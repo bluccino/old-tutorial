@@ -5,7 +5,7 @@
 
 ## What the Hell is Bluccino?
 
-#### Here's the Most Important of Bluccino's Power
+#### Bluccino Sweet Spots
 
 * Bluccino is a rapid prototyping platform for Bluetooth BLE and Mesh networking applications
 * Bluccino is a simple and elegant language independent unit testing framework (mocking platform)
