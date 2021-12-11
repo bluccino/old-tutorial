@@ -29,7 +29,7 @@ This is a Bluetooth mesh application, running on one or two processors. When we 
 
 ## Is Bluccino Free?
 
-If you don't make money with Bluccino you don't have to give us money. If you are making money with Bluccino, give us a little money for the value we provide you! Does this seem fair? If you use Bluccino you need a license for it, but such license is free for you in case of non-commercial use. And for commercial use the license is afforable, especially you are a start-up company.  
+If you don't make money with Bluccino you don't have to give us money. If you are making money with Bluccino, give us a little back for the value we provide you! Does this seem fair? If you use Bluccino you need a license for it, and you should be aware that such license is free for you in case of non-commercial use. And for commercial use the license is afforable, especially you are a start-up company.  
 
 ## Want to see Bluccino in Action?
 
