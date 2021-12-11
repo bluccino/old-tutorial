@@ -11,7 +11,7 @@
 * Blucino is a simple and elegant language independent unit testing framework (mocking platform)
 * Blucino makes the essential flows of event driven applications transparent and blurs out all unessential details
 
-#### But There's Even More ...
+#### But there's even more ...
 
 * Blucino is a programming philosophy for platform independent Bluetooth networking applications
 * Blucino is platform, hardware and language independent (C, C++, Python, ...)
@@ -22,7 +22,7 @@
 * Blucino is a slim code layer
 * Blucino is awesome and makes great fun
 
-## Lot's of headings, but what exactly does Bluccino Look and Feel?
+## Lot's of bold statements, but what exactly can I do with Bluccino?
 
 Bluccino was developped in parrallel to our firmware development og the Bluenetics connector.
 This is a Bluetooth mesh application, running on one or two processors. When we learnt about Bluetooth mesh we started with the simplest Zephyr mesh example which is called 
