@@ -63,6 +63,7 @@ The whole high-level semantics of a more than 600 line's source code is summariz
 
 
 #### We call it the *Bluccino effect*:
+
 * Close-up the essential app workflow
 * in terms of a super-super simple code
 * while blurring out the unessential details 
@@ -70,7 +71,7 @@ The whole high-level semantics of a more than 600 line's source code is summariz
 
 ## Is Bluccino Free?
 
-If you don't make money with Bluccino then you don't have to give us money and Bluccino is free to use for you. If you are making money with Bluccino, give us a little back for the value we provide you! Does this seem fair? 
+If you don't make money with Bluccino then you don't have to give us money and Bluccino is free to use for you. If you are making money with Bluccino, give us a little back for the value we provide to you! Does this sound fair? 
 
 Whether you use Bluccino for commercial or non-commercial use you need a license for it. This license is included in the git repository andyou agree to the license whenever you download the repository. You should be aware that this license always grants you free non-commercial use. For commercial contact us please, you will see the license is affordable for you, especially if you are a small start-up company.  
 
