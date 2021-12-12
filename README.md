@@ -65,7 +65,7 @@ The whole high-level semantics of a more than 600 line's source code is summariz
 #### We call it the *Bluccino effect*:
 * Close-up the essential app workflow
 * in terms of a super-super simple code
-* while blurring out the unessential details. 
+* while blurring out the unessential details 
 
 
 ## Is Bluccino Free?
