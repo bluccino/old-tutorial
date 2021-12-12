@@ -71,9 +71,10 @@ The whole high-level semantics of a more than 600 line's source code is summariz
 
 ## Is Bluccino Free?
 
-If you don't make money with Bluccino then you don't have to give us money and Bluccino is free to use for you. If you are making money with Bluccino, give us a little back for the value we provide to you! Does this sound fair? 
+For the firmware development within Bluenetics Bluccino brought a huge value. The efficiency of writing re-usable pre-tested software modules and the clear software architecture which is defined within each Bluccino application increased the efficiency of software development by more than a factor of 10! 
+If you don't make money with Bluccino then we will leave you such benefit for free, and you don't have to give us money, since in such case Bluccino is free to use for you. If you are making money with Bluccino, give us a little back for the value we provide to you! Does this sound fair? 
 
-Whether you use Bluccino for commercial or non-commercial use you need a license for it. This license is included in the git repository andyou agree to the license whenever you download the repository. You should be aware that this license always grants you free non-commercial use. For commercial contact us please, you will see the license is affordable for you, especially if you are a small start-up company.  
+Whether you use Bluccino for commercial or non-commercial use you need a license for it. This license is included in the git repository, you are not allowed to download the code without the license document, and you implicitely agree to the license terms whenever you download the repository including the license document. You should be aware that this license always grants you free non-commercial use of the Bluccino code. For commercial use contact us please, you will see the license is affordable, no matter whether you are a big enterprise or a tiny start-up company.  
 
 ## Want to see Bluccino in Action?
 
