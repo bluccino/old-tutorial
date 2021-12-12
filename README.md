@@ -61,7 +61,9 @@ The whole high-level semantics of a more than 600 line's source code is visible 
    <span style="color:red">
       <span style="font-size:80px"> Yes - 25 lines! </span> 
    </span>   
-</p>   
+</p>
+<span style="font-size:80px"> Yes - 25 lines! </span> 
+
 
 #### We call it the 'Bluccino effect':
 * Close-up the essential app workflow
