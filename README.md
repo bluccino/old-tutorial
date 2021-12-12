@@ -20,7 +20,7 @@
 * Bluccino is a slim code layer
 * Bluccino is awesome and makes great fun
 
-## Lot's of bold statements, but what exactly can I do with Bluccino?
+## Lot's of bold statements, but what exactly can be done with Bluccino?
 
 Bluccino was developed in parallel to the firmware development of our Bluenetics connector.
 This is a Bluetooth mesh application, running either on one or alternatively on two processors, which also needs to offer some small BLE service set. When we learnt about Bluetooth mesh we started to study the simplest Zephyr mesh example which is called onoff_app (zephyr/samples/boards/nrf/mesh/onoff-app). The README file of this sample mentions the following text
