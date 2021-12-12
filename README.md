@@ -35,7 +35,7 @@ This sounded promising, especially the phrase 'simple'. When we examined the 'si
 
 ![image](https://user-images.githubusercontent.com/17394277/145695547-f0345886-8ad6-487f-973e-6e99c6c4ccbc.png)
 
-This is what we would call a 'simple' program. But let's keep it as it is and call the 647-line source code of onoff_app a 'simple application', what would just mean that 'hello world' is super-super-super simple.
+Whoppa - this is what we would call a 'simple' program. But let's keep it as it is and call the 647-line source code of onoff_app a 'simple application', what would just mean that 'hello world' is super-super-super simple.
 
 If we analyse the 'onoff_app' and ask what the code exactlay does when the node is provisioned (on-boarded onto the mesh network), then below diagram will tell us everything: The phrase 'for (i=1:4)' just means that we have 4 similar setups, each setup (refering to index i) comprising a button, a mesh client model, a mesh server model and an LED. The i-th button is connected with the i-th client, indicating that a button preess would send an ON message via Bluetooth mesh to the i-th server, while a double button press sends an OFF message to the i-th server, while the i-th server forwards the ON or OFF message to an LED module which will just cause the i-th LED going on and off. That's it.  
 
