@@ -41,7 +41,7 @@ If we analyse the 'onoff_app' and ask what the code exactlay does when the node 
 
 ![onoff_app_essence](https://user-images.githubusercontent.com/17394277/145696057-b7fba735-ed74-4f4e-b8b9-9a1e0d1c1407.png)
 
-Let's see how a C++ program running on a Bluccino framework would look in every detail!
+Let's see how a C++ program running on a Bluccino framework would look like?
 
 ![image](https://user-images.githubusercontent.com/17394277/145696286-a38c4422-be82-47da-837c-e6a5cef88d17.png)
 
