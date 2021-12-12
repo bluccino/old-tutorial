@@ -5,7 +5,7 @@
 
 #### Bluccino Sweet Spots
 
-* Bluccino apps have super-super simple code which make the essential flow of event driven apps transparent and blur out all unessential details
+* Bluccino event driven apps close-up the essential workflow by super-super simple code while blurring out all unessential details
 * Bluccino is a rapid prototyping platform for Bluetooth BLE and Mesh networking applications
 * Bluccino is a simple and elegant language independent unit testing framework (mocking platform)
 
@@ -52,8 +52,8 @@ As the C++ code has 25 lines instead of 5 we will intentionally avoid to call th
 The whole high-level semantics of a more than 600 line's source code is visible on a C++ code chunk of 25 lines?
 Yes - 25 lines! 
 
-* We call it the 'Bluccino effect'!
-* Bringing the essential workflow of an application into foreground
+#### We call it the 'Bluccino effect'!
+* Close-up the essential app workflow
 * in terms of a super-super simple code
 * while blurring out the unessential details. 
 
