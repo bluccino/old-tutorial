@@ -62,7 +62,7 @@ The whole high-level semantics of a more than 600 line's source code is summariz
 </p>
 
 
-#### We call it the 'Bluccino effect':
+#### We call it the *Bluccino effect*:
 * Close-up the essential app workflow
 * in terms of a super-super simple code
 * while blurring out the unessential details. 
