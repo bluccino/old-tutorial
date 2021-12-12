@@ -33,7 +33,9 @@ model which controls one of the 4 sets of buttons and LEDs .
 
 This sounded promising, especially the phrase 'simple'. When we examined the 'simple application' we found one source file main.c which has 647 lines. Whoppa - more than 600 lines of source code for a 'simple application'? Let's go back to the year 1978 when Brian W. Kernighan and Dennis M. Ritchie published their book "The C Programming Language". In a very early section they presented the world's most famous program:  
 
-![image](https://user-images.githubusercontent.com/17394277/145695547-f0345886-8ad6-487f-973e-6e99c6c4ccbc.png)
+<p align="center">
+   <img src="https://user-images.githubusercontent.com/17394277/145695547-f0345886-8ad6-487f-973e-6e99c6c4ccbc.png" with="400">
+</p>
 
 Whoppa - this is what we would call a 'simple' program. But let's keep it as it is and call the 647-line source code of onoff_app a 'simple application', what would just mean that 'hello world' is super-super-super simple.
 
@@ -44,7 +46,7 @@ If we analyse the 'onoff_app' and ask what the code exactlay does when the node 
 Let's see now the C++ program running such functionality on a Bluccino framework!
 
 <p align="center">
-   <img src="https://user-images.githubusercontent.com/17394277/145696286-a38c4422-be82-47da-837c-e6a5cef88d17.png" width="400">
+   <img src="https://user-images.githubusercontent.com/17394277/145696286-a38c4422-be82-47da-837c-e6a5cef88d17.png" width="600">
 </p>
 
 As the C++ code has 25 lines instead of 5 we will intentionally avoid to call this code super-super-super simple, but the reader might agree that we deal with a super-super simple Bluetooth Mesh app. What we see is a button object of class Button, a client object (cli) of class GooCli (generic OnOff client), and a server object (srv) of class GooSrv (generic OnOff server). When the button is pressed the button module fires a message which by subscription of the button's when-callback will forward the OnOff message to the client. The client sends the message via Bluetooth channel to the server, which fires the received message to the server's when callback, which will forward the message to the LED module causing the LED going ON or OFF
