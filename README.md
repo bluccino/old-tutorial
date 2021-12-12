@@ -58,7 +58,7 @@ As the C++ code has 25 lines instead of 5 we will intentionally avoid to call th
 The whole high-level semantics of a more than 600 line's source code is visible on a C++ code chunk of 25 lines?
 Yes - 25 lines! 
 
-#### We call it the 'Bluccino effect'!
+#### We call it the 'Bluccino effect':
 * Close-up the essential app workflow
 * in terms of a super-super simple code
 * while blurring out the unessential details. 
