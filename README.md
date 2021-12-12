@@ -45,13 +45,13 @@ Let's see how a C++ program running on a Bluccino framework would look in every 
 
 ![image](https://user-images.githubusercontent.com/17394277/145696286-a38c4422-be82-47da-837c-e6a5cef88d17.png)
 
-It's no more super-super-super simple, but the reader might agree that wecan call it super-super simple. What we see is a button object of class Button, a client object of class GooCli (generic OnOff client), a server object
+As the C++ code has 25 lines instead of 5 we will not call this code super-super-super simple, but the reader might agree that it would be still appropriate to call this Bluetooth Mesh app super-super simple. What we see is a button object of class Button, a client object of class GooCli (generic OnOff client), a server object of class GooSrv (generic OnOff server). When the button is pressed the button module fires a message which by subscription of the button's when-callback will forward the OnOff message to the client. The client sends the message via Bluetooth channel to the server, which fires the received message to the server's when callback, which will forward the message to the LED module causing the LED going ON or OFF
 
+## The Bluccino Effect
 
+The whole high-level semantics of a more than 600 line's source code visible on a C++ code chunk of 25 lines?
+Yes - 25 lines! We call it the 'Bluccino effect' - bringing the essential workflow of an application to the foreground in terms of a super-super simple code and blurr out the unessential details. 
 
-
-
-Blucino has been introduced to write super-super simple Bluetooth mesh programs. 
 
 ## Is Bluccino Free?
 
