@@ -74,6 +74,9 @@ The whole high-level semantics of a more than 600 line's source code is summariz
 For the firmware development at Bluenetics Bluccino brought a huge value. 
 * the efficiency of writing re-usable pre-tested software modules
 * the clear software architecture which is defined within each Bluccino application
+* the rapid development of a clear application message flow framework
+* the efficient module interfaces
+* the easy possibility of single module testing (utilizing Blucino's mocking capabilities)
 * the re-usability of software modules (we use modules both on a nRF52832 and STM32L051 SoC)
 increased the efficiency of software development at Bluenetics by more than a factor of 10! 
 
