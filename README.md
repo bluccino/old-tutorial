@@ -62,7 +62,7 @@ The whole high-level semantics of a more than 600 line's source code is visible 
       <span style="font-size:80px"> Yes - 25 lines! </span> 
    </span>   
 </p>
-<span style="font-size:80px"> Yes - 25 lines! </span> 
+<font size="5"> Yes - 25 lines! </font> 
 
 
 #### We call it the 'Bluccino effect':
