@@ -667,7 +667,7 @@ void main(void)
 }
 
 #if MIGRATION_STEP1
-  int bl_core_in(BL_ob *o, int val)
+  int bl_core(BL_ob *o, int val)
 	{
     if (o->op == OP_INIT)
     {

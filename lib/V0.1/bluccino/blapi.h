@@ -61,7 +61,7 @@
 // obligatory init and loop functions
 //==============================================================================
 
-  void bl_init(BL_fct module,BL_fct cb, int val);     // init API or module
+  void bl_init(BL_fct module, BL_fct cb, int val);    // init API or module
   void bl_loop(BL_fct module);                        // loop API or module
 
 #endif // __BLAPI_H__

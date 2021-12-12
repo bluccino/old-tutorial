@@ -10,19 +10,19 @@
 // app init and app loop
 //==============================================================================
 
-  static void init()                  // app init
+  static void init()                   // app init
   {
     msg = BL_Y"I'm alive!"BL_0;
   }
 
-  static void loop()                  // app loop
+  static void loop()                   // app loop
   {
-    static int n = 1;                 // mind: must be static!
+    static int n = 1;                  // mind: must be static!
 
-    if (bl_dbg(1))                    // this is to print the timing header
-      bl_prt("[%03d] %s\n",n++,msg);  // print inviting message
+    if (bl_dbg(1))                     // this is to print the timing header
+      bl_prt("[%03d] %s\n",n++,msg);   // print inviting message
 
-    bl_sleep(1000);                   // sleep 1000 ms
+    bl_sleep(1000);                    // sleep 1000 ms
   }
 
 //==============================================================================
@@ -31,12 +31,12 @@
 
   void main(void)
   {
-    bl_init(NULL,1);                   // init Bluccino
+    bl_init(NULL,NULL,1);              // Bluccino init (no callback passing)
     init();                            // app init
 
     for(;;)
     {
-      bl_loop();                       // Bluccino loop
+      bl_loop(NULL);                   // run Bluccino loop
       loop();                          // run app loop
     }
   }
