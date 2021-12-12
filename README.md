@@ -34,7 +34,7 @@ model which controls one of the 4 sets of buttons and LEDs .
 This sounded promising, especially the phrase 'simple'. When we examined the 'simple application' we found one source file main.c which has 647 lines. Whoppa - more than 600 lines of source code for a 'simple application'? Let's go back to the year 1978 when Brian W. Kernighan and Dennis M. Ritchie published their book "The C Programming Language". In a very early section they presented the world's most famous program:  
 
 <p align="center">
-   <img src="https://user-images.githubusercontent.com/17394277/145695547-f0345886-8ad6-487f-973e-6e99c6c4ccbc.png" with="250">
+   <img src="https://user-images.githubusercontent.com/17394277/145695547-f0345886-8ad6-487f-973e-6e99c6c4ccbc.png" width="250">
 </p>
 
 Whoppa - this is what we would call a 'simple' program. But let's keep it as it is and call the 647-line source code of onoff_app a 'simple application', what would just mean that 'hello world' is super-super-super simple.
@@ -42,7 +42,7 @@ Whoppa - this is what we would call a 'simple' program. But let's keep it as it 
 If we analyse the 'onoff_app' and ask what the code exactlay does when the node is provisioned (on-boarded onto the mesh network), then below diagram will tell us everything: The phrase 'for (i=1:4)' just means that we have 4 similar setups, each setup (refering to index i) comprising a button, a mesh client model, a mesh server model and an LED. The i-th button is connected with the i-th client, indicating that a button preess would send an ON message via Bluetooth mesh to the i-th server, while a double button press causes the i-th client to send an OFF message to the i-th server which is forwarded as an ON or OFF message to the LED module causing the i-th LED going either on or off. That's it.  
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/17394277/145696057-b7fba735-ed74-4f4e-b8b9-9a1e0d1c1407.png" with="400">
+  <img src="https://user-images.githubusercontent.com/17394277/145696057-b7fba735-ed74-4f4e-b8b9-9a1e0d1c1407.png" width="400">
 </p>
 
 Let's see now the C++ program running such functionality on a Bluccino framework!
