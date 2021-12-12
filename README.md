@@ -58,7 +58,9 @@ As the C++ code has 25 lines instead of 5 we will intentionally avoid to call th
 The whole high-level semantics of a more than 600 line's source code is visible on a C++ code chunk of 25 lines?
 
 <p align="center">
-   ## Yes - 25 lines!
+   <span style="color:white">
+      <span style="font-size:40px"> Yes - 25 lines! </span> 
+   </span>   
 </p>   
 
 #### We call it the 'Bluccino effect':
