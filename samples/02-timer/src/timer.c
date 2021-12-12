@@ -5,26 +5,34 @@
 #include "bluccino.h"
 #include "timer.h"
 
-  static BL_notify notify = NULL;
-
-//==============================================================================
-// mandatory init/loop functions
-//==============================================================================
-
-  static BL_ob tim = {CL_TIMER,OP_TICK,0,NULL};
+  static BL_fct notify = NULL;
   static BL_ms time = 0;
 
-  void timer_init(BL_notify cb)
-  {
-    notify = cb;
-  }
+    // timer messaging object
 
-  void timer_loop(void)
+  static BL_ob tim = {CL_TIMER,OP_TICK,0,NULL};
+
+//==============================================================================
+// public interface
+//==============================================================================
+
+  int timer(BL_ob *o, int val)
   {
-    if (bl_ms() >= time)
+    switch (o->op)
     {
-      bl_logo(3,"loop",&tim,time);
-      bl_out(&tim,time,notify);
-      time += 1000;                    // next time = current time + 1000 ms
+      case OP_INIT:
+        bl_logo(1,BL_B"timer",o,val);
+        notify = o->data;
+        break;
+
+      case OP_LOOP:
+        if (bl_ms() >= time)
+        {
+          bl_logo(3,"loop",&tim,time);
+          bl_out(&tim,time,notify);        // emit tick message
+          time += 1000;                    // next time = current time + 1000 ms
+        }
+        break;
     }
+    return 0;
   }

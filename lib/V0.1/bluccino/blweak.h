@@ -14,15 +14,13 @@
   #endif
 
   #if __WEAK__
-      __weak void bl_core_init(BL_notify cb)  {}                  // dummy
-      __weak void bl_core_loop(void)          {}                  // dummy
-
-      __weak void bl_verbose(int verbose)     {}                  // dummy
-      __weak void bl_logo(int l,BL_txt m,BL_ob *o,int v) {}       // dummy
+      __weak int  bl_core(BL_ob *o, int val) { return 0; }      // dummy
+      __weak void bl_verbose(int verbose)    {}                 // dummy
+      __weak void bl_logo(int l,BL_txt m,BL_ob *o,int v) {}     // dummy
   #endif
 
-  __weak int  bl_output(BL_ob *o, int val) { return 0; }      // dummy
-  __weak void bl_gear_init(BL_notify cb)  {}                  // dummy
-  __weak void bl_gear_loop(void)          {}                  // dummy
+  __weak int  bl_up(BL_ob *o, int val) { return 0; }            // dummy
+  __weak int  bl_down(BL_ob *o, int val) { return 0; }          // dummy
+  __weak int  bl_gear(BL_ob *o, int val) { return 0; }          // dummy
 
 #endif // __BLWEAK_H__

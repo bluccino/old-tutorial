@@ -13,14 +13,21 @@
 #include "bltype.h"
 #include "bllog.h"
 
-   extern bool bl_attention;           // attention mode
-   extern bool bl_provisioned;         // provisioned mode
-
 //==============================================================================
-// mesh opcodes
+// useful macros
 //==============================================================================
 
-  #define BL_GOOLET 0x8203
+  #define BL_PAIR(cl,op)    (((cl)<<16) | ((op) & 0xffff))
+  #define BL_MSG(o)         BL_PAIR(o->cl,o->op)
+
+  #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))     // array length
+
+//==============================================================================
+// extern declarations
+//==============================================================================
+
+  extern bool bl_attention;           // attention mode
+  extern bool bl_provisioned;         // provisioned mode
 
 //==============================================================================
 // timing & sleep
@@ -32,29 +39,29 @@
 // event message emission, posting and notification
 //==============================================================================
 
-  int bl_out(BL_ob *o, int value, BL_notify call);
+  int bl_out(BL_ob *o, int value, BL_fct call);
   int bl_in(BL_ob *o, int value);
-
-//==============================================================================
-// gear input/output (post) functions
-//==============================================================================
-
-  int bl_input(BL_ob *o, int value);   // gear input function
-  int bl_output(BL_ob *o, int value);  // gear output function
-
-  void bl_driver(BL_notify cb);        // set gear driver
+  int bl_up(BL_ob *o, int value);      // input gear (up-stream messages)
+  int bl_down(BL_ob *o, int value);    // output gear (doen-stream messages)
 
 //==============================================================================
 // obligatory init and loop functions
 //==============================================================================
 
-  void bl_core_init(BL_notify cb);
-  void bl_core_loop(void);
+  int bl_core(BL_ob *o, int val);
+  int bl_gear(BL_ob *o, int val);
 
-  void bl_gear_init(BL_notify cb);
-  void bl_gear_loop(void);
+//==============================================================================
+// run system operation on a module (syntactic sugar: id = 0, val = 0)
+//==============================================================================
 
-  void bl_init(BL_notify cb, int verbose);
-  void bl_loop(void);
+  int bl_sys(int op, BL_fct module, BL_fct cb);
+
+//==============================================================================
+// obligatory init and loop functions
+//==============================================================================
+
+  void bl_init(BL_fct module,BL_fct cb, int val);     // init API or module
+  void bl_loop(BL_fct module);                        // loop API or module
 
 #endif // __BLAPI_H__

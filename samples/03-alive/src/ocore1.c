@@ -595,7 +595,7 @@ void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flag
 }
 
 #if MIGRATION_STEP1
-void bl_core_init(BL_notify cb)
+static void init(void)
 #else
 void main(void)
 #endif
@@ -667,8 +667,13 @@ void main(void)
 }
 
 #if MIGRATION_STEP1
-  void bl_core_loop(void)
+  int bl_core_in(BL_ob *o, int val)
 	{
-		// nothing to do
+    if (o->op == OP_INIT)
+    {
+      bl_logo(4,BL_R"core",o,val);     // log trace
+      init();
+    }
+		return 0;
 	}
 #endif

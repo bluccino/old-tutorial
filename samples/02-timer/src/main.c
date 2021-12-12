@@ -14,7 +14,7 @@
     switch (o->op)
     {
       case OP_TICK:
-        bl_logo(1,BL_B"when",o,val);
+        bl_logo(1,BL_G"when",o,val);
         return 0;
     }
     return 0;
@@ -34,19 +34,19 @@
   }
 
 //==============================================================================
-// Arduino style engine
+// framework engine
 //==============================================================================
 
   void main(void)
   {
-    bl_init(NULL,2);                   // Bluccino init
-    timer_init(when);                  // init TIMER module
+    bl_init(NULL,NULL,2);              // Bluccino init (no callback passing)
+    bl_init(timer,when,0);             // TIMER init (pass 'when' callback)
     init();                            // app init
 
     for(;;)
     {
-      bl_loop();                       // run Bluccino loop
-      timer_loop();                    // run Bluccino loop
+      bl_loop(NULL);                   // run Bluccino loop
+      bl_loop(timer);                  // run TIMER loop
       loop();                          // run app loop
     }
   }

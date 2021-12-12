@@ -20,10 +20,10 @@
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_notify notify = NULL;      // notification callback
-  static BL_notify driver = NULL;      // output driver callback
+  static BL_fct notify = NULL;      // notification callback
+  static BL_fct driver = NULL;      // output driver callback
 
-  void bl_driver(BL_notify cb)         // set output driver callback
+  void bl_driver(BL_fct cb)         // set output driver callback
   {
     driver = cb;                       // store callback
   }
@@ -69,7 +69,7 @@
 // output message (either handeled by driver or else by app subscription)
 //==============================================================================
 
-  int bl_out(BL_ob *o, int val, BL_notify cb)
+  int bl_out(BL_ob *o, int val, BL_fct cb)
   {
     if (driver)                        // if a driver callback has been provided
     {                                  // => call driver for message processing
@@ -131,18 +131,46 @@
   }
 
 //==============================================================================
+// run system operation on a module (syntactic sugar: id = 0, val = 0)
+//==============================================================================
+
+  int bl_sys(int op, BL_fct module, BL_fct cb)
+  {
+    BL_ob o = {CL_SYS,op,0,cb};
+    return module(&o,0);
+  }
+
+//==============================================================================
 // obligatory init and loop functions
 //==============================================================================
 
-  void bl_init(BL_notify cb, int verbose)
+    // bl_init(NULL,when,verbose)           // Bluccino API level loop
+    // bl_init(bl_gear,when_core,0)         // initialize gear
+
+  void bl_init(BL_fct module,BL_fct cb, int val)
   {
-    notify = cb;
-    bl_verbose(verbose);
-    bl_gear_init(bl_output);
-    bl_core_init(when_core);
+    if (module)
+      bl_sys(OP_INIT,module,cb);            // init module
+    else
+    {
+      notify = cb;
+      bl_verbose(val);
+
+      bl_sys(OP_INIT,bl_gear,bl_down);      // init gear
+      bl_sys(OP_INIT,bl_core,when_core);    // init core
+    }
   }
 
-  void bl_loop(void)
+    // bl_loop(NULL)                        // Blucino API level loop
+    // bl_loop(bl_core)                     // core level loop
+
+  void bl_loop(BL_fct module)
   {
-    bl_core_loop();
+    if (module)
+      bl_sys(OP_LOOP,module,NULL);          // run specific module loop
+    else
+    {
+      bl_sys(OP_LOOP,bl_gear,NULL);         // run gear loop
+      bl_sys(OP_LOOP,bl_core,NULL);         // run core loop
+    }
   }

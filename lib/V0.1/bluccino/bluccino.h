@@ -14,11 +14,6 @@
 #endif
 
   #include "blapi.h"
-
-//==============================================================================
-// Bluccino Core Migration
-//==============================================================================
-
-  #define MIGRATION_STEP1         1    // introduce bl_core_init(), bl_core_loop
-
+  #include "bllog.h"
+  
 #endif // __BLUCCINO_H__

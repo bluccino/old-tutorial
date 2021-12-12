@@ -24,8 +24,6 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-  int  timer_in(BL_ob *o, int value);  // input interface
-  void timer_init(BL_notify call);     // init fuction
-  void timer_loop(void);               // loop function
+  int  timer(BL_ob *o, int value);     // TIMER interface
 
 #endif // __TIMER_H__
