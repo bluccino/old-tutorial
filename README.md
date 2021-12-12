@@ -23,7 +23,7 @@
 ## Lot's of bold statements, but what exactly can I do with Bluccino?
 
 Bluccino was developed in parallel to the firmware development of our Bluenetics connector.
-This is a Bluetooth mesh application, running on one or two processors. When we learnt about Bluetooth mesh we started to study the simplest Zephyr mesh example which is called onoff_app (zephyr/samples/boards/nrf/mesh/onoff-app). The README.rst file of this sample mentions the following text
+This is a Bluetooth mesh application, running on one or two processors. When we learnt about Bluetooth mesh we started to study the simplest Zephyr mesh example which is called onoff_app (zephyr/samples/boards/nrf/mesh/onoff-app). The README file of this sample mentions the following text
 
 ```
 This is a simple application demonstrating a Bluetooth mesh multi-element node.
@@ -31,7 +31,7 @@ Each element has a mesh onoff client and server
 model which controls one of the 4 sets of buttons and LEDs .
 ```
 
-This sounded promising, especially the phrase 'simple'. When we examined the 'simple application' we found one source file main.c which has 647 lines. Whoppa - more than 600 lines of source code and such an application is termed simple? Let's go back to the year 1978 when Brian W. Kernighan and Dennis M. Ritchie published their book "The C Programming Language". In a very early section they present the world's most famous program:  
+This sounded promising, especially the phrase 'simple'. When we examined the 'simple application' we found one source file main.c which has 647 lines. Whoppa - more than 600 lines of source code and such an application is termed 'simple'? Let's go back to the year 1978 when Brian W. Kernighan and Dennis M. Ritchie published their book "The C Programming Language". In a very early section they presented the world's most famous program:  
 
 ![image](https://user-images.githubusercontent.com/17394277/145695547-f0345886-8ad6-487f-973e-6e99c6c4ccbc.png)
 
