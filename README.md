@@ -55,7 +55,7 @@ As the C++ code has 25 lines instead of 5 we will intentionally avoid to call th
 
 ## The Bluccino Effect
 
-The whole high-level semantics of a more than 600 line's source code is visible on a C++ code chunk of 25 lines?
+The whole high-level semantics of a more than 600 line's source code is summarized by a C++ code chunk of 25 lines?
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/17394277/145706538-56e5863b-3b84-496b-a708-71d52b2fe407.png" width="200">
