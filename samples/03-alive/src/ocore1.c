@@ -57,7 +57,7 @@
 #include "bluccino.h"
 
 #ifndef MIGRATION_STEP1
-  #define MIGRATION_STEP1         0    // introduce bl_core_init(), bl_core_loop
+  #define MIGRATION_STEP1         0    // introduce bl_core()
 #endif
 
 //==============================================================================

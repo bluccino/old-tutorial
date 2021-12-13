@@ -2,27 +2,29 @@
 # 04-attention demo
 #===============================================================================
 
-This demo separates the original main.c file of onoff_app sample into
-  * a tiny new main.c file with a simple main loop demonstrating periodic
-    "I'm alive!" log messages
-  * and a simple Bluccino mesh core which allows to switch each of the
-    4 LEDs of a nRF52 DK board on/off by single (ON) or double (OFF) button
-    press
-  * additionally with a provisioning app the board and similar other boards
-    can be onboarded to a Bluetooth mesh network, such that by proper confi-
-    guration any button can control any LED in the mesh network, no matter
-    whether button and LED are on the same board or different boards.
+With this demo we migrate from ocore1.c mesh core to ocore2.c, supporting
+provisioning and attention messages being forwarded from the core to Bluccino
+API layer. The high level app behavior is changed as follows:
+
+  * periodic loggings with log text
+       - "I'm a (unprovisoned) mesh device" (in unprovisioned case)
+       - "I'm a (provisoned) mesh node" (in provisioned case)
+  * All log messages show color switch of the log header (time stamps)
+    when attention is in process or node state changes from device state
+    (unprovisioned) to node state (provisioned)
+  * App is also logging an addtional log message "attention" during active
+    attention mode
 
 # Lessons to Learn
 
-  * how to provide a config.h file which is included automatically for each
-    #include "bluccino.h" statement
-  * how to add migration code to an existing program which can be activated
-    or deactivated
-  * how to use the functions bl_dbg() and bl_prt() for log and module level
-    based customized logging
-  * how to use the Nordic nRF Mesh app to initialize a new Bluetooth mesh
-    network, to provision and configure mesh nodes for proper communication
+  * how additional 'migration defines' are added to config.h (remember: config.h
+    file is included automatically for each #include "bluccino.h" statement
+    (this is caused by proper settings in CMakeLists.txt)
+  * how to transform ocore.1 to ocore.2 by further adding of migration code
+  * how to post attention and provisioning messages from ocore2.c up to
+    Bluccino API where global state variables bl_provisioned and bl_attention
+    are updated accordingly
+  * how to use the bl_log() function
 
 # Project Configuration
 

@@ -1,5 +1,5 @@
 //==============================================================================
-// ocore1.c - onoff-app based mesh/HW core, version 1
+// ocore2.c - onoff-app based mesh/HW core, version 2
 //==============================================================================
 
 /*
@@ -57,7 +57,10 @@
 #include "bluccino.h"
 
 #ifndef MIGRATION_STEP1
-  #define MIGRATION_STEP1         0    // introduce bl_core_init(), bl_core_loop
+  #define MIGRATION_STEP1         0    // introduce bl_core()
+#endif
+#ifndef MIGRATION_STEP2
+  #define MIGRATION_STEP2         0    // introduce bl_core_init(), bl_core_loop
 #endif
 
 //==============================================================================
@@ -398,11 +401,21 @@ static void prov_complete(uint16_t net_idx, uint16_t addr)
 	       net_idx, addr);
 	primary_addr = addr;
 	primary_net_idx = net_idx;
+
+  #if MIGRATION_STEP2
+	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
+	  bl_in(&o,1);
+  #endif // MIGRATION_STEP2
 }
 
 static void prov_reset(void)
 {
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
+
+  #if MIGRATION_STEP2
+	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
+	  bl_in(&o,0);
+  #endif // MIGRATION_STEP2
 }
 
 static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
@@ -532,6 +545,28 @@ static void button_pressed_worker(struct k_work *work)
 	}
 }
 
+#if MIGRATION_STEP2
+//==============================================================================
+// provisioning link open/close callbacks
+//==============================================================================
+
+static void link_open(bt_mesh_prov_bearer_t bearer)
+{
+	BL_ob o = {CL_MESH, OP_ATT, 1, NULL};
+	bl_in(&o,1);
+}
+
+static void link_close(bt_mesh_prov_bearer_t bearer)
+{
+	BL_ob o = {CL_MESH, OP_ATT, 0, NULL};
+	bl_in(&o,0);
+}
+
+//==============================================================================
+// provisioning table
+//==============================================================================
+#endif // MIGRATION_STEP2
+
 /* Disable OOB security for SILabs Android app */
 
 static const struct bt_mesh_prov prov = {
@@ -546,6 +581,10 @@ static const struct bt_mesh_prov prov = {
 	.output_actions = 0,
 	.output_number = 0,
 #endif
+#if MIGRATION_STEP2
+  .link_open = link_open,              // to activate attention mode
+  .link_close = link_close,            // to deactivate attention mode
+#endif // MIGRATION_STEP2
 	.complete = prov_complete,
 	.reset = prov_reset,
 };
@@ -595,7 +634,7 @@ void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flag
 }
 
 #if MIGRATION_STEP1
-void bl_core_init(BL_fct cb)
+static void init(void)
 #else
 void main(void)
 #endif
@@ -667,8 +706,13 @@ void main(void)
 }
 
 #if MIGRATION_STEP1
-  void bl_core_loop(void)
+  int bl_core(BL_ob *o, int val)
 	{
-		// nothing to do
+    if (o->op == OP_INIT)
+    {
+      bl_logo(4,BL_R"core",o,val);     // log trace
+      init();
+    }
+		return 0;
 	}
 #endif

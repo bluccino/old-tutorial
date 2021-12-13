@@ -13,8 +13,8 @@
 // provisioned & attention state
 //==============================================================================
 
-  static bool provisioned = 0;
-  static bool attention = 0;
+  bool bl_provisioned = 0;
+  bool bl_attention = 0;
 
 //==============================================================================
 // notification and driver callbacks
@@ -96,15 +96,15 @@
     switch (pair)                           // dispatch event
     {
       case BL_PAIR(CL_MESH,OP_PRV):         // provisioned state changed
-        provisioned = val;
-        bl_log_color(attention,provisioned);
-        bl_log1(2,"@mesh:provisioned",provisioned);
+        bl_provisioned = val;
+        bl_log_color(bl_attention,bl_provisioned);
+        bl_log1(2,"@mesh:provisioned",bl_provisioned);
         return bl_out(o,val,notify);
 
       case BL_PAIR(CL_MESH,OP_ATT):         // attention state changed
-        attention = val;
-        bl_log_color(attention,provisioned);
-        bl_log1(2,"@mesh:attention",attention);
+        bl_attention = val;
+        bl_log_color(bl_attention,bl_provisioned);
+        bl_log1(2,"@mesh:attention",bl_attention);
         return bl_out(o,val,notify);
 
       case BL_PAIR(CL_TIMER,OP_TICK):

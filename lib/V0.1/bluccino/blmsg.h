@@ -54,8 +54,8 @@
 
   #ifndef BL_OP_TEXT
 
-    #define BL_OP_TEXT {"VOID","INIT","LOOP","SET","LET","GET","STS","PRV", \
-                        "ATT","TRIG","TICK","CMD","VAL","LEVEL","ONOFF",    \
+    #define BL_OP_TEXT {"VOID","INIT","LOOP","PRV","ATT","SET","LET","GET", \
+                        "STS","TRIG","TICK","CMD","VAL","LEVEL","ONOFF",    \
                         "PAY", "ADV","BEACON","SEND","PRESS","RELEASE"}
 
     typedef enum BL_op
@@ -64,13 +64,13 @@
               OP_INIT,                   // init function
               OP_LOOP,                   // loop function
 
+              OP_PRV,                    // provisioning state changed
+              OP_ATT,                    // attention state change
+
               OP_SET,                    // acknowledged set operation
               OP_LET,                    // unacknowledged
               OP_GET,                    // ask for status
               OP_STS,                    // send status
-
-              OP_PRV,                    // provisioning state changed
-              OP_ATT,                    // attention state change
 
               OP_TRIG,                   // generic trigger signal
               OP_TICK,                   // timer ticks
