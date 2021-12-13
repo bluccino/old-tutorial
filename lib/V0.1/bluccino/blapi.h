@@ -26,14 +26,16 @@
 // extern declarations
 //==============================================================================
 
-  extern bool bl_attention;           // attention mode
-  extern bool bl_provisioned;         // provisioned mode
+  extern bool bl_attention;            // attention mode
+  extern bool bl_provisioned;          // provisioned mode
 
 //==============================================================================
-// timing & sleep
+// sleep & wait
 //==============================================================================
 
-  void bl_sleep(int ms);               // deep sleep for given milliseconds
+  BL_us bl_zero(void);                 // reset clock
+  void bl_sleep(BL_ms ms);             // deep sleep for given milliseconds
+  void bl_wait(BL_ms tick);            // wait until time tick
 
 //==============================================================================
 // event message emission, posting and notification
@@ -41,15 +43,6 @@
 
   int bl_out(BL_ob *o, int value, BL_fct call);
   int bl_in(BL_ob *o, int value);
-  int bl_up(BL_ob *o, int value);      // input gear (up-stream messages)
-  int bl_down(BL_ob *o, int value);    // output gear (doen-stream messages)
-
-//==============================================================================
-// obligatory init and loop functions
-//==============================================================================
-
-  int bl_core(BL_ob *o, int val);
-  int bl_gear(BL_ob *o, int val);
 
 //==============================================================================
 // run system operation on a module (syntactic sugar: id = 0, val = 0)

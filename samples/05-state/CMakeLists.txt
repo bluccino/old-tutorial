@@ -8,7 +8,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(04-attention)
+  project(04-state)
 
   set (LIB ../../lib/V0.1)
   set (BLU ${LIB}/bluccino)
@@ -25,6 +25,6 @@
 
   target_sources(app PRIVATE
                  ${SRC}/main.c
-                 ${SRC}/ocore2.c
+                 ${SRC}/ocore3.c
                  ${BLU}/bluccino.c
                 )

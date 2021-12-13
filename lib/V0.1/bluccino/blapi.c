@@ -8,6 +8,8 @@
 
 #include "bluccino.h"
 #include "blweak.h"                    // weak function definitions
+#include "blcore.h"
+#include "blgear.h"
 
 //==============================================================================
 // provisioned & attention state
@@ -32,6 +34,8 @@
 // us/ms clock
 //==============================================================================
 
+  static volatile BL_us offset = 0;
+
   static BL_us now_us()                     // system clock in us
   {
     uint64_t cyc = k_uptime_ticks();
@@ -39,13 +43,17 @@
     return (BL_us)((1000000*cyc)/f);
   }
 
+  BL_us bl_zero(void)                       // reset clock
+  {
+    return offset = now_us();
+  }
+
   BL_us bl_us(void)                         // get current clock time in us
   {
-    static BL_us offset = 0;
     BL_us us = now_us();
 
     if (offset == 0)                        // first call always returns 0
-      offset = us;
+      us = bl_zero();                       // reset clock
 
     return us  - offset;
   }
@@ -57,12 +65,19 @@
   }
 
 //==============================================================================
-// timing & sleep
+// sleep & wait
 //==============================================================================
 
-  void bl_sleep(int ms)                // deep sleep for given milliseconds
+  void bl_sleep(BL_ms ms)              // deep sleep for given milliseconds
   {
-    BL_SLEEP(ms);
+    if (ms > 0)
+      BL_SLEEP((int)ms);
+  }
+
+  void bl_wait(BL_ms tick)             // wait until time tick
+  {
+    BL_ms ms = tick - bl_ms();
+    bl_sleep(ms);
   }
 
 //==============================================================================
@@ -106,6 +121,11 @@
         bl_log_color(bl_attention,bl_provisioned);
         bl_log1(2,"@mesh:attention",bl_attention);
         return bl_out(o,val,notify);
+
+      case BL_PAIR(CL_GOOSRV,OP_SET):       // GOOSRV set
+      case BL_PAIR(CL_GOOSRV,OP_LET):       // GOOSRV let (unack'ed set)
+        bl_logo(2,"@api",o,val);
+        return bl_core(o,val);
 
       case BL_PAIR(CL_TIMER,OP_TICK):
       case BL_PAIR(CL_SCAN,OP_ADV):
@@ -156,8 +176,10 @@
       notify = cb;
       bl_verbose(val);
 
-      bl_sys(OP_INIT,bl_gear,bl_down);      // init gear
+      //bl_sys(OP_INIT,bl_gear,bl_down);      // init gear
+bl_log(2,BL_B"api:init"BL_0);
       bl_sys(OP_INIT,bl_core,when_core);    // init core
+bl_log(2,BL_B"api:done"BL_0);
     }
   }
 

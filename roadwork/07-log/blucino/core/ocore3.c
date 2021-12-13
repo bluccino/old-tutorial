@@ -9,7 +9,7 @@
 //   - add a dummy bl_core_loop() function                              @@@1.4
 //
 // OCORE Versions 2 (ocore2)
-//   - include "bluccino.h"                                              @@@2.1
+//   - include "bluccino.h"                                             @@@2.1
 //   - provide bl_core_set() function to change state                   @@@2.2
 //
 // OCORE Versions 3 (ocore3)

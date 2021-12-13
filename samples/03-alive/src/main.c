@@ -10,12 +10,12 @@
 // app init and app loop
 //==============================================================================
 
-  static void init()                   // app init
+  static void init(void)               // app init
   {
     msg = BL_Y"I'm alive!"BL_0;
   }
 
-  static void loop()                   // app loop
+  static void loop(void)               // app loop
   {
     static int n = 1;                  // mind: must be static!
 

@@ -145,7 +145,7 @@
       return;
 
     if (msg[0] != 0)
-      printk("%s\n", msg);
+      printk("%s\n"BL_0, msg);
   }
 
   void bl_log1(int lev, BL_txt msg, int value)  // log text msg with 1 arg

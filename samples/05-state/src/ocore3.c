@@ -1,5 +1,5 @@
 //==============================================================================
-// ocore2.c - onoff-app based mesh/HW core, version 2
+// ocore3.c - onoff-app based mesh/HW core, version 3
 //==============================================================================
 
 /*
@@ -61,6 +61,9 @@
 #endif
 #ifndef MIGRATION_STEP2
   #define MIGRATION_STEP2         0    // emit provisioned/attention messages
+#endif
+#ifndef MIGRATION_STEP3
+  #define MIGRATION_STEP3         0    // set onoff state
 #endif
 
 //==============================================================================
@@ -593,6 +596,10 @@ static const struct bt_mesh_prov prov = {
  * Bluetooth Ready Callback
  */
 
+#if MIGRATION_STEP3
+  static volatile int initialized = 0;
+#endif // MIGRATION_STEP3
+
 static void bt_ready(int err)
 {
 	struct bt_le_oob oob;
@@ -602,11 +609,20 @@ static void bt_ready(int err)
 		return;
 	}
 
-	printk("Bluetooth initialized\n");
+  #if MIGRATION_STEP3
+    bl_log(2,BL_B"Bluetooth initialized");
+  #else
+	  printk("Bluetooth initialized\n");
+  #endif
 
 	err = bt_mesh_init(&prov, &comp);
 	if (err) {
-		printk("Initializing mesh failed (err %d)\n", err);
+    #if MIGRATION_STEP3
+      initialized = -1;
+      bl_log1(0,BL_R"Initializing mesh failed", err);
+    #else
+		  printk("Initializing mesh failed (err %d)\n", err);
+    #endif
 		return;
 	}
 
@@ -623,7 +639,12 @@ static void bt_ready(int err)
 
 	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
 
-	printk("Mesh initialized\n");
+  #if MIGRATION_STEP3
+    initialized = true;
+    bl_log(2,BL_B"Mesh initialized");
+  #else
+  	printk("Mesh initialized\n");
+  #endif // MIGRATION_STEP3
 }
 
 void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flags)
@@ -634,14 +655,18 @@ void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flag
 }
 
 #if MIGRATION_STEP1
-static void init(void)
+  static void core_init(void)
 #else
 void main(void)
 #endif
 {
 	int err;
 
-	printk("Initializing...\n");
+  #if MIGRATION_STEP3
+    bl_log(2,BL_B"Initializing ..."BL_0);
+  #else
+	  printk("Initializing...\n");
+  #endif
 
 	/* Initialize the button debouncer */
 	last_time = k_uptime_get_32();
@@ -710,13 +735,31 @@ void main(void)
 // THE core interface
 //==============================================================================
 
+  static void init(BL_ob *o, int val)
+  {
+    bl_logo(4,BL_R"core",o,val);   // log trace
+    core_init();
+
+    #if MIGRATION_STEP3
+      while (initialized == 0)
+        bl_sleep(100);
+
+      bl_sleep(500);               // sleep another 500ms
+      bl_zero();                   // reset clock
+      bl_log(0," ");
+    #endif
+  }
+
+//==============================================================================
+// THE core interface
+//==============================================================================
+
   int bl_core(BL_ob *o, int val)
 	{
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):
-        bl_logo(4,BL_R"core",o,val);     // log trace
-        init();
+        init(o,val);
         break;
 
       case BL_PAIR(CL_SYS,OP_LOOP):

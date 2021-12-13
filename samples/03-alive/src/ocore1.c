@@ -667,13 +667,22 @@ void main(void)
 }
 
 #if MIGRATION_STEP1
+//==============================================================================
+// THE core interface
+//==============================================================================
+
   int bl_core(BL_ob *o, int val)
 	{
-    if (o->op == OP_INIT)
+    switch (BL_PAIR(o->cl,o->op))
     {
-      bl_logo(4,BL_R"core",o,val);     // log trace
-      init();
+      case BL_PAIR(CL_SYS,OP_INIT):
+        bl_logo(4,BL_R"core",o,val);     // log trace
+        init();
+        break;
+
+      case BL_PAIR(CL_SYS,OP_LOOP):
+        break;
     }
 		return 0;
 	}
-#endif
+#endif // MIGRATION_STEP1
