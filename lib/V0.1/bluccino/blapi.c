@@ -176,8 +176,8 @@
       notify = cb;
       bl_verbose(val);
 
-      //bl_sys(OP_INIT,bl_gear,bl_down);      // init gear
 bl_log(2,BL_B"api:init"BL_0);
+      //bl_sys(OP_INIT,bl_gear,bl_down);    // init gear
       bl_sys(OP_INIT,bl_core,when_core);    // init core
 bl_log(2,BL_B"api:done"BL_0);
     }
@@ -192,7 +192,7 @@ bl_log(2,BL_B"api:done"BL_0);
       bl_sys(OP_LOOP,module,NULL);          // run specific module loop
     else
     {
-      bl_sys(OP_LOOP,bl_gear,NULL);         // run gear loop
+      //bl_sys(OP_LOOP,bl_gear,NULL);         // run gear loop
       bl_sys(OP_LOOP,bl_core,NULL);         // run core loop
     }
   }

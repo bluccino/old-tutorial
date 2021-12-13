@@ -730,6 +730,26 @@ void main(void)
 	}
 }
 
+#if MIGRATION_STEP3
+//==============================================================================
+// State change                                                         @@@2.2
+//==============================================================================
+
+  static void goosrv_set(BL_ob *o,int val)  // set state of GOOSRV
+	{
+		  // id = 1..4, since it adresses elements 1..4
+			// button indices are 0..3, thus swnum = o->id - 1
+
+    sw.sw_num = (uint8_t)(o->id-1);         // store ID (switch number)
+		sw.onoff_state = (uint8_t)val;          // store val (for onoff state)
+
+		  // finally we submit a button press work, which refreshes the
+			// onoff state with the new val and publishes the state
+
+	  k_work_submit(&sw.button_work);         // submit button work (that's all)
+	}
+
+#endif // MIGRATION_STEP3
 #if MIGRATION_STEP1
 //==============================================================================
 // THE core interface
@@ -759,11 +779,20 @@ void main(void)
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):
+        //bl_logo(3,BL_Y"core",o,val);
         init(o,val);
         break;
 
       case BL_PAIR(CL_SYS,OP_LOOP):
+        //bl_logo(3,BL_Y"core",o,val);
         break;
+
+    #if MIGRATION_STEP3
+      case BL_PAIR(CL_GOOSRV,OP_SET):
+        bl_logo(3,"@core",o,val);       // log message
+        goosrv_set(o,val);                 // set GOOSRV state
+        break;
+    #endif //MIGRATION_STEP3
     }
 		return 0;
 	}

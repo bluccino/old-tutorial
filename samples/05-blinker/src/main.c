@@ -1,10 +1,13 @@
 //==============================================================================
-// main.c for 04-attention demo
+// main.c for 05-blinker demo
 //==============================================================================
 
 #include "bluccino.h"
 
-  BL_txt msg1, msg2;
+    BL_ob o1 = {CL_GOOSRV,OP_SET,1,NULL};
+    BL_ob o2 = {CL_GOOSRV,OP_SET,2,NULL};
+    BL_ob o3 = {CL_GOOSRV,OP_SET,3,NULL};
+    BL_ob o4 = {CL_GOOSRV,OP_SET,4,NULL};
 
 //==============================================================================
 // when a message is emitted
@@ -12,12 +15,20 @@
 
   static int when(BL_ob *o, int val)
   {
-    switch (o->op)
+    switch (BL_PAIR(o->cl,o->op))
     {
-      case OP_ATT:
-      case OP_PRV:
-        bl_logo(1,BL_R"when",o,val);
+      case BL_PAIR(CL_TIMER,OP_TICK):
+      {
+        bl_logo(1,BL_Y"when",o,val);
+
+        bl_in(&o1,val%2);                  // change GOOSRV state
+        bl_in(&o4,val%2);                  // change GOOSRV state
+        val++;
+        bl_in(&o2,val%2);                  // change GOOSRV state
+        bl_in(&o3,val%2);                  // change GOOSRV state
+
         break;
+      }
     }
     return 0;
   }
@@ -28,18 +39,16 @@
 
   static void init()                   // app init
   {
-    msg1 = BL_C"I'm a (provisoned) mesh node"BL_0;
-    msg2 = BL_C"I'm a (unprovisoned) mesh device"BL_0;
   }
 
-  static void loop()                   // app loop
+  static void loop(void)               // app loop
   {
-    bl_log(1,bl_provisioned?msg1:msg2);
+    static BL_ms tick = 0;             // next time stamp for tick emission
+    static BL_ob oo = {CL_TIMER,OP_TICK,0,NULL};
 
-    if (bl_attention)
-      bl_log(1,BL_M"attention state"BL_0);
-
-    bl_sleep(1000);                    // sleep 1000 ms
+    bl_wait(tick);                     // sleep 1000 ms
+    bl_out(&oo,(int)(tick/1000),when); // emit message to (subscribed!) when-cb
+    tick += 1000;                      // next time stamp to emit tick event
   }
 
 //==============================================================================

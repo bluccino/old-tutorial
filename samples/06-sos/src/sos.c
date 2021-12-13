@@ -11,7 +11,7 @@
 // timer tick: output sequenced [SOS:ONOFF] messages
 //==============================================================================
 
-  #define PATTERN "* * *  *** *** ***  * * *   ";
+  #define PATTERN "* * *  *** *** ***  * * *          ";
 
   static int tick(BL_ob *o, int val)
   {
@@ -33,13 +33,20 @@
   }
 
 //==============================================================================
-// input interface
+// THE sos interface function
 //==============================================================================
 
-  int sos_in(BL_ob *o, int val)
+  int sos(BL_ob *o, int val)
   {
     switch (o->op)
     {
+      case OP_INIT:
+        notify = o->data;
+        break;
+
+      case OP_LOOP:
+        break;
+
       case OP_TICK:
       {
         bl_logo(2,"sos",o,val);
@@ -47,18 +54,4 @@
       }
     }
     return val;
-  }
-
-//==============================================================================
-// mandatory init/loop functions
-//==============================================================================
-
-  void sos_init(BL_fct cb)
-  {
-    notify = cb;
-  }
-
-  void sos_loop(void)
-  {
-    // nothing to do
   }

@@ -11,7 +11,7 @@
 
   #define MIGRATION_STEP1         1    // introduce bl_core()
   #define MIGRATION_STEP2         1    // provisioning and attention
-  #define MIGRATION_STEP3         1    // state change
+  #define MIGRATION_STEP3         1    // provisioning and attention
 
 //==============================================================================
 //==============================================================================

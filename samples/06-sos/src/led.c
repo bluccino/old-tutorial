@@ -5,35 +5,28 @@
 #include "bluccino.h"
 #include "led.h"
 
-  static BL_fct notify = NULL;
+  static BL_ob oo = {CL_GOOSRV,OP_SET,0,NULL};
 
 //==============================================================================
-// input interface
+// THE led interface function
 //==============================================================================
 
-  int led_in(BL_ob *o, int value)
+  int led(BL_ob *o, int value)
   {
-    switch (BL_PAIR(o->cl,o->op))
+    switch (o->op)
     {
-      case BL_PAIR(CL_LED,OP_ONOFF):
+      case OP_INIT:
+      case OP_LOOP:
+        break;
+
+      case OP_LEVEL:
       {
         bl_logo(1,"@led",o,value);
+        for (oo.id = 1; oo.id <= 4; oo.id++)
+           bl_in(&oo,value);                  // send value to all 4 LEDs
+
         break;
       }
     }
     return 0;
-  }
-
-//==============================================================================
-// mandatory init/loop functions
-//==============================================================================
-
-  void led_init(BL_fct cb)
-  {
-    notify = cb;
-  }
-
-  void led_loop(void)
-  {
-    // nothing to do
   }

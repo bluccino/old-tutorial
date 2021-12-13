@@ -63,7 +63,7 @@
   #define MIGRATION_STEP2         0    // emit provisioned/attention messages
 #endif
 #ifndef MIGRATION_STEP3
-  #define MIGRATION_STEP3         0    // provide state change functionality
+  #define MIGRATION_STEP3         0    // set onoff state
 #endif
 
 //==============================================================================
@@ -597,7 +597,7 @@ static const struct bt_mesh_prov prov = {
  */
 
 #if MIGRATION_STEP3
-  static bool initialized = false;
+  static volatile int initialized = 0;
 #endif // MIGRATION_STEP3
 
 static void bt_ready(int err)
@@ -610,14 +610,19 @@ static void bt_ready(int err)
 	}
 
   #if MIGRATION_STEP3
-  	bl_log(2,BL_C"Bluetooth initialized"BL_0);
+    bl_log(2,BL_B"Bluetooth initialized");
   #else
-  	printk("Bluetooth initialized\n");
-  #endif // MIGRATION_STEP3
+	  printk("Bluetooth initialized\n");
+  #endif
 
 	err = bt_mesh_init(&prov, &comp);
 	if (err) {
-		printk("Initializing mesh failed (err %d)\n", err);
+    #if MIGRATION_STEP3
+      initialized = -1;
+      bl_log1(0,BL_R"Initializing mesh failed", err);
+    #else
+		  printk("Initializing mesh failed (err %d)\n", err);
+    #endif
 		return;
 	}
 
@@ -636,8 +641,7 @@ static void bt_ready(int err)
 
   #if MIGRATION_STEP3
     initialized = true;
-  	bl_log(2,"\n");
-  	bl_log(2,BL_C"Mesh initialized"BL_0);
+    bl_log(2,BL_B"Mesh initialized");
   #else
   	printk("Mesh initialized\n");
   #endif // MIGRATION_STEP3
@@ -651,18 +655,18 @@ void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flag
 }
 
 #if MIGRATION_STEP1
-  static void init(void)
+  static void core_init(void)
 #else
 void main(void)
 #endif
 {
 	int err;
 
-#if MIGRATION_STEP3
-	bl_log(2,BL_C"Initializing..."BL_0);
-#else
-	printk("Initializing...\n");
-#endif // MIGRATION_STEP3
+  #if MIGRATION_STEP3
+    bl_log(2,BL_B"Initializing ..."BL_0);
+  #else
+	  printk("Initializing...\n");
+  #endif
 
 	/* Initialize the button debouncer */
 	last_time = k_uptime_get_32();
@@ -751,30 +755,44 @@ void main(void)
 // THE core interface
 //==============================================================================
 
+  static void init(BL_ob *o, int val)
+  {
+    bl_logo(4,BL_R"core",o,val);   // log trace
+    core_init();
+
+    #if MIGRATION_STEP3
+      while (initialized == 0)
+        bl_sleep(100);
+
+      bl_sleep(500);               // sleep another 500ms
+      bl_zero();                   // reset clock
+      bl_log(0," ");
+    #endif
+  }
+
+//==============================================================================
+// THE core interface
+//==============================================================================
+
   int bl_core(BL_ob *o, int val)
 	{
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):
-        bl_logo(4,BL_B"core",o,val);        // log message
-        init();
-        while (!initialized)
-        {
-          bl_log(4,BL_B"wait for complete init"BL_0);
-          bl_sleep(100);                    // sleep a bit
-        }
+        //bl_logo(3,BL_Y"core",o,val);
+        init(o,val);
         break;
 
       case BL_PAIR(CL_SYS,OP_LOOP):
+        //bl_logo(3,BL_Y"core",o,val);
         break;
 
     #if MIGRATION_STEP3
       case BL_PAIR(CL_GOOSRV,OP_SET):
-        bl_logo(3,BL_Y"core",o,val);       // log message
+        bl_logo(3,"@core",o,val);       // log message
         goosrv_set(o,val);                 // set GOOSRV state
         break;
     #endif //MIGRATION_STEP3
-
     }
 		return 0;
 	}

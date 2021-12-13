@@ -8,7 +8,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(04-sos)
+  project(06-sos)
 
   set (LIB ../../lib/V0.1)
   set (BLU ${LIB}/bluccino)
@@ -17,7 +17,7 @@
   include_directories(${SRC} ${BLU})
 
   add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
-# add_definitions(-DINCLUDE="config.h")     # push define down to C level
+  add_definitions(-DINCLUDE="config.h")     # push define down to C level
 
 #===============================================================================
 # source files
@@ -27,6 +27,7 @@
                ${SRC}/main.c
                ${SRC}/led.c
                ${SRC}/sos.c
+               ${SRC}/ocore3.c
                ${BLU}/blapi.c
                ${BLU}/bllog.c
               )

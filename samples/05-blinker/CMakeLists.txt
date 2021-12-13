@@ -8,7 +8,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(04-meshnode)
+  project(05-blinker)
 
   set (LIB ../../lib/V0.1)
   set (BLU ${LIB}/bluccino)

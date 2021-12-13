@@ -24,8 +24,6 @@
 #ifndef __SOS_H__
 #define __SOS_H__
 
-  int  sos_in(BL_ob *o, int value);    // input interface
-  void sos_init(BL_fct call);       // init fuction
-  void sos_loop(void);                 // loop function
+  int  sos(BL_ob *o, int value);       // THE sos interface function
 
 #endif // __SOS_H__
