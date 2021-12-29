@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
   cmake_minimum_required(VERSION 3.20.0)
-  set(QEMU_EXTRA_FLAGS -s)
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+# set(QEMU_EXTRA_FLAGS -s)
 
 #===============================================================================
 # project definition and path setup
@@ -10,7 +10,7 @@
 
   project(01-hello)
 
-  set (LIB ../../lib/V0.1)
+  set (LIB ../../lib/V0.2)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 

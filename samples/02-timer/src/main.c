@@ -16,8 +16,9 @@
       case OP_TICK:
         bl_logo(1,BL_G"when",o,val);
         return 0;
+      default:
+        return -1;
     }
-    return 0;
   }
 
 //==============================================================================
@@ -39,8 +40,9 @@
 
   void main(void)
   {
-    bl_init(NULL,NULL,2);              // Bluccino init (no callback passing)
-    bl_init(timer,when,0);             // TIMER init (pass 'when' callback)
+    bl_verbose(2);                     // set verbose mode
+    bl_init(NULL,NULL);                // Bluccino init (no callback passing)
+    bl_init(timer,when);               // TIMER init (pass 'when' callback)
     init();                            // app init
 
     for(;;)

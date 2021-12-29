@@ -23,7 +23,7 @@
       case OP_INIT:
         bl_logo(1,BL_B"timer",o,val);
         notify = o->data;
-        break;
+        return 0;
 
       case OP_LOOP:
         if (bl_ms() >= time)
@@ -32,7 +32,9 @@
           bl_out(&tim,time,notify);        // emit tick message
           time += 1000;                    // next time = current time + 1000 ms
         }
-        break;
+        return 0;
+
+      default:
+        return 0;
     }
-    return 0;
   }

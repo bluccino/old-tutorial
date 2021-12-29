@@ -1,0 +1,16 @@
+##!/bin/bash
+# .edit: launch editor
+
+   if [ "$*" == "-?" ]; then
+      echo 'usage: ./.edit <args>   # launch atom with common project dirs'
+      exit 0
+   fi
+
+   GITROOT=`gitroot`
+   ENVIRONMENT=$GIT/Environment
+   BLU=$GITROOT
+
+   cd $GITROOT
+   atom $BLU/docs $BLU/samples $BLU/lib/V0.2
+
+# eof

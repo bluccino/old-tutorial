@@ -51,7 +51,7 @@
      cnt++;
      bl_logo(3,"loop",&oo,cnt);        // live signal
      sos(&oo,cnt);
-     bl_sleep(500);                   // sleep 1000 ms
+     bl_sleep(500);                    // sleep 1000 ms
   }
 
 //==============================================================================
