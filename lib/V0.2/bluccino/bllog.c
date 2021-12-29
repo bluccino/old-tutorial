@@ -33,6 +33,7 @@
 //==============================================================================
 // RTT log driver
 //==============================================================================
+#ifdef __NRF_SDK__
 
      // For some reason, this function, while not static, is not included
      // in the RTT header files
@@ -53,7 +54,6 @@
     BL_VPRINTF(0, format, &arguments);
   }
 
-#ifndef __ZEPHYR__
   void bl_prt(const char * format, ...)
   {
     va_list arguments;  // lint -save -esym(530,args) sym args not initialized
@@ -61,7 +61,8 @@
     bl_vprintf(format, arguments);
     va_end(arguments);  // lint -restore
   }
-#endif
+
+#endif // __NRF_SDK__
 //==============================================================================
 // set log color
 //==============================================================================
