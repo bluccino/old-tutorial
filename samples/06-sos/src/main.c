@@ -2,17 +2,24 @@
 // main.c for 04-sos demo (hello Bluccino)
 //==============================================================================
 //
-//                    [:TICK]           [:ONOFF]
-//                       |       +---------------------+
-//                       v       |                     v
-//                    +-------------+           +-------------+
-//                    |             |           |             |
-//                    |     SOS     |           |     LED     |
-//                    |             |           |             |
-//                    +-------------+           +-------------+
+// main taks:
+// - 1) setup a main engine with 500 ms period tick generatiom
+// - 2) main engine to call Bluccino and app initializers
+// - 3) main engine to call Bluccino ticker and app tick() function
+// - 4) app init() to init SOS and LED module
+// - 5) app init() to setup message forwarding from SOS module to LED module
+// - 6) app tick() to tick SOS module
 //
-//  Message posting:
-//    - [LED:ONOFF]    app switches LED on or off
+//                    +-------------+         +-------------+
+//             INIT -->             |  LEVEL  |             |
+//                    |     SOS     |--------->     LED     |
+//    (500 ms) TICK -->             |         |             |
+//                    +-------------+         +-------------+
+// LEVEL
+//  ^
+//  |== +== +==   +======     +======     +======   +== +== +==        +==
+//  | | | | | |   |     |     |     |     |     |   | | | | | |        | |
+// -+-+==-+==-+====-----+======-----+======-----+====-+==-+==-+===...===-+=...>
 //
 //==============================================================================
 
@@ -21,55 +28,45 @@
 #include "sos.h"
 
 //==============================================================================
-// when callback
+// app tick functions
 //==============================================================================
 
-  int when(BL_ob *o, int val)
+  static void tick(BL_ob *o, int val)  // tick all systems
   {
-    switch (o->op)
-    {
-      case OP_LEVEL:
-        bl_logo(1,"@when",o,val);
-        return led(o,val);
-    }
-    return 0;
+     bl_logo(1,"main",o,val);          // log to see we are alife
+     sos_tick(val);
   }
 
 //==============================================================================
-// mandatory init/loop functions
+// app init
+// - 1) init all modules of app (note: Bluccino init is done in main engine!)
+// - 2) setup connections: all outputs of SOS module have to go to LED module
 //==============================================================================
 
-  static BL_ob oo = {CL_TIMER,OP_TICK,0,NULL};
-  static int cnt = 0;                  // loop counter
-
-  static void init()
+  static void init(void)               // init all modules
   {
-  }
-
-  static void loop()                   // app loop
-  {
-     cnt++;
-     bl_logo(3,"loop",&oo,cnt);        // live signal
-     sos(&oo,cnt);
-     bl_sleep(500);                    // sleep 1000 ms
+    led_init(1);                       // init LED module, act on LED @1
+    sos_init(led);                     // init SOS module, output to LED module
   }
 
 //==============================================================================
-// Arduino style engine
+// main engine
+// - calling Bluccino init and app init() function
+// - periodic (500ms) calls of app tick() function
 //==============================================================================
 
   void main(void)
   {
-    bl_init(NULL,when,2);              // Bluccino init
-    bl_init(led,when,0);               // init LED module
-    bl_init(sos,when,0);               // init SOS module
+    BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
+    static int count = 0;              // tick counter
+
+    bl_verbose(2);                     // set verbose level 2
+    bl_init(NULL,NULL);                // Bluccino init
     init();                            // app init
 
-    for(;;)
+    for(;;)                            // loop generating (approx) 500ms ticks
     {
-      bl_loop(NULL);                   // run Bluccino loop
-      bl_loop(led);                    // run LED loop
-      bl_loop(sos);                    // run SOS loop
-      loop();                          // run app loop
+      tick(&oo,count++);               // app tick
+      bl_sleep(500);                   // sleep 500 ms
     }
   }

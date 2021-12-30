@@ -5,28 +5,26 @@
 #include "bluccino.h"
 #include "led.h"
 
-  static BL_ob oo = {CL_GOOSRV,OP_SET,0,NULL};
+  static BL_ob oo = {CL_LED,OP_SET,0,NULL};
 
 //==============================================================================
 // THE led interface function
 //==============================================================================
 
-  int led(BL_ob *o, int value)
+  int led(BL_ob *o, int val)
   {
     switch (o->op)
     {
       case OP_INIT:
-      case OP_LOOP:
-        break;
+        oo.id = o->id + 1;                  // store (id+1) in message obj's id
+        return 0;
 
       case OP_LEVEL:
-      {
-        bl_logo(1,"@led",o,value);
-        for (oo.id = 1; oo.id <= 4; oo.id++)
-           bl_in(&oo,value);                  // send value to all 4 LEDs
+        bl_logo(1,"@led",o,val);
+        bl_down(&oo,val);                   // send level (down) to LED driver
+        return 0;
 
-        break;
-      }
+      default:
+        return -1;                          // bad command
     }
-    return 0;
   }

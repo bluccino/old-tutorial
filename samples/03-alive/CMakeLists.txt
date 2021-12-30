@@ -17,7 +17,8 @@
   include_directories(${SRC} ${BLU})
 
 # add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
-  add_definitions(-DINCLUDE="config.h")     # push define down to C level
+  add_definitions(-DBL_CONFIG="config.h")     # push define down to C level
+# add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
 
 #===============================================================================
 # source files

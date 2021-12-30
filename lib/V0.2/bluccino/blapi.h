@@ -22,6 +22,7 @@
 // us/ms clock
 //==============================================================================
 
+  BL_us bl_zero(void);                 // reset clock
   BL_us bl_us(void);                   // get current clock time in us
   BL_ms bl_ms(void);                   // get current clock time in ms
 
@@ -46,7 +47,8 @@
 
   int bl_up(BL_ob *o, int value);      // gear input function
   int bl_down(BL_ob *o, int value);    // gear output function
-  int bl_gear(BL_ob *o, int val);      // THE gear interface
+  int bl_gear(BL_ob *o, int val);      // gear module interface
+  int bl_core(BL_ob *o, int val);      // core module interface
 
 //==============================================================================
 // run system operation on a module (syntactic sugar: id = 0, val = 0)

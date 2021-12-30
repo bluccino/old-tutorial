@@ -771,7 +771,7 @@ void main(void)
   }
 
 //==============================================================================
-// THE core interface
+// public module API
 //==============================================================================
 
   int bl_core(BL_ob *o, int val)
@@ -779,15 +779,16 @@ void main(void)
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):
-        //bl_logo(3,BL_Y"core",o,val);
+        bl_logo(3,BL_Y"core",o,val);
         init(o,val);
         break;
 
-      case BL_PAIR(CL_SYS,OP_LOOP):
+      case BL_PAIR(CL_SYS,OP_TICK):
         //bl_logo(3,BL_Y"core",o,val);
         break;
 
     #if MIGRATION_STEP3
+      case BL_PAIR(CL_LED,OP_SET):
       case BL_PAIR(CL_GOOSRV,OP_SET):
         bl_logo(3,"@core",o,val);       // log message
         goosrv_set(o,val);                 // set GOOSRV state

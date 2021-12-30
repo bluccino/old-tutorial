@@ -105,18 +105,6 @@
   }
 
 //==============================================================================
-// message processing by either driver or app callback
-//==============================================================================
-
-  int bl_out(BL_ob *o, int value, BL_fct call)
-  {
-    if (call)                          // is an app callback provided?
-      return call(o,value);            // forward event message to app
-
-    return 0;
-  }
-
-//==============================================================================
 // timing & sleep
 //==============================================================================
 
@@ -149,7 +137,19 @@
   }
 
 //==============================================================================
-// event message emission entry point
+// output a message from Bluccino API or in general
+//==============================================================================
+
+  int bl_out(BL_ob *o, int value, BL_fct call)
+  {
+    if (call)                          // is an app callback provided?
+      return call(o,value);            // forward event message to app
+
+    return 0;
+  }
+
+//==============================================================================
+// input a message to Bluccino API
 //==============================================================================
 
   int bl_in(BL_ob *o, int value)
@@ -182,6 +182,34 @@
 
     LOGO(level,"@api",o,value);
     return bl_out(o,value,notify);          // forward message to a
+  }
+
+//==============================================================================
+// dummy interface for core module public interface (default/__weak)
+//==============================================================================
+
+  __weak int bl_core(BL_ob *o, int val)
+  {
+    return -1;                              // not supported by default
+  }
+
+//==============================================================================
+// message downward posting to lower level / driver layer (default/__weak)
+//==============================================================================
+
+  __weak int bl_down(BL_ob *o, int val)
+  {
+bl_logo(0,BL_M,o,val);
+    return bl_core(o,val);
+  }
+
+//==============================================================================
+// message upward posting to API layer (default/__weak)
+//==============================================================================
+
+  __weak int bl_up(BL_ob *o, int val)
+  {
+    return bl_in(o,val);
   }
 
 //==============================================================================
@@ -234,7 +262,8 @@
       return bl_sys(OP_INIT,module,cb);     // init module
 
     notify = cb;
-    //bl_sys(OP_INIT,bl_core,when_core);    // init core
+//  bl_sys(OP_INIT,bl_core,when_core);      // init core
+    bl_sys(OP_INIT,bl_core,NULL);           // init core
     return 0;
   }
 
