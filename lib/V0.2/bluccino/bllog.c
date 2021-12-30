@@ -24,11 +24,11 @@
 #include "bluccino.h"
 
 #ifndef CFG_PRETTY_LOGGING
-  #define CFG_PRETTY_LOGGING    0      // pretty text for class tag & opcode
+  #define CFG_PRETTY_LOGGING    1      // pretty text for class tag & opcode
 #endif
 
   static BL_txt color = "";            // text color for time header
-  static int debug = 0;                // debug level
+  static int debug = 1;                // debug level
 
 //==============================================================================
 // RTT log driver

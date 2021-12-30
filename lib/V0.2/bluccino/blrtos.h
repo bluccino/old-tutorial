@@ -9,6 +9,12 @@
 #ifndef __BLRTOS_H__
 #define __BLRTOS_H__
 
+  #ifdef ZEPHYR
+    #ifndef __ZEPHYR__
+      #define __ZEPHYR__
+    #endif
+  #endif
+
   #ifndef __ZEPHYR__
     #define __NRF_SDK__ 1
   #endif

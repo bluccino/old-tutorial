@@ -24,30 +24,6 @@
 //==============================================================================
 
   #include "bluccino.h"
-  #include "led.h"
-  #include "sos.h"
-
-//==============================================================================
-// app tick functions
-//==============================================================================
-
-  static void tick(BL_ob *o, int val)  // tick all systems
-  {
-     bl_logo(1,"main",o,val);          // log to see we are alife
-     sos_tick(val);
-  }
-
-//==============================================================================
-// app init
-// - 1) init all modules of app (note: Bluccino init is done in main engine!)
-// - 2) setup connections: all outputs of SOS module have to go to LED module
-//==============================================================================
-
-  static void init(void)               // init all modules
-  {
-    led_init(1);                       // init LED module, act on LED @1
-    sos_init(led);                     // init SOS module, output to LED module
-  }
 
 //==============================================================================
 // main engine
@@ -57,16 +33,5 @@
 
   void main(void)
   {
-    BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
-    static int count = 0;              // tick counter
-
-    bl_verbose(2);                     // set verbose level 2
-    bl_init(NULL,NULL);                // Bluccino init
-    init();                            // app init
-
-    for(;;)                            // loop generating (approx) 500ms ticks
-    {
-      tick(&oo,count++);               // app tick
-      bl_sleep(500);                   // sleep 500 ms
-    }
+    bl_prt("SOS app ...")
   }

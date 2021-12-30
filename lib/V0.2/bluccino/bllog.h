@@ -39,7 +39,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_API
-    #define CFG_LOG_API    0           // no API logging by default
+    #define CFG_LOG_API    1           // no API logging by default
 #endif
 
 #if (CFG_LOG_API)
@@ -55,7 +55,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_CORE
-    #define CFG_LOG_CORE    0           // no CORE logging by default
+    #define CFG_LOG_CORE    1           // no CORE logging by default
 #endif
 
 #if (CFG_LOG_CORE)
@@ -71,7 +71,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_APP
-    #define CFG_LOG_APP    0           // no APP logging by default
+    #define CFG_LOG_APP    1           // no APP logging by default
 #endif
 
 #if (CFG_LOG_APP)

@@ -23,9 +23,9 @@
 //
 //==============================================================================
 
-  #include "bluccino.h"
-  #include "led.h"
-  #include "sos.h"
+#include "bluccino.h"
+#include "led.h"
+#include "sos.h"
 
 //==============================================================================
 // app tick functions

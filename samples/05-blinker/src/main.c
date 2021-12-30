@@ -2,12 +2,12 @@
 // main.c for 05-blinker demo
 //==============================================================================
 
-#include "bluccino.h"
+  #include "bluccino.h"
 
-    BL_ob o1 = {CL_GOOSRV,OP_SET,1,NULL};
-    BL_ob o2 = {CL_GOOSRV,OP_SET,2,NULL};
-    BL_ob o3 = {CL_GOOSRV,OP_SET,3,NULL};
-    BL_ob o4 = {CL_GOOSRV,OP_SET,4,NULL};
+  BL_ob o1 = {CL_GOOSRV,OP_SET,1,NULL};
+  BL_ob o2 = {CL_GOOSRV,OP_SET,2,NULL};
+  BL_ob o3 = {CL_GOOSRV,OP_SET,3,NULL};
+  BL_ob o4 = {CL_GOOSRV,OP_SET,4,NULL};
 
 //==============================================================================
 // when a message is emitted
