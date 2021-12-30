@@ -38,6 +38,8 @@
   #include "log.h"
   #include "timer.h"
 
+  #define __weak             __WEAK
+
   #define bl_prt             bl_printf
   #define printk(...)        bl_printf(__VA_ARGS__)
 

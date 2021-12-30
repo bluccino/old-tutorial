@@ -16,13 +16,13 @@
     #include "bltype.h"
 
     #ifdef BL_CONFIG
-      #include BL_CONFIG
+      #include "config.h"
     #endif
 
     #include "blmsg.h"
 
     #ifdef BL_LOGGING
-      #include BL_LOGGING
+      #include "logging.h"
     #endif
 
     #include "blapi.h"

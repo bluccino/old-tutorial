@@ -1,1 +1,0 @@
-osource "/opt/nordic/ncs/v1.6.1/zephyr/soc/$(ARCH)/*/Kconfig.soc"

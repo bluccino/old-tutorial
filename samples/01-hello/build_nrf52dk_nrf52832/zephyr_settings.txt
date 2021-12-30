@@ -1,3 +1,0 @@
-"BOARD_ROOT":"/opt/nordic/ncs/v1.6.1/nrf"
-"DTS_ROOT":"/opt/nordic/ncs/v1.6.1/nrf"
-"MODULE_EXT_ROOT":"/opt/nordic/ncs/v1.6.1/nrf"
