@@ -9,18 +9,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-//#include "log.h"
-//#include "timer.h"
-
-/*
-#ifdef BL_CONFIG
-  #include "config.h"
-#endif
-
-#include "blapi.h"
-#include "bllog.h"
-*/
-
 #include "bluccino.h"
 
 #ifndef CFG_PRETTY_LOGGING

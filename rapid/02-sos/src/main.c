@@ -38,49 +38,47 @@
 //
 //==============================================================================
 
-#include "bluccino.h"
-#include "led.h"
-#include "sos.h"
+  #include "bluccino.h"
 
 //==============================================================================
-// app tick functions
+// LED and SOS dummy functions
 //==============================================================================
 
-  static void tick(BL_ob *o, int val)  // tick all systems
+  int led(BL_ob *o, int val)           // SOS dummy interface
   {
-     bl_logo(1,"main",o,val);          // log to see we are alife
-     sos_tick(val);
+    bl_logo(1,BL_G "led",o,val);
+    return 0;
+  }
+
+  int sos(BL_ob *o, int val)           // SOS dummy interface
+  {
+    bl_logo(1,BL_M "sos",o,val);
+    BL_ob oo = {CL_LED,OP_LEVEL,0,NULL};
+    return led(&oo,val%2);             // post binary sequence to LED module
   }
 
 //==============================================================================
-// app init
-// - 1) init all modules of app (note: Bluccino init is done in main engine!)
-// - 2) setup connections: all outputs of SOS module have to go to LED module
+// tick function (sends tick messages to all modules which have to be ticked)
 //==============================================================================
 
-  static void init(void)               // init all modules
+  static int tick(BL_ob *o, int val)   // system ticker
   {
-    led_init();                        // init LED module
-    sos_init(1,led);                   // init SOS module, output to LED @1
+    BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
+    return sos(&oo,val);               // ticking SOS module
   }
 
 //==============================================================================
 // main engine
-// - calling Bluccino init and app init() function
 // - periodic (500ms) calls of app tick() function
 //==============================================================================
 
   void main(void)
   {
-    BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
+    init();
 
-    bl_verbose(2);                     // set verbose level 2
-    bl_init(NULL,NULL);                // Bluccino init
-    init();                            // app init
-
-    for(int count=0;;count++)          // loop generating (approx) 500ms ticks
+    for (int cnt = 0; ; cnt++)
     {
-      tick(&oo,count++);               // app tick
-      bl_sleep(500);                   // sleep 500 ms
+      tick(cnt);                   // send seed ticks to system ticker
+      bl_sleep(500);                   // sleep until next tick due
     }
   }

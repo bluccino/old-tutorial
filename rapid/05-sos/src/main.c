@@ -60,8 +60,8 @@
 
   static void init(void)               // init all modules
   {
-    led_init();                        // init LED module
-    sos_init(1,led);                   // init SOS module, output to LED @1
+    led_init(1);                       // init LED module, act on LED @1
+    sos_init(led);                     // init SOS module, output to LED module
   }
 
 //==============================================================================

@@ -18,7 +18,7 @@
 // -+-+==-+==-+====-----+======-----+======-----+====-+==-+==-+===...===-+=...>
 //
 //  Message input:
-//    - [SOS:INIT @id <cb>]  init module, provide callback
+//    - [SOS:INIT <cb>]      init module, provide callback
 //    - [SOS:TICK count]     ticking the module (defines pace of output pattern)
 //
 //  Message output:
@@ -36,13 +36,13 @@
   int  sos(BL_ob *o, int value);       // public module interface
 
 //==============================================================================
-// syntactic sugar: SOS module init & provide callback [SOS:INIT @id <cb>]
-// usage: sos_init(id,cb)
+// syntactic sugar: SOS module init & provide callback [SOS:INIT <cb>]
+// usage: tst_led_init()
 //==============================================================================
 
-  inline static int sos_init(int id,BL_fct cb)
+  inline static int sos_init(BL_fct cb)
   {
-    BL_ob oo = {CL_SOS,OP_INIT, id, cb};
+    BL_ob oo = {CL_SOS,OP_INIT, 0, cb};
     return sos(&oo,0);                 // init SOS module, provide callback
   }
 
@@ -54,7 +54,7 @@
   inline static int sos_tick(int count)
   {
     BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
-    return sos(&oo,count);             // [SOS:TICK count]
+    return sos(&oo,count);             // [SOS:TICK val]
   }
 
 #endif // __SOS_H__

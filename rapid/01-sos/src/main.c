@@ -41,12 +41,56 @@
   #include "bluccino.h"
 
 //==============================================================================
+// LED and SOS dummy functions
+//==============================================================================
+
+  int led(BL_ob *o, int val)           // SOS dummy interface
+  {
+    bl_logo(1,BL_G "led",o,val);
+    return 0;
+  }
+
+  int sos(BL_ob *o, int val)           // SOS dummy interface
+  {
+    bl_logo(1,BL_M "sos",o,val);
+    led(o,val%2);
+    return 0;
+  }
+
+//==============================================================================
+// tick function (sends tick messages to all modules which have to be ticked)
+//==============================================================================
+
+  static int tick(BL_ob *o, int val)   // system ticker
+  {
+    sos(o,val);                        // ticking SOS module
+    return 0;
+  }
+
+//==============================================================================
+// app init
+// - 1) init all modules of app (note: Bluccino init is done in main engine!)
+// - 2) setup connections: all outputs of SOS module have to go to LED module
+//==============================================================================
+
+  static void init(void)               // init all modules
+  {
+    bl_init(led,NULL);
+    bl_init(sos,led);
+  }
+
+//==============================================================================
 // main engine
-// - calling Bluccino init and app init() function
 // - periodic (500ms) calls of app tick() function
 //==============================================================================
 
   void main(void)
   {
-    bl_prt("SOS rapid prototyping\n");
+    init();                            // app init
+
+    for(int count=0;;count++)          // loop generating (approx) 500ms ticks
+    {
+      bl_tick(tick,count);             // app tick
+      bl_sleep(500);                   // sleep 500 ms
+    }
   }

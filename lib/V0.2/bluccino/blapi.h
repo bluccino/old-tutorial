@@ -71,16 +71,16 @@
 // ticking/tocking a module (syntactic sugar: id = 0, val = 0)
 //==============================================================================
 
-  static inline int bl_tick(BL_fct module)  // ticking a module
+  static inline int bl_tick(BL_fct module, int val)  // ticking a module
   {
     BL_ob oo = {CL_SYS,OP_TICK,0,NULL};
-    return module(&oo,0);
+    return module(&oo,val);
   }
 
-  static inline int bl_tock(BL_fct module)  // tocking a module
+  static inline int bl_tock(BL_fct module, int val)  // tocking a module
   {
     BL_ob oo = {CL_SYS,OP_TOCK,0,NULL};
-    return module(&oo,0);
+    return module(&oo,val);
   }
 
 //==============================================================================

@@ -53,4 +53,5 @@ dkms.conf
 
 # iHux
 build
+build_*
 output
