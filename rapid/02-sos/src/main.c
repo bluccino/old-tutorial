@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c (SOS app - rapid prototyping demo)
+// main.c for 02-sos (SOS - rapid prototyping demo)
 //==============================================================================
 //
 // SOS app controls the blinking pattern of one selected LED of a multi LED
@@ -39,32 +39,30 @@
 //==============================================================================
 
   #include "bluccino.h"
-
-//==============================================================================
-// LED and SOS dummy functions
-//==============================================================================
-
-  int led(BL_ob *o, int val)           // SOS dummy interface
-  {
-    bl_logo(1,BL_G "led",o,val);
-    return 0;
-  }
-
-  int sos(BL_ob *o, int val)           // SOS dummy interface
-  {
-    bl_logo(1,BL_M "sos",o,val);
-    BL_ob oo = {CL_LED,OP_LEVEL,0,NULL};
-    return led(&oo,val%2);             // post binary sequence to LED module
-  }
+  #include "sos.h"
+  #include "led.h"
 
 //==============================================================================
 // tick function (sends tick messages to all modules which have to be ticked)
 //==============================================================================
 
-  static int tick(BL_ob *o, int val)   // system ticker
+  static int tick(BL_ob *o, int val)   // system ticker: ticks all subsystems
   {
-    BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
-    return sos(&oo,val);               // ticking SOS module
+    bl_logo(1,"main",o,val);           // show tick logs at verbose level 1
+    sos(o,val);                        // SOS module needs to be ticked
+    return 0;
+  }
+
+//==============================================================================
+// app init
+// - 1) init all modules of app (note: Bluccino init is done in main engine!)
+// - 2) setup connections: all outputs of SOS module have to go to LED module
+//==============================================================================
+
+  static void init(void)               // init all modules
+  {
+    bl_init(led,NULL);                 // TODO: provide also LED @id
+    bl_init(sos,led);                  // init SOS module, output to LED module
   }
 
 //==============================================================================
@@ -74,11 +72,14 @@
 
   void main(void)
   {
-    init();
+    bl_hello(3,"02-sos demo");         // set verbose level 3 & print hello msg
 
-    for (int cnt = 0; ; cnt++)
+    bl_init(bluccino,NULL);            // Bluccino init
+    init();                            // app init
+
+    for(int count=0;;count++)          // loop generating (approx) 500ms ticks
     {
-      tick(cnt);                   // send seed ticks to system ticker
-      bl_sleep(500);                   // sleep until next tick due
+      bl_tick(tick,0,count);           // app tick
+      bl_sleep(500);                   // sleep 500 ms
     }
   }

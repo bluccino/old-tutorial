@@ -20,7 +20,7 @@
         return 0;
 
       case OP_LEVEL:
-        bl_logo(1,"@led",o,val);
+        bl_logo(2,BL_G "led",o,val);
         bl_down(&oo,val);                   // send level (down) to LED driver
         return 0;
 

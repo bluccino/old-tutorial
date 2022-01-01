@@ -56,6 +56,18 @@
 
 #include "bluccino.h"
 
+//==============================================================================
+// CORE level generic logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"core:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+
+//==============================================================================
+// migration defaults
+//==============================================================================
+
 #ifndef MIGRATION_STEP1
   #define MIGRATION_STEP1         0    // introduce bl_core()
 #endif
@@ -328,8 +340,14 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	int err;
 
 	onoff_state->current = net_buf_simple_pull_u8(buf);
-	printk("addr 0x%02x state 0x%02x\n",
+  #if MIGRATION_STEP3
+    if (bl_dbg(4))
+	    bl_prt(BL_Y "addr 0x%02x state 0x%02x",
 	       bt_mesh_model_elem(model)->addr, onoff_state->current);
+  #else
+	  printk("addr 0x%02x state 0x%02x\n",
+	       bt_mesh_model_elem(model)->addr, onoff_state->current);
+  #endif
 
 	gpio_pin_set(onoff_state->led_device, onoff_state->led_gpio_pin,
 		     onoff_state->current);
@@ -610,7 +628,7 @@ static void bt_ready(int err)
 	}
 
   #if MIGRATION_STEP3
-    bl_log(2,BL_B"Bluetooth initialized");
+    LOG(4,BL_B"Bluetooth initialized");
   #else
 	  printk("Bluetooth initialized\n");
   #endif
@@ -619,7 +637,7 @@ static void bt_ready(int err)
 	if (err) {
     #if MIGRATION_STEP3
       initialized = -1;
-      bl_log1(0,BL_R"Initializing mesh failed", err);
+      LOG(0,BL_R"initializing mesh failed (err: %d)", err);
     #else
 		  printk("Initializing mesh failed (err %d)\n", err);
     #endif
@@ -641,7 +659,7 @@ static void bt_ready(int err)
 
   #if MIGRATION_STEP3
     initialized = true;
-    bl_log(2,BL_B"Mesh initialized");
+    LOG(3,BL_B"mesh initialized");
   #else
   	printk("Mesh initialized\n");
   #endif // MIGRATION_STEP3
@@ -663,7 +681,7 @@ void main(void)
 	int err;
 
   #if MIGRATION_STEP3
-    bl_log(2,BL_B"Initializing ..."BL_0);
+    LOG(3,BL_B"initializing ...");
   #else
 	  printk("Initializing...\n");
   #endif
@@ -757,16 +775,20 @@ void main(void)
 
   static void init(BL_ob *o, int val)
   {
-    bl_logo(4,BL_R"core",o,val);   // log trace
+    LOG(2,BL_B"init core (ocore3) ...");
+    LOGO(4,BL_R,o,val);                // see what comes in ...
+
     core_init();
 
     #if MIGRATION_STEP3
       while (initialized == 0)
         bl_sleep(100);
 
-      bl_sleep(500);               // sleep another 500ms
-      bl_zero();                   // reset clock
-      bl_log(0," ");
+      bl_sleep(1000);                   // sleep another 500ms
+      bl_zero();                       // reset clock
+      LOG(2,BL_B"core initialized");
+
+      LOG(0," ");
     #endif
   }
 
@@ -779,22 +801,24 @@ void main(void)
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):
-        bl_logo(3,BL_Y"core",o,val);
+//        LOGO(3,BL_Y"core",o,val);
         init(o,val);
-        break;
+        return 0;
 
       case BL_PAIR(CL_SYS,OP_TICK):
-        //bl_logo(3,BL_Y"core",o,val);
-        break;
+        return 0;
 
     #if MIGRATION_STEP3
       case BL_PAIR(CL_LED,OP_SET):
       case BL_PAIR(CL_GOOSRV,OP_SET):
         bl_logo(3,"@core",o,val);       // log message
         goosrv_set(o,val);                 // set GOOSRV state
-        break;
+        return 0;
     #endif //MIGRATION_STEP3
+
+      default:
+  		  return 0;
     }
-		return 0;
 	}
+
 #endif // MIGRATION_STEP1

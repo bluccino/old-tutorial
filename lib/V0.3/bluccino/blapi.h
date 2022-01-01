@@ -51,11 +51,25 @@
   int bl_core(BL_ob *o, int val);      // core module interface
 
 //==============================================================================
-// run system operation on a module (syntactic sugar: id = 0, val = 0)
+// post general message [CL:OP @id,<data>,val] to module
+// - usage: bl_msg(module,cl,op,id,data,val)
 //==============================================================================
 
-  int bl_sys(int op, BL_fct module, BL_fct cb);
-///int bl_clop(int cl, int op, BL_fct module, int id, int val);
+  int bl_msg(BL_fct module, BL_cl cl, BL_op op, int id, void* data, int val);
+
+//==============================================================================
+// post message (with main parameters to POST interface ofa given module)
+// - usage: bl_post(module,opcode,id,val)  // class=CL_SYS, data=NULL
+//==============================================================================
+
+  int bl_post(BL_fct module, BL_op op, int id, int val);
+
+//==============================================================================
+// subscribe to a module's message output
+// - usage: bl_sub(module,cb)          // class=CL_SYS, id=0, val=0
+//==============================================================================
+
+  int bl_when(BL_fct module, BL_fct cb);
 
 //==============================================================================
 // invoke a test message (sends to upward gear, where it needs to be forwarded)
@@ -69,26 +83,36 @@
 
 //==============================================================================
 // ticking/tocking a module (syntactic sugar: id = 0, val = 0)
+// - usage: bl_tick(module,id,cnt)     // post [SYS:TICK @id,cnt] to a module
+// -        bl_tock(module,id,cnt)     // post [SYS:TOCK @id,cnt] to a module
 //==============================================================================
 
-  static inline int bl_tick(BL_fct module)  // ticking a module
+  int bl_tick(BL_fct module, int id, int cnt);  // ticking a module
+  int bl_tock(BL_fct module, int id, int cnt);  // tocking a module
+
+//==============================================================================
+// bl_hello (syntactic sugar to set verbose level and print a hello message)
+// - usage: bl_hello(verbose,msg)
+//==============================================================================
+
+  static inline void bl_hello(int verbose, BL_txt msg)
   {
-    BL_ob oo = {CL_SYS,OP_TICK,0,NULL};
-    return module(&oo,0);
+    bl_verbose(verbose);               // set verbose level
+    if (bl_dbg(0))                     // always - start print with time stamp
+      bl_prt(BL_R "%s\n" BL_0,msg);    // print hello message in red
   }
 
-  static inline int bl_tock(BL_fct module)  // tocking a module
-  {
-    BL_ob oo = {CL_SYS,OP_TOCK,0,NULL};
-    return module(&oo,0);
-  }
-
 //==============================================================================
-// obligatory init and loop functions
+// bl_init (syntactic sugar to initialize a given module)
+// - usage: bl_init(module,cb)  // post [SYS:INIT <cb>] to a module
 //==============================================================================
 
-  int bl_loop(BL_fct module);
   int bl_init(BL_fct module,BL_fct cb);
-  int bl_use(BL_fct module, BL_txt msg);
+
+//==============================================================================
+// public module interface: supporting [SYS:INIT|WHEN|TICK|TOCK]
+//==============================================================================
+
+  int bluccino(BL_ob *o, int val);
 
 #endif // __BLAPI_H__

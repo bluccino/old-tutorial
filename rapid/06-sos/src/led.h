@@ -13,7 +13,7 @@
 //                               +-------------+
 //
 //  Input Messages:
-//    - [LED:INIT]          init LED module
+//    - [LED:INIT @id <cb>] init id, assign LED channel and subscriber callback
 //    - [LED:LEVEL level]   binary input to switch LED on or off
 //
 //==============================================================================
@@ -28,13 +28,13 @@
   int  led(BL_ob *o, int value);       // public module interface
 
 //==============================================================================
-// syntactic sugar: LED module init, provide @id & callback [LED:INIT]
-// usage: led_init()
+// syntactic sugar: LED module init, provide @id & callback [LED:INIT @id <cb>]
+// usage: led_init(id,cb)
 //==============================================================================
 
-  inline static int led_init(void)
+  inline static int led_init(int id)
   {
-    BL_ob oo = {CL_LED,OP_INIT, 0, NULL};
+    BL_ob oo = {CL_LED,OP_INIT, id, NULL};
     return led(&oo,0);                 // init LED module, provide id & callback
   }
 

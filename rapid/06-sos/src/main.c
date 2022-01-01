@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c (SOS app - rapid prototyping demo)
+// main.c for 06-sos (SOS - rapid prototyping demo)
 //==============================================================================
 //
 // SOS app controls the blinking pattern of one selected LED of a multi LED
@@ -38,18 +38,18 @@
 //
 //==============================================================================
 
-#include "bluccino.h"
-#include "led.h"
-#include "sos.h"
+  #include "bluccino.h"
+  #include "sos.h"
+  #include "led.h"
 
 //==============================================================================
-// app tick functions
+// tick function (sends tick messages to all modules which have to be ticked)
 //==============================================================================
 
-  static void tick(BL_ob *o, int val)  // tick all systems
+  static int tick(BL_ob *o, int val)   // system ticker: ticks all subsystems
   {
      bl_logo(1,"main",o,val);          // log to see we are alife
-     sos_tick(val);
+     return sos_tick(val);             // SOS module needs ticking
   }
 
 //==============================================================================
@@ -60,8 +60,8 @@
 
   static void init(void)               // init all modules
   {
-    led_init();                        // init LED module
-    sos_init(1,led);                   // init SOS module, output to LED @1
+    led_init(1);                       // init LED module, act on LED @1
+    sos_init(led);                     // init SOS module, output to LED module
   }
 
 //==============================================================================
@@ -72,15 +72,14 @@
 
   void main(void)
   {
-    BL_ob oo = {CL_SOS,OP_TICK,0,NULL};
+    bl_hello(3,"06-sos demo");         // set verbose level 3 & print hello msg
 
-    bl_verbose(2);                     // set verbose level 2
-    bl_init(NULL,NULL);                // Bluccino init
+    bl_init(bluccino,NULL);            // Bluccino init
     init();                            // app init
 
     for(int count=0;;count++)          // loop generating (approx) 500ms ticks
     {
-      tick(&oo,count++);               // app tick
+      bl_tick(tick,0,count);           // app tick
       bl_sleep(500);                   // sleep 500 ms
     }
   }

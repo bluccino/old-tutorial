@@ -10,7 +10,7 @@
 
   project(06-sos)
 
-  set (LIB ../../lib/V0.2)
+  set (LIB ../../lib/V0.3)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 

@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c (SOS app - rapid prototyping demo)
+// main.c for 01-sos (SOS - rapid prototyping demo)
 //==============================================================================
 //
 // SOS app controls the blinking pattern of one selected LED of a multi LED
@@ -46,14 +46,14 @@
 
   int led(BL_ob *o, int val)           // SOS dummy interface
   {
-    bl_logo(1,BL_G "led",o,val);
+    bl_logo(2,BL_G "led",o,val);
     return 0;
   }
 
   int sos(BL_ob *o, int val)           // SOS dummy interface
   {
-    bl_logo(1,BL_M "sos",o,val);
-    led(o,val%2);
+    bl_logo(2,BL_M "sos",o,val);
+    led(o,val%2);                      // oops :-(, that should not be done !!!
     return 0;
   }
 
@@ -63,6 +63,7 @@
 
   static int tick(BL_ob *o, int val)   // system ticker
   {
+    bl_logo(1,"main",o,val);           // show tick logs at verbose level 1
     sos(o,val);                        // ticking SOS module
     return 0;
   }
@@ -86,11 +87,14 @@
 
   void main(void)
   {
+    bl_hello(3,"01-sos demo");         // set verbose level 3 & print hello msg
+
+    bl_init(bluccino,NULL);            // Bluccino init
     init();                            // app init
 
     for(int count=0;;count++)          // loop generating (approx) 500ms ticks
     {
-      bl_tick(tick,count);             // app tick
+      bl_tick(tick,0,count);           // app tick
       bl_sleep(500);                   // sleep 500 ms
     }
   }

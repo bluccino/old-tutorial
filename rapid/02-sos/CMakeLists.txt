@@ -10,7 +10,7 @@
 
   project(01-sos)
 
-  set (LIB ../../lib/V0.2)
+  set (LIB ../../lib/V0.3)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 
@@ -26,6 +26,8 @@
 
   target_sources(app PRIVATE
                ${SRC}/main.c
+               ${SRC}/sos.c
+               ${SRC}/led.c
                ${BLU}/blapi.c
                ${BLU}/bllog.c
               )
