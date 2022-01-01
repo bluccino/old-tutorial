@@ -775,7 +775,7 @@ void main(void)
 
   static void init(BL_ob *o, int val)
   {
-    LOG(2,BL_B"init core (ocore3) ...");
+    LOG(2,BL_C"init core (ocore3) ...");
     LOGO(4,BL_R,o,val);                // see what comes in ...
 
     core_init();
@@ -786,7 +786,7 @@ void main(void)
 
       bl_sleep(1000);                   // sleep another 500ms
       bl_zero();                       // reset clock
-      LOG(2,BL_B"core initialized");
+      LOG(2,BL_C"core initialized");
 
       LOG(0," ");
     #endif

@@ -18,7 +18,7 @@
     static BL_txt p = NULL;            // work pointer to pattern
     static bool last = 0;              // remember last output level
 
-    bl_logo(2,"sos",o,val);            // log what's going on
+    bl_logo(2,BL_M "sos",o,val);       // log what's going on
 
     if (!p || *p == 0)                 // first time, or end of pattern?
       p = PATTERN;                     // reset work pointer to pattern begin
