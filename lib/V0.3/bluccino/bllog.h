@@ -15,7 +15,7 @@
 
 #if 0
 //==============================================================================
-// XYZ level generic logging shorthands
+// XYZ level logging shorthands
 //==============================================================================
 
   #define LOG                     LOG_XYZ
@@ -80,6 +80,22 @@
 #else
     #define LOG_APP(l,f,...)    {}     // empty
     #define LOGO_APP(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
+// TEST Logging
+//==============================================================================
+
+#ifndef CFG_LOG_TEST
+    #define CFG_LOG_TEST    1           // no TEST logging by default
+#endif
+
+#if (CFG_LOG_TEST)
+    #define LOG_TEST(l,f,...)    BL_LOG(CFG_LOG_TEST-1+l,f,##__VA_ARGS__)
+    #define LOGO_TEST(l,f,o,v)   bl_logo(CFG_LOG_TEST-1+l,f,o,v)
+#else
+    #define LOG_TEST(l,f,...)    {}     // empty
+    #define LOGO_TEST(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================

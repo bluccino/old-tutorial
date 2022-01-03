@@ -247,6 +247,17 @@
   }
 
 //==============================================================================
+// forward a received message to an interface of a given module
+// - usage: bl_fwd(module,cl,o,val)    // only interface class to be changed
+//==============================================================================
+
+  int bl_fwd(BL_fct module, BL_cl cl, BL_ob *o, int val)
+  {
+    BL_ob oo = {cl,o->op,o->id,o->data};
+    return module(&oo,val);            // forward message to module interface
+  }
+
+//==============================================================================
 // subscribe to message output
 // - usage: bl_when(module,cb)         // class=CL_SYS, val=0, data=NULL
 //==============================================================================

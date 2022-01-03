@@ -65,6 +65,13 @@
   int bl_post(BL_fct module, BL_op op, int id, int val);
 
 //==============================================================================
+// forward a received message to an interface of a given module
+// - usage: bl_fwd(module,cl,o,val)    // only interface class to be changed
+//==============================================================================
+
+  int bl_fwd(BL_fct module, BL_cl cl, BL_ob *o, int val);
+
+//==============================================================================
 // subscribe to a module's message output
 // - usage: bl_sub(module,cb)          // class=CL_SYS, id=0, val=0
 //==============================================================================
@@ -100,6 +107,16 @@
     bl_verbose(verbose);               // set verbose level
     if (bl_dbg(0))                     // always - start print with time stamp
       bl_prt(BL_R "%s\n" BL_0,msg);    // print hello message in red
+  }
+
+//==============================================================================
+// bl_data (syntactic sugar to cast const void* data to non-const)
+// - usage: MY_data *p = bl_data(o)
+//==============================================================================
+
+  static inline void *bl_data(BL_ob *o)
+  {
+    return (void*)o->data;
   }
 
 //==============================================================================
