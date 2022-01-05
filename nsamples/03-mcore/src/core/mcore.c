@@ -12,9 +12,9 @@
 //                                  +-------------+
 //                                  |     SYS     |
 //                                  +-------------+
-//                                  |             |-> SCAN
+//                            PRV ->|             |-> PRV
 //                                  |     MESH    |
-//                                  |             |-> SCAN
+//                            ATT ->|             |-> ATT
 //                                  +-------------+
 //                            ADV ->|             |
 //                                  |      :      |-> SCAN
@@ -22,13 +22,14 @@
 //                                  +-------------+
 //
 //  Input Messages:
-//    - [SYS:INIT]          init module
+//    - [SYS:INIT <cb>]     init module
 //    - [SYS:TICK @id cnt]  tick the module
 //    - [SYS:TOCK @id cnt]  tock the module
 //    - [:ADV <adv>]        receive ADV event
 //    - [:EVENT <lll>]      receive LLL event
 //  Output Messages:
-//    - [:SCAN <percent>]   control scanner (off/on/percentage)
+//    - [MESH:PRV val]      provisioning on/off => post to upward gear
+//    - [MESH:ATT val]      attentioning on/off => post to upward gear
 //
 //==============================================================================
 // mcore derived from:
@@ -68,6 +69,8 @@
 #ifndef MIGRATION_STEP2
   #define MIGRATION_STEP2         0    // TODO introduce bl_core()
 #endif
+
+  static BL_fct notify = NULL;
 
 //==============================================================================
 // let's go ...
@@ -234,11 +237,14 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 //==============================================================================
 
 #if MIGRATION_STEP1
-static void init(void)
+static int init(BL_ob *o, int val)
+{
+  LOGO(5,BL_B,o,val);                // log trace
+  notify = o->data;                  // store notify callback
 #else
 void main(void)
-#endif
 {
+#endif
 	int err;
 
 	light_default_var_init();
@@ -284,6 +290,9 @@ void main(void)
 
 		k_timer_start(&smp_svr_timer, K_NO_WAIT, K_MSEC(1000));
 	#endif
+  #if MIGRATION_STEP1
+    return 0;                          // OK
+	#endif
 }
 
 //==============================================================================
@@ -297,9 +306,7 @@ void main(void)
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):        // [SYS:INIT]
-        LOGO(5,BL_B,o,val);                // log trace
-        init();
-				return 0;                          // OK
+        return init(o,val);                // forward to init()
 
       case BL_PAIR(CL_SYS,OP_TICK):        // [SYS:TICK @0,cnt]
       case BL_PAIR(CL_SYS,OP_TOCK):        // [SYS:TICK @0,cnt]
@@ -307,7 +314,7 @@ void main(void)
 
       case BL_PAIR(CL_MESH,OP_PRV):        // [MESH:PRV val]  (provision)
       case BL_PAIR(CL_MESH,OP_ATT):        // [MESH:ATT val]  (attention)
-				return bl_up(o,val);               // post to upward gear
+				return bl_out(o,val,notify);       // output message to subscriber
 
       default:
     		return -1;                         // bad input

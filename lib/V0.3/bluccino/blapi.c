@@ -331,7 +331,7 @@
     {
       case (BL_PAIR(CL_SYS,OP_INIT)):
         notify = o->data;
-        bl_init(bl_core,bl_in);        // init core, subscribe with bl_in()
+        bl_init(bl_core,bl_up);        // init core, subscribe with bl_up()
         return 0;
 
       case (BL_PAIR(CL_SYS,OP_WHEN)):
