@@ -8,6 +8,7 @@
 - performd MIGRATION_STEP1
 - added main.c
 - moved all *.c stuff into folder src/core or src/main
+- increased main stack size from 1024 to 2048 bytes
 
 
 #===============================================================================
