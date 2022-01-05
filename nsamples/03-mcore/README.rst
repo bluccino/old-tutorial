@@ -25,7 +25,8 @@
   - use LOG for printk("Bluetooth initialized\n")
   - use LOG for printk("Mesh initialized\n")
   - use LOG for reset counter logging
-- most system messages replaced by Bluccino LOGs  
+- most system messages replaced by Bluccino LOGs
+- [MESH:PRV] and [MESH:ATT] posted upward via bl_core()  
 
 #===============================================================================
 # Appendix

@@ -1,9 +1,41 @@
-/* Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
- *
- * Copyright (c) 2018 Vikrant More
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//==============================================================================
+// fm_lll.h (high level part)
+// LLL communication module (LLL = Location detect, Location evt. @ Low power)
+//
+// Created by Hugo Pristauz on 2022-Jan-02
+// Copyright © 2022 fuseAware. All rights reserved.
+//==============================================================================
+//
+//                                  INIT  TICK TOCK
+//                                    |    |    |
+//                                    v    v    v
+//                                  +-------------+
+//                                  |     SYS     |
+//                                  +-------------+
+//                                  |             |-> SCAN
+//                                  |     MESH    |
+//                                  |             |-> SCAN
+//                                  +-------------+
+//                            ADV ->|             |
+//                                  |      :      |-> SCAN
+//                          EVENT ->|             |
+//                                  +-------------+
+//
+//  Input Messages:
+//    - [SYS:INIT]          init module
+//    - [SYS:TICK @id cnt]  tick the module
+//    - [SYS:TOCK @id cnt]  tock the module
+//    - [:ADV <adv>]        receive ADV event
+//    - [:EVENT <lll>]      receive LLL event
+//  Output Messages:
+//    - [:SCAN <percent>]   control scanner (off/on/percentage)
+//
+//==============================================================================
+// mcore derived from:
+// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
+// Copyright (c) 2018 Vikrant More
+// SPDX-License-Identifier: Apache-2.0
+//==============================================================================
 
 #include <drivers/gpio.h>
 
@@ -256,6 +288,7 @@ void main(void)
 
 //==============================================================================
 // THE core interface
+// - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
 //==============================================================================
 #if MIGRATION_STEP1
 
@@ -271,6 +304,10 @@ void main(void)
       case BL_PAIR(CL_SYS,OP_TICK):        // [SYS:TICK @0,cnt]
       case BL_PAIR(CL_SYS,OP_TOCK):        // [SYS:TICK @0,cnt]
 				return 0;                          // OK - nothing to tick/tock
+
+      case BL_PAIR(CL_MESH,OP_PRV):        // [MESH:PRV val]  (provision)
+      case BL_PAIR(CL_MESH,OP_ATT):        // [MESH:ATT val]  (attention)
+				return bl_up(o,val);               // post to upward gear
 
       default:
     		return -1;                         // bad input

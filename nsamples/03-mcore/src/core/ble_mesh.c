@@ -62,7 +62,7 @@ static void prov_complete(uint16_t net_idx, uint16_t addr)
 {
   #if MIGRATION_STEP2
 	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
-	  bl_up(&o,1);
+	  bl_core(&o,1);            // post [MESH:PRV 1] to core, which posts it up
   #endif // MIGRATION_STEP2
 }
 
@@ -71,7 +71,7 @@ static void prov_reset(void)
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
   #if MIGRATION_STEP2
 	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
-	  bl_up(&o,0);
+	  bl_core(&o,0);            // post [MESH:PRV 0] to core, which posts it up
   #endif // MIGRATION_STEP2
 }
 
@@ -83,13 +83,13 @@ static void prov_reset(void)
 static void link_open(bt_mesh_prov_bearer_t bearer)
 {
 	BL_ob o = {CL_MESH, OP_ATT, 1, NULL};
-	bl_up(&o,1);
+	bl_core(&o,1);              // post [MESH:ATT 1] to core, which posts it up
 }
 
 static void link_close(bt_mesh_prov_bearer_t bearer)
 {
 	BL_ob o = {CL_MESH, OP_ATT, 0, NULL};
-	bl_up(&o,0);
+	bl_core(&o,0);              // post [MESH:ATT 0] to core, which posts it up
 }
 
 //==============================================================================
