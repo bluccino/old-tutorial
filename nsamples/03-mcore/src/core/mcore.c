@@ -16,6 +16,15 @@
 #include "transition.h"
 
 //==============================================================================
+// CORE level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mcore:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+  #define ERR 1,BL_R
+
+//==============================================================================
 // overview code migration from original onoff_app sample to a bluccino core
 //==============================================================================
 
@@ -124,7 +133,11 @@ void update_led_gpio(void)
 	color = 100 * ((float) (ctl->temp->current - ctl->temp->range_min) /
 		       (ctl->temp->range_max - ctl->temp->range_min));
 
-	printk("power-> %d, color-> %d\n", power, color);
+  #if MIGRATION_STEP2
+	  LOG(3,BL_G "power-> %d, color-> %d", power, color);
+  #else
+	  printk("power-> %d, color-> %d\n", power, color);
+  #endif
 
 	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
 		     ctl->light->current);
@@ -148,12 +161,23 @@ void update_light_state(void)
 
 static void short_time_multireset_bt_mesh_unprovisioning(void)
 {
-	if (reset_counter >= 4U) {
+	if (reset_counter >= 4U)
+  {
 		reset_counter = 0U;
-		printk("BT Mesh reset\n");
+    #if MIGRATION_STEP2
+		  LOG(1,BL_M "BT Mesh reset");
+    #else
+		  printk("BT Mesh reset\n");
+    #endif
 		bt_mesh_reset();
-	} else {
-		printk("Reset Counter -> %d\n", reset_counter);
+	}
+  else
+  {
+    #if MIGRATION_STEP2
+  		LOG(1,BL_M "reset counter -> %d", reset_counter);
+    #else
+		  printk("Reset Counter -> %d\n", reset_counter);
+    #endif
 		reset_counter++;
 	}
 
@@ -164,7 +188,11 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 {
 	reset_counter = 0U;
 	save_on_flash(RESET_COUNTER);
-	printk("Reset Counter set to Zero\n");
+  #if MIGRATION_STEP2
+  	LOG(1,BL_M "reset counter set to zero");
+  #else
+  	printk("Reset Counter set to Zero\n");
+  #endif
 }
 
 K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
@@ -189,14 +217,23 @@ void main(void)
 		smp_svr_init();
 	#endif
 
-	printk("Initializing...\n");
+  #if MIGRATION_STEP2
+	  LOG(2,BL_B "initializing...");
+  #else
+	  printk("Initializing...\n");
+  #endif
 
 	ps_settings_init();
 
 	/* Initialize the Bluetooth Subsystem */
 	err = bt_enable(NULL);
-	if (err) {
-		printk("Bluetooth init failed (err %d)\n", err);
+	if (err)
+  {
+    #if MIGRATION_STEP2
+		  LOG(ERR "Bluetooth init failed (err %d)", err);
+    #else
+		  printk("Bluetooth init failed (err %d)\n", err);
+    #endif
 		return;
 	}
 
@@ -227,7 +264,7 @@ void main(void)
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):        // [SYS:INIT]
-        bl_logo(4,BL_B"core",o,val);       // log trace
+        LOGO(5,BL_B,o,val);                // log trace
         init();
 				return 0;                          // OK
 

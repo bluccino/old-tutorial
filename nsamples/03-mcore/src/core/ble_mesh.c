@@ -9,6 +9,15 @@
 #include "device_composition.h"
 
 //==============================================================================
+// CORE level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mcore:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+  #define ERR 1,BL_R
+
+//==============================================================================
 // overview code migration from original onoff_app sample to a bluccino core
 //==============================================================================
 
@@ -29,13 +38,21 @@
 
 static int output_number(bt_mesh_output_action_t action, uint32_t number)
 {
-	printk("OOB Number: %u\n", number);
+  #if MIGRATION_STEP2
+   	LOG(1,BL_M "OOB Number: %u", number);
+	#else
+   	printk("OOB Number: %u\n", number);
+	#endif
 	return 0;
 }
 
 static int output_string(const char *str)
 {
-	printk("OOB String: %s\n", str);
+  #if MIGRATION_STEP2
+  	LOG(1,BL_M "OOB String: %s", str);
+	#else
+  	printk("OOB String: %s\n", str);
+	#endif
 	return 0;
 }
 
@@ -106,11 +123,20 @@ void bt_ready(void)
 	int err;
 	struct bt_le_oob oob;
 
-	printk("Bluetooth initialized\n");
+  #if MIGRATION_STEP2
+  	LOG(2,BL_B "Bluetooth initialized");
+	#else
+  	printk("Bluetooth initialized\n");
+  #endif
 
 	err = bt_mesh_init(&prov, &comp);
-	if (err) {
-		printk("Initializing mesh failed (err %d)\n", err);
+	if (err)
+	{
+    #if MIGRATION_STEP2
+	  	LOG(ERR "Initializing mesh failed (err %d)", err);
+		#else
+	  	printk("Initializing mesh failed (err %d)\n", err);
+		#endif
 		return;
 	}
 
@@ -119,13 +145,22 @@ void bt_ready(void)
 	}
 
 	/* Use identity address as device UUID */
-	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob)) {
-		printk("Identity Address unavailable\n");
+	if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob))
+	{
+          #if MIGRATION_STEP2
+  		LOG(1,BL_R "Identity Address unavailable");
+	  #else
+  		printk("Identity Address unavailable\n");
+	  #endif
 	} else {
 		memcpy(dev_uuid, oob.addr.a.val, 6);
 	}
 
 	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
 
-	printk("Mesh initialized\n");
+	#if MIGRATION_STEP2
+    LOG(2,BL_B"Mesh initialized");
+	#else
+    printk("Mesh initialized\n");
+	#endif
 }

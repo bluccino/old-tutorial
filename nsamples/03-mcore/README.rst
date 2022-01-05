@@ -19,7 +19,13 @@
   - notify attention
   - notify attention complete
 - now we are able to see color change of logs in case of attention & provision
-
+- in mcore.c
+  - add LOG macro definitions
+  - use LOG for printk("Initializing ...\n")
+  - use LOG for printk("Bluetooth initialized\n")
+  - use LOG for printk("Mesh initialized\n")
+  - use LOG for reset counter logging
+- most system messages replaced by Bluccino LOGs  
 
 #===============================================================================
 # Appendix

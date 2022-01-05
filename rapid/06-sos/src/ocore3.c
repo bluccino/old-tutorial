@@ -57,7 +57,7 @@
 #include "bluccino.h"
 
 //==============================================================================
-// CORE level generic logging shorthands
+// CORE level logging shorthands
 //==============================================================================
 
   #define LOG                     LOG_CORE

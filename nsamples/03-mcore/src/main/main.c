@@ -69,7 +69,7 @@
     {
       bl_tick(tick,0,ticks);           // app ticking
  
-      if (ticks % 200 == 0)            // app tock is 200 times slower
+      if (ticks % 500 == 0)            // app tock is 500 times slower
       {
         bl_tock(tock,1,tocks);         // app tocking
         tocks++;
