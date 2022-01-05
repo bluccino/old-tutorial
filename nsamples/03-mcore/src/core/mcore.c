@@ -272,7 +272,7 @@ void main(void)
     #else
 		  printk("Bluetooth init failed (err %d)\n", err);
     #endif
-		return;
+		return err;
 	}
 
 	bt_ready();
