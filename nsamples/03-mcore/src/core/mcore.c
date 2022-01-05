@@ -22,8 +22,10 @@
 #include "bluccino.h"
 
 #ifndef MIGRATION_STEP1
-#error MCORE
   #define MIGRATION_STEP1         0    // TODO introduce bl_core()
+#endif
+#ifndef MIGRATION_STEP2
+  #define MIGRATION_STEP2         0    // TODO introduce bl_core()
 #endif
 
 //==============================================================================
@@ -174,7 +176,6 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 #if MIGRATION_STEP1
 static void init(void)
 #else
-#error main()
 void main(void)
 #endif
 {

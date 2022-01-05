@@ -5,10 +5,20 @@
 - derived from zephyr/samples/boards/nrf/mesh/onoff_level_lighting_vnd_app
 - we call it 'ollv-app by short name'
 -
-- performd MIGRATION_STEP1
+- performing MIGRATION_STEP1
+- add MIGRATION define defaults to mcore.c
 - added main.c
 - moved all *.c stuff into folder src/core or src/main
 - increased main stack size from 1024 to 2048 bytes
+-
+- performing MIGRATION_STEP2
+- add MIGRATION define defaults to ble_mesh.c
+- in ble_mesh.c:
+  - notify provisioning
+  - notify provision complete
+  - notify attention
+  - notify attention complete
+- now we are able to see color change of logs in case of attention & provision
 
 
 #===============================================================================
