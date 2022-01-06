@@ -13,8 +13,12 @@
 //                                  |     SYS     |
 //                                  +-------------+
 //                            PRV ->|             |-> PRV
-//                                  |     MESH    |
+//                                  |    MESH     |
 //                            ATT ->|             |-> ATT
+//                                  +-------------+
+//                                  |             |
+//                            SET ->|   BUTTON    |-> SET
+//                                  |             |
 //                                  +-------------+
 //
 //  Input Messages:
@@ -23,8 +27,9 @@
 //    - [SYS:TOCK @id cnt]  tock the module
 //
 //  Output Messages:
-//    - [MESH:PRV val]      provisioning on/off => post to upward gear
-//    - [MESH:ATT val]      attentioning on/off => post to upward gear
+//    - [MESH:PRV val]      provisioning on/off
+//    - [MESH:ATT val]      attentioning on/off
+//    - [BUTTON:SET @id 1]  button press @ channel @id
 //
 //==============================================================================
 // mcore derived from:
@@ -298,6 +303,7 @@ void main(void)
 
       case BL_PAIR(CL_MESH,OP_PRV):        // [MESH:PRV val]  (provision)
       case BL_PAIR(CL_MESH,OP_ATT):        // [MESH:ATT val]  (attention)
+      case BL_PAIR(CL_BUTTON,OP_SET):      // [MESH:ATT val]  (attention)
 				return bl_out(o,val,notify);       // output message to subscriber
 
       default:
