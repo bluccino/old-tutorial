@@ -46,21 +46,4 @@
   #define MIGRATION_STEP3         1
   #define MIGRATION_STEP4         1
 
-//==============================================================================
-// migration defaults
-//==============================================================================
-
-  #ifndef MIGRATION_STEP1
-    #define MIGRATION_STEP1         0
-  #endif
-  #ifndef MIGRATION_STEP2
-    #define MIGRATION_STEP2         0
-  #endif
-  #ifndef MIGRATION_STEP3
-    #define MIGRATION_STEP3         0
-  #endif
-  #ifndef MIGRATION_STEP4
-    #define MIGRATION_STEP4         0
-  #endif
-
 #endif // __CONFIG_H__

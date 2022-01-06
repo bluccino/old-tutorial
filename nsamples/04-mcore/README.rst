@@ -1,4 +1,17 @@
 #===============================================================================
+# 04-mcore (Bluccino mesh core)
+#===============================================================================
+
+- derived from 03-mcore, and thus
+  derived from zephyr/samples/boards/nrf/mesh/onoff_level_lighting_vnd_app
+- performing MIGRATION_STEP4
+- creation of mcore.h with #include "bluccino.h" and setting migration defaults
+- app_gpio adopted to allow independent LED control and receive of button events
+- all publishing commands deactivated
+- main adopted to toogle active LED in tock callback
+- main adopted with when callback to change active LED selection by button press
+
+#===============================================================================
 # 03-mcore (Bluccino mesh core)
 #===============================================================================
 
@@ -27,6 +40,7 @@
   - use LOG for reset counter logging
 - most system messages replaced by Bluccino LOGs
 - [MESH:PRV] and [MESH:ATT] posted upward via bl_core()
+- performing MIGRATION_STEP3
 
 
 #===============================================================================

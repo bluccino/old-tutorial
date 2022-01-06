@@ -8,9 +8,12 @@
 #ifndef _APP_GPIO_H
 #define _APP_GPIO_H
 
-/* GPIO */
-extern const struct device *button_device[4];
-extern const struct device *led_device[4];
+  #include "mcore.h"
+  
+  #if !MIGRATION_STEP4
+    extern const struct device *button_device[4];
+    extern const struct device *led_device[4];
+  #endif
 
 //==============================================================================
 // public module interface

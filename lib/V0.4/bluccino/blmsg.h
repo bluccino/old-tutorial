@@ -57,7 +57,8 @@
 
     #define BL_OP_TEXT {"VOID","INIT","WHEN","USE","PRV","ATT","SET","LET",   \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
-                        "ONOFF","PAY", "ADV","BEACON","SEND","PRESS","RELEASE"}
+                        "ONOFF","TOGGLE", \
+                        "PAY", "ADV","BEACON","SEND","PRESS","RELEASE"}
 
     typedef enum BL_op
             {
@@ -81,6 +82,7 @@
               OP_VAL,                    // generic value
               OP_LEVEL,                  // generic level
               OP_ONOFF,                  // generic onoff command
+              OP_TOGGLE,                 // toggle state
 
               OP_PAY,                    // generic payload
               OP_ADV,                    // LLL advertising reports

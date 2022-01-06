@@ -7,7 +7,7 @@
 //==============================================================================
 
   #include "bluccino.h"
-  
+
   #define VERSION  CFG_APP_VERSION
   #define VERBOSE  CFG_APP_VERBOSE     // verbose level for application
 
@@ -18,6 +18,45 @@
   #define LOG                     LOG_MAIN
   #define LOGO(lvl,col,o,val)     LOGO_MAIN(lvl,col"main:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_MAIN(lvl,col,o,val)
+
+//==============================================================================
+// helper: LED control   // set or toggle on/off status of LED @id
+// - usage: led(id,val)  // val=-1: toggle, val=0: off, val=1: on
+//==============================================================================
+
+  static int id = 0;                        // THE LED id
+
+  static int led(int id, int val)           // control LED
+  {
+    BL_op op = val<0 ? OP_TOGGLE:OP_SET;    // SET or TOGGLE?
+    BL_ob oo = {CL_LED,op,id,NULL};
+    return bl_down(&oo,val);                // post [LED:op @id,val] to core
+  }
+
+//==============================================================================
+// when callback - implement simple test flow
+//==============================================================================
+
+  static int when(BL_ob *o, int val)
+  {
+    switch (BL_PAIR(o->cl,o->op))
+    {
+      case BL_PAIR(CL_BUTTON,OP_PRESS):     // button press to cause LED on off
+        LOGO(1,"@",o,val);
+
+        led(id,0);                          // turn off current LED
+
+        if (o->id == id)                    // same button pressed again?
+          id = 0;                           // unselect current ID
+        else
+          id = o->id;                       // update THE LED id
+
+        return 0;                           // OK
+
+      default:
+        return -1;                          // bad args
+    }
+  }
 
 //==============================================================================
 // tick function (sends tick messages to all modules which have to be ticked)
@@ -35,7 +74,9 @@
 
   static int tock(BL_ob *o, int val)   // system tocker: tocks all subsystems
   {
-    LOGO(3,BL_Y,o,val);                // log to see we are alife
+    LOGO(3,"",o,val);                  // log to see we are alife
+    if (id > 0)
+      led(id,-1);                      // toggle LED
     return 0;                          // OK
   }
 
@@ -61,15 +102,15 @@
   {
     bl_hello(VERBOSE,VERSION);
 
-    bl_init(bluccino,NULL);            // Bluccino init, subscribe with when()
+    bl_init(bluccino,when);            // Bluccino init, subscribe with when()
     bl_init(init,NULL);                // app init
- 
+
     int tocks = 0;                     // tock counter
     for(int ticks=0;;ticks++)          // loop generating (approx) 10ms ticks
     {
       bl_tick(tick,0,ticks);           // app ticking
- 
-      if (ticks % 500 == 0)            // app tock is 500 times slower
+
+      if (ticks % 100 == 0)            // app tock is 100 times slower
       {
         bl_tock(tock,1,tocks);         // app tocking
         tocks++;

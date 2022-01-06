@@ -7,6 +7,8 @@
 
 #include <drivers/gpio.h>
 
+#include "bluccino.h"
+
 #include "app_gpio.h"
 #include "ble_mesh.h"
 #include "device_composition.h"
@@ -16,6 +18,22 @@
 #define GENERIC_LEVEL
 
 static uint8_t tid;
+
+//============================================================================
+// migration defaults
+//============================================================================
+
+#ifndef MIGRATION_STEP4
+  #define MIGRATION_STEP4   0
+#endif
+#ifndef MIGRATION_STEP5
+  #define MIGRATION_STEP5   0
+#endif
+
+//============================================================================
+// legacy publisher
+//============================================================================
+#if !MIGRATION_STEP4
 
 void publish(struct k_work *work)
 {
@@ -227,3 +245,16 @@ void publish(struct k_work *work)
 		printk("bt_mesh_model_publish: err: %d\n", err);
 	}
 }
+
+#endif
+//============================================================================
+// legacy publisher
+//============================================================================
+#if MIGRATION_STEP5
+
+  int bl_pub(BL_ob *o, int val)
+  {
+    LOGO(3,BL_R,o,val);
+  }
+
+#endif

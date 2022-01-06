@@ -11,7 +11,7 @@
 
   project(03-mcore)
 
-  set (LIB ../../lib/V0.3)
+  set (LIB ../../lib/V0.4)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 

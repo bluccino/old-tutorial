@@ -17,6 +17,20 @@
 #define ONOFF
 #define GENERIC_LEVEL
 
+//==============================================================================
+// CORE level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mcore:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+  #define ERR 1,BL_R
+
+ //==============================================================================
+// legacy publisher
+//==============================================================================
+#if !MIGRATION_STEP4
+
 static uint8_t tid;
 
 void publish(struct k_work *work)
@@ -225,7 +239,25 @@ void publish(struct k_work *work)
 	}
 #endif
 
-	if (err) {
-		printk("bt_mesh_model_publish: err: %d\n", err);
+	if (err)
+  {
+    #if MIGRATION_STEP2
+		  LOG(ERR"bt_mesh_model_publish: err: %d", err);
+    #else
+		  printk("bt_mesh_model_publish: err: %d\n", err);
+    #endif
 	}
 }
+
+#endif // !MIGRATION_STEP4
+//==============================================================================
+// new publisher
+//==============================================================================
+#if MIGRATION_STEP5
+
+  int bl_pub(BL_ob *o, int val)
+  {
+    return -1;                       // bad args (at this implementation stage)
+  }
+
+#endif // MIGRATION_STEP5

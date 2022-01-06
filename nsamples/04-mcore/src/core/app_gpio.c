@@ -6,21 +6,21 @@
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
 //
+//                                  GPIO
 //                             +-------------+
 //                             |             |
-//                             |     LED     |
+//                       SET ->|    LED      |
 //                             |             |
 //                             +-------------+
 //                             |             |
-//                             |   BUTTON    |
+//                             |   BUTTON    |-> PRESS
 //                             |             |
 //                             +-------------+
 //  Input Messages:
-//    - [:]
+//    - [LED:SET @id onoff]   // set LED @id on/off (id=1..4)
 //
 //  Output Messages:
-//    - [:]
-//    - [:]
+//    - [BUTTON:PRESS @id]      // notify button press
 //
 //==============================================================================
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
@@ -40,17 +40,21 @@
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mcore:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"gpio:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
   static BL_fct notify = NULL;
 
 //==============================================================================
-// let's go ...
+// defines
 //==============================================================================
 
-  const struct device *led_device[4];
+  #ifdef ONE_LED_ONE_BUTTON_BOARD
+    #define N    1
+  #else
+    #define N    4
+  #endif
 
   #define LED0_NODE DT_ALIAS(led0)
   #define LED1_NODE DT_ALIAS(led1)
@@ -62,6 +66,12 @@
   #define SW2_NODE DT_ALIAS(sw2)
   #define SW3_NODE DT_ALIAS(sw3)
 
+//==============================================================================
+// locals
+//==============================================================================
+
+  static bool led_onoff[4] = {0,0,0,0};
+  static const struct device *led_device[4];
 
 //==============================================================================
 // button work horse - posts [BUTTON:SET @id 1] (instead of publishing)
@@ -96,9 +106,9 @@
   #if MIGRATION_STEP4
     static void button_post(int id)
     {
-      BL_ob oo = {CL_BUTTON,OP_SET,id,NULL};
+      BL_ob oo = {CL_BUTTON,OP_PRESS,id,NULL};
       LOGO(4,BL_Y,&oo,1);
-      bl_core(&oo,1);             // post [BUTTON:SET @id,1] to core
+      bl_core(&oo,1);             // post [BUTTON:PRESS @id,1] to core
     }
 
     static void but0_cb(SH_dev *dev, SH_gpiocb *cb, uint32_t pins)
@@ -132,14 +142,57 @@
   #endif
 
 //==============================================================================
-// LED init
+// LED set  [SET:LED @id onoff]  // @id = 1..4
 //==============================================================================
 
-#ifdef ONE_LED_ONE_BUTTON_BOARD
-  #define N    1
-#else
-  #define N    4
-#endif
+  static int led_set(BL_ob *o, int onoff)
+  {
+    switch (o->id)     // id 1..4 maps to led_device[0..3]
+    {
+      case 1:
+        led_onoff[0] = onoff;
+        gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),onoff);
+        return 0;
+
+      case 2:
+        led_onoff[1] = onoff;
+        gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),onoff);
+        return 0;
+
+      case 3:
+        led_onoff[2] = onoff;
+        gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),onoff);
+        return 0;
+
+      case 4:
+        led_onoff[3] = onoff;
+        gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),onoff);
+        return 0;
+
+      default:
+        return -1;                     // bad input
+    }
+  }
+
+//==============================================================================
+// LED toggle
+//==============================================================================
+
+  static int led_toggle(BL_ob *o,int val)
+  {
+    if (o->id < 1 || o->id > 4)
+      return -1;                       // bad args
+
+    val = (led_onoff[o->id-1] == 0);   // new LED value
+    int ok = led_set(o,val);           // toggle LED state
+
+    LOGO(4,BL_Y,o,val);                // log changed LED level
+    return ok;
+  }
+
+//==============================================================================
+// LED init
+//==============================================================================
 
   static void led_init(void)
   {
@@ -186,6 +239,8 @@ static void button_init(void)
   	k_work_init(&button_work, publish);
   #endif
 
+      // button[0] ...
+
 	button_device[0] = device_get_binding(DT_GPIO_LABEL(SW0_NODE, gpios));
 	gpio_pin_configure(button_device[0], DT_GPIO_PIN(SW0_NODE, gpios),
 			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
@@ -195,12 +250,12 @@ static void button_init(void)
 				     DT_GPIO_PIN(SW0_NODE, gpios),
 				     GPIO_INT_EDGE_TO_ACTIVE);
 
-#if MIGRATION_STEP4
-	gpio_init_callback(&button_cb[0], but0_cb, BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
-#else
-	gpio_init_callback(&button_cb[0], button_pressed,
-			   BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
-#endif
+  #if MIGRATION_STEP4
+  	gpio_init_callback(&button_cb[0], but0_cb, BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
+  #else
+  	gpio_init_callback(&button_cb[0], button_pressed,
+  			   BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
+  #endif
 
 	gpio_add_callback(button_device[0], &button_cb[0]);
 
@@ -295,7 +350,13 @@ static void button_init(void)
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):       // [SYS:INIT]
-	      return init(o,val);               // delegate to init();
+      	return init(o,val);               // delegate to init();
+
+      case BL_PAIR(CL_LED,OP_SET):        // [LED:set]
+	      return led_set(o,val != 0);       // delegate to led_set();
+
+      case BL_PAIR(CL_LED,OP_TOGGLE):     // [LED:toggle]
+	      return led_toggle(o,val);         // delegate to led_toggle();
 
       default:
 	      return -1;                        // bad input

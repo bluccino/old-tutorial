@@ -5,33 +5,6 @@
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
-//
-//                                  INIT  TICK TOCK
-//                                    |    |    |
-//                                    v    v    v
-//                                  +-------------+
-//                                  |     SYS     |
-//                                  +-------------+
-//                            PRV ->|             |-> PRV
-//                                  |    MESH     |
-//                            ATT ->|             |-> ATT
-//                                  +-------------+
-//                                  |             |
-//                            SET ->|   BUTTON    |-> SET
-//                                  |             |
-//                                  +-------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]     init module
-//    - [SYS:TICK @id cnt]  tick the module
-//    - [SYS:TOCK @id cnt]  tock the module
-//
-//  Output Messages:
-//    - [MESH:PRV val]      provisioning on/off
-//    - [MESH:ATT val]      attentioning on/off
-//    - [BUTTON:SET @id 1]  button press @ channel @id
-//
-//==============================================================================
 // mcore derived from:
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
 // Copyright (c) 2018 Vikrant More
@@ -39,8 +12,6 @@
 //==============================================================================
 
 #include <drivers/gpio.h>
-
-#include "bluccino.h"
 
 #include "app_gpio.h"
 #include "ble_mesh.h"
@@ -144,8 +115,10 @@ static void light_default_status_init(void)
 void update_vnd_led_gpio(void)
 {
 #ifndef ONE_LED_ONE_BUTTON_BOARD
-	gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
+  #if !MIGRATION_STEP4
+	  gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
 		     vnd_user_data.current == STATE_ON);
+  #endif
 #endif
 }
 
@@ -163,13 +136,21 @@ void update_led_gpio(void)
 	  printk("power-> %d, color-> %d\n", power, color);
   #endif
 
-	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
+  #if !MIGRATION_STEP4
+  	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
 		     ctl->light->current);
+  #endif
+
 #ifndef ONE_LED_ONE_BUTTON_BOARD
-	gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),
+  #if !MIGRATION_STEP4
+  	gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),
 		     power < 50);
-	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
+  #endif
+
+  #if !MIGRATION_STEP4
+  	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
 		     color < 50);
+  #endif
 #endif
 }
 
@@ -303,8 +284,12 @@ void main(void)
 
       case BL_PAIR(CL_MESH,OP_PRV):        // [MESH:PRV val]  (provision)
       case BL_PAIR(CL_MESH,OP_ATT):        // [MESH:ATT val]  (attention)
-      case BL_PAIR(CL_BUTTON,OP_SET):      // [MESH:ATT val]  (attention)
+      case BL_PAIR(CL_BUTTON,OP_PRESS):    // [BUTTON:PRESS @id](button pressed)
 				return bl_out(o,val,notify);       // output message to subscriber
+
+      case BL_PAIR(CL_LED,OP_SET):         // [LED:SET @id,onoff]
+      case BL_PAIR(CL_LED,OP_TOGGLE):      // [LED:SET @id,onoff]
+				return gpio(o,val);                // delegate to GPIO submodule
 
       default:
     		return -1;                         // bad input

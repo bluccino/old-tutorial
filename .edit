@@ -9,7 +9,7 @@
    GITROOT=`gitroot`
    ENVIRONMENT=$GIT/Environment
    BLU=$GITROOT
-   LIB=$BLU/lib/V0.3
+   LIB=$BLU/lib/V0.4
 
    cd $GITROOT
    atom $BLU/docs $BLU/nsamples $BLU/rapid $LIB
