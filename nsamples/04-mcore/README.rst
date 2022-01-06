@@ -10,6 +10,8 @@
 - all publishing commands deactivated
 - main adopted to toogle active LED in tock callback
 - main adopted with when callback to change active LED selection by button press
+- led() helper function added to main - now test program looking fine
+- nice 03-mcore with lED and button functionality (and deactivated publisher)
 
 #===============================================================================
 # 03-mcore (Bluccino mesh core)
