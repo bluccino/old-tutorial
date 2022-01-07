@@ -11,6 +11,11 @@
   #define VERSION  CFG_APP_VERSION
   #define VERBOSE  CFG_APP_VERBOSE     // verbose level for application
 
+  #define T_TICK      10               // 10 ms ticks
+  #define T_ATT      750               // 750 ms attention blink period
+  #define T_PRV     2000               // 2000 ms provisioned blink period
+  #define T_UNP      350               // 350 ms unprovisioned blink period
+
 //==============================================================================
 // MAIN level logging shorthands
 //==============================================================================
@@ -45,7 +50,7 @@
 // - usage: state = attention(o,val)
 // - interfaces: []=SYS(TICK); []=MESH(ATT); []=GET(ATT);
 // - [SYS:TICK @id,cnt] // tick input for attention blinking
-// - [MESH:ATT state]   // update attention state which is received from mesh
+// - [SET:ATT state]    // update attention state which is received from mesh
 // - [GET:ATT state]    // return current attention state
 //==============================================================================
 
@@ -57,11 +62,11 @@
     switch (bl_id(o))
     {
       case BL_ID(CL_SYS,OP_TICK):
-        if (!state || !bl_due(&due,750))    // attention state? due?
+        if (!state || !bl_due(&due,T_ATT))  // attention state? due?
           return 0;                         // neither attention state nor due
         return led(0,-1);                   // toggle status LED @1
 
-      case BL_ID(CL_MESH,OP_ATT):
+      case BL_ID(CL_SET,OP_ATT):
         state = val;                        // store attention state
         led(0,0);                           // turn status LED off
         led(id,0);                          // turn current LED off
@@ -80,7 +85,7 @@
 // - usage: state = provision(o,val)
 // - interfaces: []=SYS(TICK); []=MESH(PRV); []=GET(PRV);
 // - [SYS:TICK @id,cnt] // tick input for attention blinking
-// - [MESH:PRV state]   // update provision state which is received from mesh
+// - [SET:PRV state]    // set provision state which is received from mesh
 // - [GET:PRV state]    // return current provision state
 //==============================================================================
 
@@ -92,13 +97,15 @@
     {
       case BL_ID(CL_SYS,OP_TICK):
       {
-        int rem = val % (state?200:35);     // 2000 ms versus 350 ms period
+        int ms = (state ? T_PRV:T_UNP);     // 2000 ms versus 350 ms period
+        int rem = val % (ms/T_TICK);        // remainder modulo (ticks/period)
         if (rem > 1 || bl_get(attention,OP_ATT))
           return 0;                         // no provision blinking during att!
-
-        return led(0,rem == 0);             // update status LED @1
+        else
+          return led(0,rem == 0);           // update status LED @1
       }
-      case BL_ID(CL_MESH,OP_PRV):
+
+      case BL_ID(CL_SET,OP_PRV):            // [SET:PRV val] change prov state
         state = val;                        // store attention state
         led(0,0);                           // turn status LED @1 off
         led(id,0);                          // turn current LED @id off
@@ -118,13 +125,15 @@
 
   static int blink(BL_ob *o, int ticks)     // attention blinker to be ticked
   {
-    static BL_ms due = 0;
+    static BL_ms due = 0;                   // need for periodic action
 
-    if (!bl_due(&due,500) || !bl_get(attention,OP_ATT))
-      return 0;                             // bye if neither due nor att state
+    if (id == 0 || !bl_due(&due,1000))      // no blinking if @id:off or not due
+      return 0;                             // bye if LED off or not due
 
+    if ( bl_get(attention,OP_ATT) )         // no blinking in attention mode
+      return 0;                             // bye if attention state
 
-    return led(1,-1);                       // toogle red LED (@id=1)
+    return led(id,-1);                      // toogle THE LED @id
   }
 
 //==============================================================================
@@ -135,10 +144,10 @@
   {
     switch (bl_id(o))
     {
-      case BL_ID(CL_MESH,OP_ATT):           // [MESH:ATT state]
+      case BL_ID(CL_SET,OP_ATT):            // [MESH:ATT state]
         return attention(o,val);            // change attention state
 
-      case BL_ID(CL_MESH,OP_PRV):           // [MESH:ATT state]
+      case BL_ID(CL_SET,OP_PRV):            // [MESH:ATT state]
         return provision(o,val);            // change provision state
 
       case BL_ID(CL_BUTTON,OP_PRESS):       // button press to cause LED on off

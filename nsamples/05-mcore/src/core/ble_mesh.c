@@ -8,10 +8,6 @@
 #include "ble_mesh.h"
 #include "device_composition.h"
 
-#if MIGRATION_STEP5
-  BL_fct output = NULL;
-#endif
-
 //==============================================================================
 // CORE level logging shorthands
 //==============================================================================
@@ -65,8 +61,8 @@ static int output_string(const char *str)
 static void prov_complete(uint16_t net_idx, uint16_t addr)
 {
   #if MIGRATION_STEP2   // pimped in MIGRATION_STEP5
-	  BL_ob o = {CL_SYS,OP_PRV,0,NULL};
-	  bl_out(&o,1,output);         // post [MESH:PRV 1] to core, which posts it up
+	  BL_ob oo = {CL_SET,OP_PRV,0,NULL};
+	  blemesh(&oo,1);         // post [SET:PRV 1] to pub ifc, which posts it up
   #endif // MIGRATION_STEP2
 }
 
@@ -74,8 +70,8 @@ static void prov_reset(void)
 {
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
   #if MIGRATION_STEP2  // pimped in MIGRATION_STEP5
-	  BL_ob o = {CL_SYS,OP_PRV,0,NULL};
-	  bl_out(&o,0,output);         // post [MESH:PRV 0] to core, which posts it up
+	  BL_ob oo = {CL_SET,OP_PRV,0,NULL};
+	  blemesh(&oo,0);         // post [SET:PRV 0] to pub ifc, which posts it up
   #endif // MIGRATION_STEP2
 }
 
@@ -86,14 +82,14 @@ static void prov_reset(void)
 
 static void link_open(bt_mesh_prov_bearer_t bearer)
 {
-	BL_ob o = {CL_SYS, OP_ATT, 1, NULL};
-	bl_out(&o,1,output);        // post [MESH:ATT 1] to core, which posts it up
+	BL_ob oo = {CL_SET,OP_ATT, 1, NULL};
+	blemesh(&oo,1);             // post [SET:ATT 1] to pub ifc, which posts it up
 }
 
 static void link_close(bt_mesh_prov_bearer_t bearer)
 {
-	BL_ob o = {CL_SYS, OP_ATT, 0, NULL};
-	bl_out(&o,0,output);        // post [MESH:ATT 0] to core, which posts it up
+	BL_ob oo = {CL_SET,OP_ATT, 0, NULL};
+	blemesh(&oo,0);            // post [MESH:ATT 0] pub ifc, which posts it up
 }
 
 //==============================================================================
@@ -179,6 +175,8 @@ void bt_ready(void)
 
   int blemesh(BL_ob *o, int val)
   {
+    static BL_fct output = NULL;       // output callback
+
     switch (bl_id(o))
     {
       case BL_ID(CL_SYS,OP_INIT):      // [SYS:INIT <cb>] init sub module
@@ -187,6 +185,11 @@ void bt_ready(void)
 
       case BL_ID(CL_SYS,OP_READY):     // [SYS:READY] BLE/MESH init
         bt_ready();                    // init BLE/Mesh when Bluetooth is ready
+        return 0;                      // OK
+
+      case BL_ID(CL_SET,OP_ATT):       // [SET:ATT] set atttention
+      case BL_ID(CL_SET,OP_PRV):       // [SET:PRV] set privisioning
+        bl_out(o,val,output);          // init BLE/Mesh when Bluetooth is ready
         return 0;                      // OK
 
       default:

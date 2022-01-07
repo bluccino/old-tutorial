@@ -7,19 +7,23 @@
 //==============================================================================
 // SYS interface: [PRV,ATT] = SYS()
 //
-//                          +-------------+
-//                   INIT ->|             |-> PRV
-//                          |     SYS     |
-//                  READY ->|             |-> ATT
-//                          +-------------+
-//                              BLEMESH
+//                          +---------------+
+//                   INIT ->|               |
+//                          |      SYS      |
+//                  READY ->|               |
+//                          +---------------+
+//                    PRV ->o               |-> PRV
+//                          |      SET      |
+//                    ATT ->o               |-> ATT
+//                          +---------------+
+//                               BLEMESH
 //  Input Messages:
 //    - [SYS:INIT <cb>]     init module
-//    - [SYS:READY]         init BLE/Mesh when Bluetooth is ready 
+//    - [SYS:READY]         init BLE/Mesh when Bluetooth is ready
 //
 //  Output Messages:
-//    - [SYS:PRV val]       provisioning on/off
-//    - [SYS:ATT val]       attentioning on/off
+//    - [SET:PRV val]       provisioning on/off
+//    - [SET:ATT val]       attentioning on/off
 //
 //==============================================================================
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models

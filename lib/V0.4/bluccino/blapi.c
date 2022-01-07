@@ -50,8 +50,13 @@
 
   #include "bluccino.h"
 
-  #define LOG   LOG_API                // API level generic logging shorthand
-  #define LOGO  LOGO_API               // API level object  logging shorthand
+//==============================================================================
+// API level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_API
+  #define LOGO(lvl,col,o,val)     LOGO_API(lvl,col"api:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_API(lvl,col,o,val)
 
 //==============================================================================
 // provisioned & attention state
@@ -64,7 +69,7 @@
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_fct notify = NULL;      // notification callback
+  static BL_fct output = NULL;      // notification callback
 
 //==============================================================================
 // us/ms clock
@@ -111,6 +116,7 @@
   bool bl_due(BL_ms *pdue, BL_ms ms)   // check if time if due & update
   {
     BL_ms now = bl_ms();
+
     if (now < *pdue)                   // time for tick action is due?
       return false;                    // no, not yet due!
 
@@ -140,10 +146,10 @@
 // output a message from Bluccino API or in general
 //==============================================================================
 
-  __weak int bl_out(BL_ob *o, int value, BL_fct call)
+  __weak int bl_out(BL_ob *o, int val, BL_fct call)
   {
     if (call)                          // is an app callback provided?
-      return call(o,value);            // forward event message to app
+      return call(o,val);            // forward event message to app
 
     return 0;
   }
@@ -152,24 +158,24 @@
 // input a message to Bluccino API
 //==============================================================================
 
-  __weak int bl_in(BL_ob *o, int value)
+  __weak int bl_in(BL_ob *o, int val)
   {
     int level = 2;                          // default verbose level
     int pair = BL_PAIR(o->cl,o->op);
 
     switch (pair)                           // dispatch event
     {
-      case BL_PAIR(CL_SYS,OP_PRV):          // provisioned state changed
-        provisioned = value;
+      case BL_PAIR(CL_SET,OP_PRV):          // provisioned state changed
+        provisioned = val;
         bl_log_color(attention,provisioned);
-        bl_log1(2,"@mesh:provisioned",provisioned);
-        return bl_out(o,value,notify);
+        LOG(2,BL_M"node %sprovisioned",val?"":"un");
+        return bl_out(o,val,output);
 
-      case BL_PAIR(CL_SYS,OP_ATT):          // attention state changed
-        attention = value;
+      case BL_PAIR(CL_SET,OP_ATT):          // attention state changed
+        attention = val;
         bl_log_color(attention,provisioned);
-        bl_log1(2,"@mesh:attention",attention);
-        return bl_out(o,value,notify);
+        LOG(2,BL_G"attention %s",val?"on":"off");
+        return bl_out(o,val,output);
 
       case BL_PAIR(CL_SYS,OP_TICK):
       case BL_PAIR(CL_SYS,OP_TOCK):
@@ -181,8 +187,8 @@
         break;
     }
 
-    LOGO(level,"@api",o,value);
-    return bl_out(o,value,notify);          // forward message to a
+    LOGO(level,"@api",o,val);
+    return bl_out(o,val,output);            // forward message to a
   }
 
 //==============================================================================
@@ -331,12 +337,12 @@
     switch (BL_PAIR(o->cl,o->op))
     {
       case (BL_PAIR(CL_SYS,OP_INIT)):
-        notify = o->data;
+        output = o->data;
         bl_init(bl_core,bl_up);        // init core, subscribe with bl_up()
         return 0;
 
       case (BL_PAIR(CL_SYS,OP_WHEN)):
-        notify = o->data;
+        output = o->data;
         return 0;
 
       case (BL_PAIR(CL_SYS,OP_TICK)):

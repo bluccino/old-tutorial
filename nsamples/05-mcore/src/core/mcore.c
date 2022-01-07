@@ -30,8 +30,6 @@
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
-  static BL_fct output = NULL;
-
 //==============================================================================
 // let's go ...
 //==============================================================================
@@ -207,11 +205,8 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 //==============================================================================
 
 #if MIGRATION_STEP1
-static int init(BL_ob *o, int val)
+static int init_mcore(void)
 {
-  LOGO(5,BL_B,o,val);                // log trace
-  output = o->data;                  // store output callback
-  bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
 #else
 void main(void)
 {
@@ -237,7 +232,7 @@ void main(void)
 	/* Initialize the Bluetooth Subsystem */
 	err = bt_enable(NULL);
 	if (err)
-  {
+        {
     #if MIGRATION_STEP2
 		  LOG(ERR "Bluetooth init failed (err %d)", err);
     #else
@@ -270,35 +265,50 @@ void main(void)
 	#endif
 }
 
+#if MIGRATION_STEP1
+//==============================================================================
+// init mcore modules
+//==============================================================================
+
+  static int init(BL_ob *o, int val)
+  {
+    LOGO(5,BL_B,o,val);                // log trace
+    bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
+    init_mcore();                      // init THIS module
+    return 0;
+  } 
+
 //==============================================================================
 // THE core interface
 // - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
 //==============================================================================
-#if MIGRATION_STEP1
 
   int bl_core(BL_ob *o, int val)
   {
+    static BL_fct output = NULL;
+
     switch (BL_PAIR(o->cl,o->op))
     {
-      case BL_PAIR(CL_SYS,OP_INIT):        // [SYS:INIT]
-        return init(o,val);                // forward to init()
+      case BL_PAIR(CL_SYS,OP_INIT):    // [SYS:INIT]
+        output = o->data;              // store output callback
+        return init(o,val);            // forward to init()
 
-      case BL_PAIR(CL_SYS,OP_TICK):        // [SYS:TICK @0,cnt]
-      case BL_PAIR(CL_SYS,OP_TOCK):        // [SYS:TICK @0,cnt]
-        return 0;                          // OK - nothing to tick/tock
+      case BL_PAIR(CL_SYS,OP_TICK):    // [SYS:TICK @0,cnt]
+      case BL_PAIR(CL_SYS,OP_TOCK):    // [SYS:TICK @0,cnt]
+        return 0;                      // OK - nothing to tick/tock
 
-      case BL_PAIR(CL_SYS,OP_PRV):         // [SYS:PRV val]  (provision)
-      case BL_PAIR(CL_SYS,OP_ATT):         // [SYS:ATT val]  (attention)
-      case BL_PAIR(CL_BUTTON,OP_PRESS):    // [BUTTON:PRESS @id](button pressed)
+      case BL_PAIR(CL_SET,OP_PRV):     // [SET:PRV val]  (provision)
+      case BL_PAIR(CL_SET,OP_ATT):     // [SET:ATT val]  (attention)
+      case BL_PAIR(CL_BUTTON,OP_PRESS):// [BUTTON:PRESS @id](button pressed)
         LOGO(4,"",o,val);      
-        return bl_out(o,val,output);       // output message to subscriber
+        return bl_out(o,val,output);   // output message to subscriber
 
-      case BL_PAIR(CL_LED,OP_SET):         // [LED:SET @id,onoff]
-      case BL_PAIR(CL_LED,OP_TOGGLE):      // [LED:SET @id,onoff]
-        return mgpio(o,val);               // delegate to MGPIO submodule
+      case BL_PAIR(CL_LED,OP_SET):     // [LED:SET @id,onoff]
+      case BL_PAIR(CL_LED,OP_TOGGLE):  // [LED:SET @id,onoff]
+        return mgpio(o,val);           // delegate to MGPIO submodule
 
       default:
-        return -1;                         // bad input
+        return -1;                     // bad input
     }
   }
 

@@ -14,22 +14,43 @@
 //                                  |     SYS     |
 //                            ATT ->|             |-> ATT
 //                                  +-------------+
-//                                  |             |
-//                            SET ->|   BUTTON    |-> SET
-//                                  |             |
+//                                  | =         = |
+//                            SET ->| ==BUTTON=== |-> SET
+//                                  | =         = |
 //                                  +-------------+
 //
 //  Input Messages:
 //    - [SYS:INIT <cb>]     init module
 //    - [SYS:TICK @id cnt]  tick the module
 //    - [SYS:TOCK @id cnt]  tock the module
-//    - [SYS:PRV val]       provisioning on/off
-//    - [SYS:ATT val]       attentioning on/off
+//    - [SET:PRV val]       provisioning on/off
+//    - [SET:ATT val]       attentioning on/off
 //
 //  Output Messages:
-//    - [SYS:PRV val]       provisioning on/off
-//    - [SYS:ATT val]       attentioning on/off
+//    - [SET:PRV val]       provisioning on/off
+//    - [SET:ATT val]       attentioning on/off
 //    - [BUTTON:SET @id 1]  button press @ channel @id
+//
+//==============================================================================
+//
+//      INIT TICK TOCK           PRV   ATT                SET
+//        |    |    |             ^     ^                  ^
+//        v    v    v             |     |                  |
+//    +-------------------------------------------------------------------+
+//    |  =====SYS=====            ==SET==              ==BUTTON==         |
+//    |                                                                   |
+//    |                           ==SET==                                 |
+//    +---------------------------o-----o---------------------------------+
+//                                ^     ^
+//                                |     |
+//                               PRV   ATT
+//                                |     |
+//                            +--------------+
+//                            |   ==SET==    |
+//                            |              |
+//                            |              |
+//                            +--------------+
+//                                 BLEMESH
 //
 //==============================================================================
 // mcore derived from:
