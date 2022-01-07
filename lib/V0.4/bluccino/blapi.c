@@ -140,7 +140,7 @@
 // output a message from Bluccino API or in general
 //==============================================================================
 
-  int bl_out(BL_ob *o, int value, BL_fct call)
+  __weak int bl_out(BL_ob *o, int value, BL_fct call)
   {
     if (call)                          // is an app callback provided?
       return call(o,value);            // forward event message to app
@@ -152,26 +152,27 @@
 // input a message to Bluccino API
 //==============================================================================
 
-  int bl_in(BL_ob *o, int value)
+  __weak int bl_in(BL_ob *o, int value)
   {
     int level = 2;                          // default verbose level
     int pair = BL_PAIR(o->cl,o->op);
 
     switch (pair)                           // dispatch event
     {
-      case BL_PAIR(CL_MESH,OP_PRV):         // provisioned state changed
+      case BL_PAIR(CL_SYS,OP_PRV):          // provisioned state changed
         provisioned = value;
         bl_log_color(attention,provisioned);
         bl_log1(2,"@mesh:provisioned",provisioned);
         return bl_out(o,value,notify);
 
-      case BL_PAIR(CL_MESH,OP_ATT):         // attention state changed
+      case BL_PAIR(CL_SYS,OP_ATT):          // attention state changed
         attention = value;
         bl_log_color(attention,provisioned);
         bl_log1(2,"@mesh:attention",attention);
         return bl_out(o,value,notify);
 
-      case BL_PAIR(CL_TIMER,OP_TICK):
+      case BL_PAIR(CL_SYS,OP_TICK):
+      case BL_PAIR(CL_SYS,OP_TOCK):
       case BL_PAIR(CL_SCAN,OP_ADV):
         level = 5;
         break;

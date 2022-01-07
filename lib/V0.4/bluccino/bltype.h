@@ -9,8 +9,9 @@
   #include <stdbool.h>
   #include <stdlib.h>
 
-  #define BL_PAIR(tag,op)   (((tag)<<16) | ((op)<0?-(op):(op)))
-  #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))     // array length
+  #define BL_ID(cl,op)      (((cl)<<16)|((op)<0?-(op):(op))) // message ID
+  #define BL_PAIR(cl,op)    BL_ID(cl,op)                     // message ID
+  #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))         // array length
 
      // create from given object o either OUT type init aggregate (op > 0)
      // or IN type init aggregate (op < 0)

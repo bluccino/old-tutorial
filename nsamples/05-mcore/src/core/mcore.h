@@ -10,10 +10,8 @@
 //                                    |    |    |
 //                                    v    v    v
 //                                  +-------------+
-//                                  |     SYS     |
-//                                  +-------------+
 //                            PRV ->|             |-> PRV
-//                                  |    MESH     |
+//                                  |     SYS     |
 //                            ATT ->|             |-> ATT
 //                                  +-------------+
 //                                  |             |
@@ -25,10 +23,12 @@
 //    - [SYS:INIT <cb>]     init module
 //    - [SYS:TICK @id cnt]  tick the module
 //    - [SYS:TOCK @id cnt]  tock the module
+//    - [SYS:PRV val]       provisioning on/off
+//    - [SYS:ATT val]       attentioning on/off
 //
 //  Output Messages:
-//    - [MESH:PRV val]      provisioning on/off
-//    - [MESH:ATT val]      attentioning on/off
+//    - [SYS:PRV val]       provisioning on/off
+//    - [SYS:ATT val]       attentioning on/off
 //    - [BUTTON:SET @id 1]  button press @ channel @id
 //
 //==============================================================================

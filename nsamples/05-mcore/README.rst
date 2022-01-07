@@ -2,7 +2,7 @@
 # 05-mcore (Bluccino mesh core for 1 button and 4 LEDs, app can access mesh)
 # - 4 LEDs, 1 BUTTON and mesh GOOSRV/GOOCLIare are controllable from app level
 # - any button @id press selects next LED blinking process
-# - after selection of 4 different LEDs LED is turned off
+# - after selection of 4 different LEDs all LEDs are turned off
 # - remark: program is suitable for nRF52832/840 DK and nRF52840 dongle
 #===============================================================================
 
@@ -11,6 +11,10 @@
 - #define CFG_NUMBER_OF_BUTTONS 1 in config.h
 - change app (main) to achieve specified behavior
 - excellent, runs on nRF52840 dongle
+- performing MIGRATION_STEP5 (define in config.h)
+- add public module interface for ble_mesh.c/.h
+- call BLEMESH[SYS:INIT] in mcore init
+- introduced status LED @0, where @0 is re-mapped to @1 at the lowest level
 
 #===============================================================================
 # 04-mcore (Bluccino mesh core for 4 LEDs and 4 buttons, app can't access mesh)

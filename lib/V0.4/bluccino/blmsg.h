@@ -11,7 +11,7 @@
 
   #ifndef BL_CL_TEXT
 
-    #define BL_CL_TEXT {"SYS","TIMER","TEST","MESH","BLE","NGMN",   \
+    #define BL_CL_TEXT {"SYS","TIMER","TEST","SET","GET","MESH","BLE","NGMN", \
                         "CFGSRV","CFGCLI","HEASRV","HEACLI", \
                         "GOOCLI","GOOSRV","GLVCLI","GLVSRV", \
                         "BUTTON", "SWITCH", "LED",           \
@@ -22,6 +22,9 @@
               CL_SYS,                    // system
               CL_TIMER,                  // timer module
               CL_TEST,                   // test class
+
+              CL_SET,                    // set property
+              CL_GET,                    // get property
 
               CL_MESH,                   // mesh
               CL_BLE,                    // BLE
@@ -55,7 +58,8 @@
 
   #ifndef BL_OP_TEXT
 
-    #define BL_OP_TEXT {"VOID","INIT","WHEN","USE","PRV","ATT","SET","LET",   \
+    #define BL_OP_TEXT {"VOID","INIT","WHEN","USE","READY", \
+                        "PRV","ATT","SET","LET",   \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","TOGGLE", \
                         "PAY", "ADV","BEACON","SEND","PRESS","RELEASE"}
@@ -67,6 +71,7 @@
               OP_WHEN,                   // provide module handling callback
               OP_USE,                    // can module be used
 
+              OP_READY,                  // continue when Bluetooth ready
               OP_PRV,                    // provisioning state changed
               OP_ATT,                    // attention state change
 

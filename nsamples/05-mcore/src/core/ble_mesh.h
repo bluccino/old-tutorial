@@ -1,9 +1,31 @@
-/* Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
- *
- * Copyright (c) 2018 Vikrant More
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//==============================================================================
+// mcore.h
+// multi model mesh demo based mesh core
+//
+// Adopted to Bluccino by Hugo Pristauz on 2022-Jan-07
+// Copyright © 2022 Bluccino. All rights reserved.
+//==============================================================================
+// SYS interface: [PRV,ATT] = SYS()
+//
+//                          +-------------+
+//                   INIT ->|             |-> PRV
+//                          |     SYS     |
+//                  READY ->|             |-> ATT
+//                          +-------------+
+//                              BLEMESH
+//  Input Messages:
+//    - [SYS:INIT <cb>]     init module
+//    - [SYS:READY]         init BLE/Mesh when Bluetooth is ready 
+//
+//  Output Messages:
+//    - [SYS:PRV val]       provisioning on/off
+//    - [SYS:ATT val]       attentioning on/off
+//
+//==============================================================================
+// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
+// Copyright (c) 2018 Vikrant More
+// SPDX-License-Identifier: Apache-2.0
+//==============================================================================
 
 #ifndef _BLE_MESH_H
 #define _BLE_MESH_H
@@ -14,6 +36,8 @@
 #include <bluetooth/l2cap.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/mesh.h>
+
+#include "mcore.h"          // MIGRATION_STEP5
 
 /* Model Operation Codes */
 #define	BT_MESH_MODEL_OP_GEN_ONOFF_GET          BT_MESH_MODEL_OP_2(0x82, 0x01)
@@ -108,6 +132,20 @@
 #define	BT_MESH_MODEL_LIGHT_CTL_TEMP_RANGE_SET_UNACK \
 	BT_MESH_MODEL_OP_2(0x82, 0x6C)
 
-void bt_ready(void);
+//==============================================================================
+// public module interface
+//==============================================================================
+
+  int blemesh(BL_ob *o, int val);
+
+//==============================================================================
+// syntactic sugar: blemesh_ready // start BT & mesh init when Bluetooth ready)
+// - usage: blemesh_ready()       // calls local bt_ready()
+//==============================================================================
+
+  static inline void blemesh_ready(void)
+  {
+    bl_sys(blemesh,OP_READY,NULL,0);
+  }
 
 #endif

@@ -19,6 +19,16 @@
   #define BL_GOOLET 0x8203
 
 //==============================================================================
+// syntactic sugar: compound message identifier
+// - usage: bl_id(o)                   // same as BL_PAIR(o->cl,o->op)
+//==============================================================================
+
+  static inline int bl_id(BL_ob *o)
+  {
+    return BL_PAIR(o->cl,o->op);
+  }
+
+//==============================================================================
 // us/ms clock
 //==============================================================================
 
@@ -72,6 +82,13 @@
   int bl_fwd(BL_fct module, BL_cl cl, BL_ob *o, int val);
 
 //==============================================================================
+// post system message to module
+// - usage: bl_sys(module,op,cb,val)   // post [SYS:op @0,<cb>,val] to module
+//==============================================================================
+
+  int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val);
+
+//==============================================================================
 // subscribe to a module's message output
 // - usage: bl_sub(module,cb)          // class=CL_SYS, id=0, val=0
 //==============================================================================
@@ -86,6 +103,28 @@
   {
     BL_ob oo = {CL_TEST,op,id,NULL};
     return bl_up(&oo,mode);            // post to test module via upward gear
+  }
+
+//==============================================================================
+// get module property
+// - usage: val = bl_get(module,op)    // use opcodes for property names
+//==============================================================================
+
+  static inline int bl_get(BL_fct module, BL_op op)
+  {
+    BL_ob oo = {CL_GET,op,0,NULL};
+    return module(&oo,0);              // post to test module via upward gear
+  }
+
+//==============================================================================
+// set module property
+// - usage: val = bl_set(module,op,val) // use opcodes for property names
+//==============================================================================
+
+  static inline int bl_set(BL_fct module, BL_op op, int val)
+  {
+    BL_ob oo = {CL_SET,op,0,NULL};
+    return module(&oo,val);            // post to test module via upward gear
   }
 
 //==============================================================================

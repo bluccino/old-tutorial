@@ -5,24 +5,6 @@
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
-//
-//                                  GPIO
-//                             +-------------+
-//                             |             |
-//                       SET ->|    LED      |
-//                             |             |
-//                             +-------------+
-//                             |             |
-//                             |   BUTTON    |-> PRESS
-//                             |             |
-//                             +-------------+
-//  Input Messages:
-//    - [LED:SET @id onoff]   // set LED @id on/off (id=1..4)
-//
-//  Output Messages:
-//    - [BUTTON:PRESS @id]      // notify button press
-//
-//==============================================================================
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
 // Copyright (c) 2018 Vikrant More
 // SPDX-License-Identifier: Apache-2.0
@@ -44,7 +26,7 @@
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
-  static BL_fct notify = NULL;
+  static BL_fct output = NULL;
 
 //==============================================================================
 // defines
@@ -96,7 +78,7 @@
     BL_ob oo = {CL_BUTTON,OP_SET,0,NULL};
 
     LOGO(1,BL_R,&oo,1);    //
-    bl_core(&oo,1);        // post to core module interface in order to output
+    mgpio(&oo,1);          // post to public module interface for output
   }
 
 //==============================================================================
@@ -256,120 +238,119 @@
 // button init
 //==============================================================================
 
-static void button_init(void)
-{
-  LOG(3,BL_C "init %d button%s",NBUTS, NBUTS==1?"":"s");
+  static void button_init(void)
+  {
+    LOG(3,BL_C "init %d button%s",NBUTS, NBUTS==1?"":"s");
 
-	  // Buttons configuration & setting
-
-  #if MIGRATION_STEP4
-  	k_work_init(&button_work, button_workhorse);
-  #else
-  	k_work_init(&button_work, publish);
-  #endif
-
-      // button[0] ...
-
-  #if (NBUTS >= 1)
-  	button_device[0] = device_get_binding(DT_GPIO_LABEL(SW0_NODE, gpios));
-  	gpio_pin_configure(button_device[0], DT_GPIO_PIN(SW0_NODE, gpios),
-  			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
-  			   DT_GPIO_FLAGS(SW0_NODE, gpios));
-
-  	gpio_pin_interrupt_configure(button_device[0],
-  				     DT_GPIO_PIN(SW0_NODE, gpios),
-  				     GPIO_INT_EDGE_TO_ACTIVE);
+  	  // Buttons configuration & setting
 
     #if MIGRATION_STEP4
-    	gpio_init_callback(&button_cb[0], but0_cb, BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
+    	k_work_init(&button_work, button_workhorse);
     #else
-    	gpio_init_callback(&button_cb[0], button_pressed,
-    			   BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
+    	k_work_init(&button_work, publish);
     #endif
 
-  	gpio_add_callback(button_device[0], &button_cb[0]);
-  #endif
+        // button[0] ...
 
-      // button[1] ...
+    #if (NBUTS >= 1)
+    	button_device[0] = device_get_binding(DT_GPIO_LABEL(SW0_NODE, gpios));
+    	gpio_pin_configure(button_device[0], DT_GPIO_PIN(SW0_NODE, gpios),
+    			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
+    			   DT_GPIO_FLAGS(SW0_NODE, gpios));
 
-  #if (NBUTS >= 2)
-  	button_device[1] = device_get_binding(DT_GPIO_LABEL(SW1_NODE, gpios));
+    	gpio_pin_interrupt_configure(button_device[0],
+    				     DT_GPIO_PIN(SW0_NODE, gpios),
+    				     GPIO_INT_EDGE_TO_ACTIVE);
 
-  	gpio_pin_configure(button_device[1], DT_GPIO_PIN(SW1_NODE, gpios),
-  			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
-  			   DT_GPIO_FLAGS(SW1_NODE, gpios));
+      #if MIGRATION_STEP4
+      	gpio_init_callback(&button_cb[0], but0_cb, BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
+      #else
+      	gpio_init_callback(&button_cb[0], button_pressed,
+      			   BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
+      #endif
 
-  	gpio_pin_interrupt_configure(button_device[1],
-  				     DT_GPIO_PIN(SW1_NODE, gpios),
-  				     GPIO_INT_EDGE_TO_ACTIVE);
-
-    #if MIGRATION_STEP4
-  	  gpio_init_callback(&button_cb[1], but1_cb, BIT(DT_GPIO_PIN(SW1_NODE, gpios)));
-    #else
-  	  gpio_init_callback(&button_cb[1], button_pressed,
-  			   BIT(DT_GPIO_PIN(SW1_NODE, gpios)));
+    	gpio_add_callback(button_device[0], &button_cb[0]);
     #endif
 
-  	gpio_add_callback(button_device[1], &button_cb[1]);
-  #endif
+        // button[1] ...
 
-      // button[2] ...
+    #if (NBUTS >= 2)
+    	button_device[1] = device_get_binding(DT_GPIO_LABEL(SW1_NODE, gpios));
 
-  #if (NBUTS >= 3)
-  	button_device[2] = device_get_binding(DT_GPIO_LABEL(SW2_NODE, gpios));
+    	gpio_pin_configure(button_device[1], DT_GPIO_PIN(SW1_NODE, gpios),
+    			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
+    			   DT_GPIO_FLAGS(SW1_NODE, gpios));
 
-  	gpio_pin_configure(button_device[2], DT_GPIO_PIN(SW2_NODE, gpios),
-  	       GPIO_INPUT | GPIO_INT_DEBOUNCE |
-  			   DT_GPIO_FLAGS(SW2_NODE, gpios));
+    	gpio_pin_interrupt_configure(button_device[1],
+    				     DT_GPIO_PIN(SW1_NODE, gpios),
+    				     GPIO_INT_EDGE_TO_ACTIVE);
 
-  	gpio_pin_interrupt_configure(button_device[2],
-  				     DT_GPIO_PIN(SW2_NODE, gpios),
-  				     GPIO_INT_EDGE_TO_ACTIVE);
+      #if MIGRATION_STEP4
+    	  gpio_init_callback(&button_cb[1], but1_cb, BIT(DT_GPIO_PIN(SW1_NODE, gpios)));
+      #else
+    	  gpio_init_callback(&button_cb[1], button_pressed,
+    			   BIT(DT_GPIO_PIN(SW1_NODE, gpios)));
+      #endif
 
-    #if MIGRATION_STEP4
-  	  gpio_init_callback(&button_cb[2], but2_cb, BIT(DT_GPIO_PIN(SW2_NODE, gpios)));
-    #else
-    	gpio_init_callback(&button_cb[2], button_pressed,
-  			   BIT(DT_GPIO_PIN(SW2_NODE, gpios)));
+    	gpio_add_callback(button_device[1], &button_cb[1]);
     #endif
 
-  	gpio_add_callback(button_device[2], &button_cb[2]);
-  #endif
+        // button[2] ...
 
-      // button[3] ...
+    #if (NBUTS >= 3)
+    	button_device[2] = device_get_binding(DT_GPIO_LABEL(SW2_NODE, gpios));
 
-  #if (NBUTS >= 4)
-  	button_device[3] = device_get_binding(DT_GPIO_LABEL(SW3_NODE, gpios));
+    	gpio_pin_configure(button_device[2], DT_GPIO_PIN(SW2_NODE, gpios),
+    	       GPIO_INPUT | GPIO_INT_DEBOUNCE |
+    			   DT_GPIO_FLAGS(SW2_NODE, gpios));
 
-  	gpio_pin_configure(button_device[3], DT_GPIO_PIN(SW3_NODE, gpios),
-  			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
-  			   DT_GPIO_FLAGS(SW3_NODE, gpios));
+    	gpio_pin_interrupt_configure(button_device[2],
+    				     DT_GPIO_PIN(SW2_NODE, gpios),
+    				     GPIO_INT_EDGE_TO_ACTIVE);
 
-  	gpio_pin_interrupt_configure(button_device[3],
-  				     DT_GPIO_PIN(SW3_NODE, gpios),
-  				     GPIO_INT_EDGE_TO_ACTIVE);
+      #if MIGRATION_STEP4
+    	  gpio_init_callback(&button_cb[2], but2_cb, BIT(DT_GPIO_PIN(SW2_NODE, gpios)));
+      #else
+      	gpio_init_callback(&button_cb[2], button_pressed,
+    			   BIT(DT_GPIO_PIN(SW2_NODE, gpios)));
+      #endif
 
-    #if MIGRATION_STEP4
-  	  gpio_init_callback(&button_cb[3], but3_cb, BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
-    #else
-  	  gpio_init_callback(&button_cb[3], button_pressed,
-  			   BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
+    	gpio_add_callback(button_device[2], &button_cb[2]);
     #endif
 
-  	gpio_add_callback(button_device[3], &button_cb[3]);
-  #endif
-}
+        // button[3] ...
+
+    #if (NBUTS >= 4)
+    	button_device[3] = device_get_binding(DT_GPIO_LABEL(SW3_NODE, gpios));
+
+    	gpio_pin_configure(button_device[3], DT_GPIO_PIN(SW3_NODE, gpios),
+    			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
+    			   DT_GPIO_FLAGS(SW3_NODE, gpios));
+
+    	gpio_pin_interrupt_configure(button_device[3],
+    				     DT_GPIO_PIN(SW3_NODE, gpios),
+    				     GPIO_INT_EDGE_TO_ACTIVE);
+
+      #if MIGRATION_STEP4
+    	  gpio_init_callback(&button_cb[3], but3_cb, BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
+      #else
+    	  gpio_init_callback(&button_cb[3], button_pressed,
+    			   BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
+      #endif
+
+    	gpio_add_callback(button_device[3], &button_cb[3]);
+    #endif
+  }
 
 //==============================================================================
 // init
 //==============================================================================
 
-
   static int init(BL_ob *o, int val)
   {
     LOG(2,BL_B "GPIO init");
 
-    notify = o->data;                   // store notify callback
+    output = o->data;                     // store output callback
     led_init();
     button_init();
     return 0;
@@ -379,7 +360,7 @@ static void button_init(void)
 // public module interface
 //==============================================================================
 
-  int gpio(BL_ob *o, int val)
+  int mgpio(BL_ob *o, int val)
   {
     switch (BL_PAIR(o->cl,o->op))
     {
@@ -387,10 +368,21 @@ static void button_init(void)
       	return init(o,val);               // delegate to init();
 
       case BL_PAIR(CL_LED,OP_SET):        // [LED:set]
+      {
+        BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
+        o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
 	      return led_set(o,val != 0);       // delegate to led_set();
+      }
 
       case BL_PAIR(CL_LED,OP_TOGGLE):     // [LED:toggle]
+      {
+        BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
+        o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
 	      return led_toggle(o,val);         // delegate to led_toggle();
+      }
+
+      case BL_PAIR(CL_BUTTON,OP_PRESS):   // [BUTTON:PRESS @id]
+	      return bl_out(o,val,output);      // output message
 
       default:
 	      return -1;                        // bad input

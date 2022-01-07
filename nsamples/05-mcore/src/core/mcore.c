@@ -30,7 +30,7 @@
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
-  static BL_fct notify = NULL;
+  static BL_fct output = NULL;
 
 //==============================================================================
 // let's go ...
@@ -210,7 +210,8 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 static int init(BL_ob *o, int val)
 {
   LOGO(5,BL_B,o,val);                // log trace
-  notify = o->data;                  // store notify callback
+  output = o->data;                  // store output callback
+  bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
 #else
 void main(void)
 {
@@ -245,7 +246,11 @@ void main(void)
 		return err;
 	}
 
-	bt_ready();
+  #if MIGRATION_STEP5
+    blemesh_ready();
+  #else
+	  bt_ready();
+  #endif
 
 	light_default_status_init();
 
@@ -272,7 +277,7 @@ void main(void)
 #if MIGRATION_STEP1
 
   int bl_core(BL_ob *o, int val)
-	{
+  {
     switch (BL_PAIR(o->cl,o->op))
     {
       case BL_PAIR(CL_SYS,OP_INIT):        // [SYS:INIT]
@@ -280,20 +285,21 @@ void main(void)
 
       case BL_PAIR(CL_SYS,OP_TICK):        // [SYS:TICK @0,cnt]
       case BL_PAIR(CL_SYS,OP_TOCK):        // [SYS:TICK @0,cnt]
-				return 0;                          // OK - nothing to tick/tock
+        return 0;                          // OK - nothing to tick/tock
 
-      case BL_PAIR(CL_MESH,OP_PRV):        // [MESH:PRV val]  (provision)
-      case BL_PAIR(CL_MESH,OP_ATT):        // [MESH:ATT val]  (attention)
+      case BL_PAIR(CL_SYS,OP_PRV):         // [SYS:PRV val]  (provision)
+      case BL_PAIR(CL_SYS,OP_ATT):         // [SYS:ATT val]  (attention)
       case BL_PAIR(CL_BUTTON,OP_PRESS):    // [BUTTON:PRESS @id](button pressed)
-				return bl_out(o,val,notify);       // output message to subscriber
+        LOGO(4,"",o,val);      
+        return bl_out(o,val,output);       // output message to subscriber
 
       case BL_PAIR(CL_LED,OP_SET):         // [LED:SET @id,onoff]
       case BL_PAIR(CL_LED,OP_TOGGLE):      // [LED:SET @id,onoff]
-				return gpio(o,val);                // delegate to GPIO submodule
+        return mgpio(o,val);               // delegate to MGPIO submodule
 
       default:
-    		return -1;                         // bad input
+        return -1;                         // bad input
     }
-	}
+  }
 
 #endif // MIGRATION_STEP1
