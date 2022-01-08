@@ -22,7 +22,7 @@
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"gpio:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mgpio:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 

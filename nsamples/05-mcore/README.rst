@@ -15,6 +15,8 @@
 - add public module interface for ble_mesh.c/.h
 - call BLEMESH[SYS:INIT] in mcore init
 - introduced status LED @0, where @0 is re-mapped to @1 at the lowest level
+- bt_mesh_reset() not directly but notification of app with [RESET:CNT] message
+- app can control bt_mesh_reset() with [RESET:PRV] message
 
 #===============================================================================
 # 04-mcore (Bluccino mesh core for 4 LEDs and 4 buttons, app can't access mesh)

@@ -69,7 +69,7 @@
 
 //==============================================================================
 // post message (with main parameters to POST interface ofa given module)
-// - usage: bl_post(module,opcode,id,val)  // class=CL_SYS, data=NULL
+// - usage: bl_post(module,opcode,id,val) // class=CL_SYS, data=NULL
 //==============================================================================
 
   int bl_post(BL_fct module, BL_op op, int id, int val);

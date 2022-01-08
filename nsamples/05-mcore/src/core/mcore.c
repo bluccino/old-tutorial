@@ -162,6 +162,7 @@ void update_light_state(void)
 	}
 }
 
+#if !MIGRATION_STEP5             // explicite reset control by app
 static void short_time_multireset_bt_mesh_unprovisioning(void)
 {
 	if (reset_counter >= 4U)
@@ -172,7 +173,8 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
     #else
 		  printk("BT Mesh reset\n");
     #endif
-		bt_mesh_reset();
+
+	  bt_mesh_reset();
 	}
   else
   {
@@ -186,6 +188,25 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
 
 	save_on_flash(RESET_COUNTER);
 }
+#endif // MIGRATION_STEP5
+//==============================================================================
+// unprovision node
+//==============================================================================
+#if MIGRATION_STEP5
+
+  static int unprovision(BL_ob *o, int val) // uprovision mesh node
+  {
+		reset_counter = 0U;
+		LOG(3,BL_B "unprovision node");
+	  bt_mesh_reset();
+    return 0;                               // OK
+  }
+
+#endif // MIGRATION_STEP5
+
+//==============================================================================
+// reset timer
+//==============================================================================
 
 static void reset_counter_timer_handler(struct k_timer *dummy)
 {
@@ -196,10 +217,33 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
   #else
   	printk("Reset Counter set to Zero\n");
   #endif
+
+  #if MIGRATION_STEP5
+    BL_ob oo = {_RESET,DUE_,0,NULL};
+    bl_core(&oo,0);                    // post to bl_core for upward posting
+  #endif
 }
 
 K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
+//==============================================================================
+// increment reset counter (set due timer, return reset counter after increment)
+//==============================================================================
+#if MIGRATION_STEP5
+
+  static int increment(BL_ob *o, int ms)   // inc reset counter, set due timer
+  {
+		reset_counter++;
+  	LOG(3,BL_M "reset counter: %d", reset_counter);
+
+    if (ms > 0)
+      k_timer_start(&reset_counter_timer, K_MSEC(ms), K_NO_WAIT);
+
+  	save_on_flash(RESET_COUNTER);
+    return reset_counter;                   // return counter value after inc
+  }
+
+#endif // MIGRATION_STEP5
 //==============================================================================
 // init (fomer main())
 //==============================================================================
@@ -251,8 +295,10 @@ void main(void)
 
 	update_light_state();
 
-	short_time_multireset_bt_mesh_unprovisioning();
-	k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
+        #if !MIGRATION_STEP5
+	  short_time_multireset_bt_mesh_unprovisioning();
+	  k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
+        #endif
 
 	#if defined(CONFIG_MCUMGR)
 		/* Initialize the Bluetooth mcumgr transport. */
@@ -276,11 +322,13 @@ void main(void)
     bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
     init_mcore();                      // init THIS module
     return 0;
-  } 
+  }
 
 //==============================================================================
-// THE core interface
+// public core interface
 // - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
+// - [RESET:PRV]   // unprovision node
+// - [RESET:INC]   // return incremented reset counter while <due> timer started
 //==============================================================================
 
   int bl_core(BL_ob *o, int val)
@@ -300,12 +348,21 @@ void main(void)
       case BL_PAIR(CL_SET,OP_PRV):     // [SET:PRV val]  (provision)
       case BL_PAIR(CL_SET,OP_ATT):     // [SET:ATT val]  (attention)
       case BL_PAIR(CL_BUTTON,OP_PRESS):// [BUTTON:PRESS @id](button pressed)
-        LOGO(4,"",o,val);      
+        LOGO(4,"",o,val);
         return bl_out(o,val,output);   // output message to subscriber
 
       case BL_PAIR(CL_LED,OP_SET):     // [LED:SET @id,onoff]
       case BL_PAIR(CL_LED,OP_TOGGLE):  // [LED:SET @id,onoff]
         return mgpio(o,val);           // delegate to MGPIO submodule
+
+      case BL_PAIR(_RESET,INC_):       // cnt = [RESET:INC <ms>]
+        return increment(o,val);       // delegate to increment()
+
+      case BL_PAIR(_RESET,PRV_):       // [RESET:PRV]
+        return unprovision(o,val);     // unprovision node
+
+      case BL_PAIR(_RESET,DUE_):       // [RESET:DUE] reset timer is due
+        return bl_out(o,val,output);   // post to subscriber
 
       default:
         return -1;                     // bad input

@@ -15,6 +15,8 @@
   #define T_ATT      750               // 750 ms attention blink period
   #define T_PRV     2000               // 2000 ms provisioned blink period
   #define T_UNP      350               // 350 ms unprovisioned blink period
+  #define T_BLINK   1000               // 1000 ms RGB blink period
+  #define T_STARTUP 7000               // 7000 ms startup reset interval
 
 //==============================================================================
 // MAIN level logging shorthands
@@ -49,6 +51,7 @@
 // module attention (handle attention state changes and perform blinking)
 // - usage: state = attention(o,val)
 // - interfaces: []=SYS(TICK); []=MESH(ATT); []=GET(ATT);
+// - [SYS:INIT <cb>]    // init module
 // - [SYS:TICK @id,cnt] // tick input for attention blinking
 // - [SET:ATT state]    // update attention state which is received from mesh
 // - [GET:ATT state]    // return current attention state
@@ -61,6 +64,9 @@
 
     switch (bl_id(o))
     {
+      case BL_ID(_SYS,INIT_):               // [SYS:INIT @id <cb>]
+        return 0;                           // OK (nothing to init)
+
       case BL_ID(CL_SYS,OP_TICK):
         if (!state || !bl_due(&due,T_ATT))  // attention state? due?
           return 0;                         // neither attention state nor due
@@ -84,6 +90,7 @@
 // module provision (handle provision state changes and perform blinking)
 // - usage: state = provision(o,val)
 // - interfaces: []=SYS(TICK); []=MESH(PRV); []=GET(PRV);
+// - [SYS:INIT <cb>]    // init module
 // - [SYS:TICK @id,cnt] // tick input for attention blinking
 // - [SET:PRV state]    // set provision state which is received from mesh
 // - [GET:PRV state]    // return current provision state
@@ -95,7 +102,10 @@
 
     switch (bl_id(o))
     {
-      case BL_ID(CL_SYS,OP_TICK):
+      case BL_ID(_SYS,INIT_):               // [SYS:INIT @id <cb>]
+        return 0;                           // OK (nothing to init)
+
+      case BL_ID(_SYS,TICK_):               // [SYS:TICK @id <val>]
       {
         int ms = (state ? T_PRV:T_UNP);     // 2000 ms versus 350 ms period
         int rem = val % (ms/T_TICK);        // remainder modulo (ticks/period)
@@ -105,19 +115,70 @@
           return led(0,rem == 0);           // update status LED @1
       }
 
-      case BL_ID(CL_SET,OP_PRV):            // [SET:PRV val] change prov state
+      case BL_ID(_SET,PRV_):                // [SET:PRV val] change prov state
         state = val;                        // store attention state
         led(0,0);                           // turn status LED @1 off
         led(id,0);                          // turn current LED @id off
         return 0;
 
-      case BL_ID(CL_GET,OP_PRV):            // state = ATTENTION[GET:ATT]
+      case BL_ID(_GET,PRV_):                // state = ATTENTION[GET:ATT]
         return state;
 
       default:
         return -1;                          // bad args
     }
   }
+
+//==============================================================================
+// module startup (optionally reset mesh node during startup)
+// - usage: cnt = startup(o,val)
+// - interfaces: []=STARTUP.SYS(INIT);[]=STARTUP.RESET(DUE);[]=STARTUP.GET(BUSY)
+// - [SYS:INIT @id,<cb>]   // init system, provide output <cb>
+// - [RESET:INC due]       // inc/get reset counter, set reset <due> timer
+// - [RESET:DUE]           // receive [RESET:DUE] message (from core)
+// - [GET:BUSY]            // get reset busy state
+//==============================================================================
+
+  #define TS  T_STARTUP                     // startup reset interval
+
+  static int startup(BL_ob *o, int val)     // public module interface
+  {
+    BL_fct output = NULL;                   // output callback
+    static volatile int count = 0;          // reset counter
+
+    switch (bl_id(o))
+    {
+      case BL_ID(_SYS,INIT_):               // [SYS:INIT <cb>] init module
+        output = o->data;                   // store output callback
+
+          // increment reset counter, start TS = 7000 ms due timer
+
+        count = bl_msg(bl_down,_RESET,INC_,0,NULL,TS);
+
+        if (count <= 3)                     // <= 3 times resetted?
+          led(count+1,1);                   // indicate by turn on LED @count+1
+        else                                // more than 3-times resetted
+        {
+          LOG(1,"unprovision node");        // let us know
+          bl_msg(bl_down,_RESET,PRV_,0,NULL,0);   // unprovision node
+        }
+
+        return 0;                           // OK
+
+      case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
+        LOG(1,BL_R"clear reset counter");   // let us know
+        led(count+1,0);                     // turn off LED @count+1
+        count = 0;                          // deactivate startup.busy state
+        return 0;                           // OK
+
+      case BL_ID(_GET,BUSY_):               // reset procedure busy
+        return (count != 0);                // return busy state
+
+      default:
+        return 0;
+    }
+  }
+
 //==============================================================================
 // helper: attention blinker (let green status LED @0 attention blinking)
 // - @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
@@ -127,13 +188,20 @@
   {
     static BL_ms due = 0;                   // need for periodic action
 
-    if (id == 0 || !bl_due(&due,1000))      // no blinking if @id:off or not due
+    if (id <= 1 || !bl_due(&due,T_BLINK))   // no blinking if @id:off or not due
       return 0;                             // bye if LED off or not due
 
-    if ( bl_get(attention,OP_ATT) )         // no blinking in attention mode
+    if ( bl_get(attention,ATT_) ||          // no blinking in attention mode
+         bl_get(startup,BUSY_))             // no blinking during startup
       return 0;                             // bye if attention state
 
-    return led(id,-1);                      // toogle THE LED @id
+    static bool toggle;
+    toggle = !toggle;
+
+    if (toggle)
+      return (led(id,1), led(2+id%3,0));    // flip LED pair
+    else
+      return (led(id,0), led(2+id%3,1));    // flip back LED pair
   }
 
 //==============================================================================
@@ -153,10 +221,12 @@
       case BL_ID(CL_BUTTON,OP_PRESS):       // button press to cause LED on off
         LOGO(1,"@",o,val);
 
-        led(id,0);                          // turn off current LED
+        led(2,0); led(3,0); led(4,0);       // turn off current LED
         id = (id==0) ? 2 : (id+1)%5;        // update THE LED id (=> 0 or 2,3,4)
-        led(id,1);                          // turn on new selected LED
         return 0;                           // OK
+
+      case BL_ID(_RESET,DUE_):              // [RESET:DUE] - reset counter due
+        return startup(o,val);              // forward to startup module
 
       default:
         return -1;                          // bad args
@@ -169,9 +239,7 @@
 
   int bl_down(BL_ob *o, int val)
   {
-    #define LED_SET BL_ID(CL_LED,OP_SET)
-
-    if ( bl_id(o)==LED_SET && !o->id)  // special logging of status LED messages
+    if ( o->cl == CL_LED && !o->id)    // special logging of status LED messages
       LOGO(5,"status:down:",o,val);
     else
       LOGO(3,BL_Y "down:",o,val);
@@ -201,8 +269,6 @@
     if (tocks % 5 == 0)                // log every 5th tock
       LOGO(3,"",o,tocks);              // log to see we are alife
 
-    if (id > 0 && !bl_get(attention,OP_ATT))
-      led(id,-1);                      // toggle LED
     return 0;                          // OK
   }
 
@@ -214,6 +280,9 @@
 
   static int init(BL_ob *o, int val)   // init all modules
   {
+    bl_init(attention,NULL);           // init atttention module
+    bl_init(provision,NULL);           // init provision module
+    bl_init(startup,NULL);             // init startup module
     return 0;                          // OK
   }
 
