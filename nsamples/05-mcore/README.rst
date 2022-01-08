@@ -1,8 +1,9 @@
 #===============================================================================
-# 05-mcore (Bluccino mesh core for 1 button and 4 LEDs, app can access mesh)
+# 05-mcore (Bluccino mesh core for 1 button and 4 LEDs, app cannot access mesh)
 # - 4 LEDs, 1 BUTTON and mesh GOOSRV/GOOCLIare are controllable from app level
 # - any button @id press selects next LED blinking process
 # - after selection of 4 different LEDs all LEDs are turned off
+# - main program involves an attention-, provision- and startup-module
 # - remark: program is suitable for nRF52832/840 DK and nRF52840 dongle
 #===============================================================================
 
@@ -17,6 +18,7 @@
 - introduced status LED @0, where @0 is re-mapped to @1 at the lowest level
 - bt_mesh_reset() not directly but notification of app with [RESET:CNT] message
 - app can control bt_mesh_reset() with [RESET:PRV] message
+- startup module flashes one of RGB LEDs at 90% duty
 
 #===============================================================================
 # 04-mcore (Bluccino mesh core for 4 LEDs and 4 buttons, app can't access mesh)

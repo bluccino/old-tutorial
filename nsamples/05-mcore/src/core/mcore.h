@@ -15,33 +15,32 @@
 //                                    |    |    |
 //                                    v    v    v
 //                                  +-------------+
-//                            PRV ->*             |-> PRV
+//                            PRV ->:             |-> PRV
 //                                  |   ==SYS==   |
-//                            ATT ->*             |-> ATT
+//                            ATT ->:             |-> ATT
 //                                  +-------------+
 //                            INC ->|             |
 //                                  |  ==RESET==  |-> DUE
 //                            PRV ->|             |
 //                                  +-------------+
-//                            SET ->*  ==BUTTON== |-> SET
+//                            SET ->:  ==BUTTON== |-> SET
 //                                  +-------------+
 //                                       MCORE
 //  Input Messages:
-//    - [SYS:INIT <cb>]     init module
-//    - [SYS:TICK @id cnt]  tick the module
-//    - [SYS:TOCK @id cnt]  tock the module
-//    - [RESET:INC <ms>]    inc reset counter and set due (<ms>) timer
-//    - [RESET:PRV]         unprovision node
-//    - [SET.PRV val]       provisioning on/off
-//    - [SET.ATT val]       attentioning on/off
-//    - [BUTTON.SET @id 1]  button press @ channel @id
-//    - [BUTTON.SET @id 1]  button press @ channel @id
-//
-//  Output Messages:
+//    - [SYS<INIT <cb>]     init module
+//    - [SYS<TICK @id cnt]  tick the module
+//    - [SYS<TOCK @id cnt]  tock the module
+//    - [RESET<INC <ms>]    inc reset counter and set due (<ms>) timer
+//    - [RESET<PRV]         unprovision node
 //    - [SET:PRV val]       provisioning on/off
 //    - [SET:ATT val]       attentioning on/off
-//    - [RESET:CNT]         get reset counter
 //    - [BUTTON:SET @id 1]  button press @ channel @id
+//
+//  Output Messages:
+//    - [SET>PRV val]       provisioning on/off
+//    - [SET>ATT val]       attentioning on/off
+//    - [RESET>DUE]         reset timer due notification
+//    - [BUTTON>SET @id 1]  button press @ channel @id
 //
 //==============================================================================
 //  Reset system

@@ -89,6 +89,13 @@
   int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val);
 
 //==============================================================================
+// handle message addressed to module, characterized by opcode
+// - usage: bl_hdl(module,op,id,val)   // post [HDL:op @id,val] to module
+//==============================================================================
+
+  int bl_hdl(BL_fct module, BL_op op, int id, int val);
+
+//==============================================================================
 // subscribe to a module's message output
 // - usage: bl_sub(module,cb)          // class=CL_SYS, id=0, val=0
 //==============================================================================

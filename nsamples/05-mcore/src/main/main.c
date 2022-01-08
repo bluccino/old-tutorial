@@ -16,7 +16,7 @@
   #define T_PRV     2000               // 2000 ms provisioned blink period
   #define T_UNP      350               // 350 ms unprovisioned blink period
   #define T_BLINK   1000               // 1000 ms RGB blink period
-  #define T_STARTUP 7000               // 7000 ms startup reset interval
+  #define T_STARTUP 5000               // 5000 ms startup reset interval
 
 //==============================================================================
 // MAIN level logging shorthands
@@ -45,6 +45,85 @@
     if (id)                                 // don't log status LED @0 logs
       LOGO(1,"@",&oo,val);                  // see what LEDs will do
     return bl_down(&oo,val);                // post [LED:op @id,val] to core
+  }
+
+//==============================================================================
+// module startup (optionally reset mesh node during startup)
+// - usage: cnt = startup(o,val)
+// - interfaces: []=STARTUP.SYS(INIT);[]=STARTUP.RESET(DUE);
+//               []=STARTUP.GET(BUSY);[]=STARTUP.BUTTON(PRESS)
+// - [SYS<INIT @id,<cb>]   // init system, provide output <cb>
+// - [SYS<TICK @id,ticks]  // init system, provide output <cb>
+// - [VOID<INC]            // trigger to emit a [RESET:DUE] event with 5s <due>
+// - [RESET!INC due]       // inc/get reset counter, set reset <due> timer
+// - [BUTTON<PRESS @id]    // receive button press event during startup
+// - [RESET>DUE]           // receive [RESET:DUE] message (from core)
+// - [GET>BUSY]            // get startup busy state
+//==============================================================================
+
+  static int startup(BL_ob *o, int val)     // public module interface
+  {
+    BL_fct output = NULL;                   // output callback
+    static volatile int count = 0;          // reset counter
+    static int8_t map[4] = {-1,3,4,2};      // LED @id map: [-,GREEN,BLUE,RED]
+
+    switch (bl_id(o))
+    {
+      case BL_ID(_SYS,INIT_):               // [SYS:INIT <cb>] init module
+        output = o->data;                   // store output callback
+
+          // increment reset counter, start TS = 7000 ms due timer
+
+        bl_hdl(startup,INC_,0,0);           // handle STARTUP[HDL:INC]
+
+        if (count <= 3)                     // <= 3 times resetted?
+          led(map[count],1);                // indicate by turn on LED @count+1
+        else                                // more than 3-times resetted
+        {
+          LOG(1,"unprovision node");        // let us know
+          bl_msg(bl_down,_RESET,PRV_,0,NULL,0);   // unprovision node
+        }
+
+        return 0;                           // OK
+
+      case BL_ID(_HDL,INC_):                // handle [HDL:INC] entry point
+        count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
+        return 0;                           // OK
+
+      case BL_ID(_SYS,TICK_):               // receive [RESET<DUE] event
+        if (count > 0)                      // if startup in progress
+        {
+          static bool old;
+          int rem = val % (1000/T_TICK);    // remainder modulo (ticks/period)
+          bool onoff = rem < (900/T_TICK);  // 90% of time on
+
+          if (onoff != old)                 // LED on/odd state changed?
+          {
+            bool save = bl_verbose(0);      // verbose off
+            led(map[count],onoff);          // turn off LED @count+1
+            bl_verbose(save);               // restore verbose level
+          }
+          old = onoff;                      // saveLED on/off state
+        }
+        return 0;                           // OK
+
+      case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
+        LOG(2,BL_M"clear reset counter");   // let us know
+        led(map[count],0);                  // turn off LED @count+1
+        count = 0;                          // deactivate startup.busy state
+        return 0;                           // OK
+
+      case BL_ID(_GET,BUSY_):               // reset procedure busy
+        return (count != 0);                // return busy state
+
+      case BL_ID(_BUTTON,PRESS_):           // button press during startup
+        if (count > 0)                      // if we are still in startup phase
+          bl_hdl(startup,INC_,0,0);         // handle STARTUP[HDL:INC]
+        return 0;                           // OK
+
+      default:
+        return 0;
+    }
   }
 
 //==============================================================================
@@ -109,7 +188,7 @@
       {
         int ms = (state ? T_PRV:T_UNP);     // 2000 ms versus 350 ms period
         int rem = val % (ms/T_TICK);        // remainder modulo (ticks/period)
-        if (rem > 1 || bl_get(attention,OP_ATT))
+        if (rem > 1 || bl_get(attention,OP_ATT) || bl_get(startup,OP_BUSY))
           return 0;                         // no provision blinking during att!
         else
           return led(0,rem == 0);           // update status LED @1
@@ -126,56 +205,6 @@
 
       default:
         return -1;                          // bad args
-    }
-  }
-
-//==============================================================================
-// module startup (optionally reset mesh node during startup)
-// - usage: cnt = startup(o,val)
-// - interfaces: []=STARTUP.SYS(INIT);[]=STARTUP.RESET(DUE);[]=STARTUP.GET(BUSY)
-// - [SYS:INIT @id,<cb>]   // init system, provide output <cb>
-// - [RESET:INC due]       // inc/get reset counter, set reset <due> timer
-// - [RESET:DUE]           // receive [RESET:DUE] message (from core)
-// - [GET:BUSY]            // get reset busy state
-//==============================================================================
-
-  #define TS  T_STARTUP                     // startup reset interval
-
-  static int startup(BL_ob *o, int val)     // public module interface
-  {
-    BL_fct output = NULL;                   // output callback
-    static volatile int count = 0;          // reset counter
-
-    switch (bl_id(o))
-    {
-      case BL_ID(_SYS,INIT_):               // [SYS:INIT <cb>] init module
-        output = o->data;                   // store output callback
-
-          // increment reset counter, start TS = 7000 ms due timer
-
-        count = bl_msg(bl_down,_RESET,INC_,0,NULL,TS);
-
-        if (count <= 3)                     // <= 3 times resetted?
-          led(count+1,1);                   // indicate by turn on LED @count+1
-        else                                // more than 3-times resetted
-        {
-          LOG(1,"unprovision node");        // let us know
-          bl_msg(bl_down,_RESET,PRV_,0,NULL,0);   // unprovision node
-        }
-
-        return 0;                           // OK
-
-      case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
-        LOG(1,BL_R"clear reset counter");   // let us know
-        led(count+1,0);                     // turn off LED @count+1
-        count = 0;                          // deactivate startup.busy state
-        return 0;                           // OK
-
-      case BL_ID(_GET,BUSY_):               // reset procedure busy
-        return (count != 0);                // return busy state
-
-      default:
-        return 0;
     }
   }
 
@@ -223,7 +252,7 @@
 
         led(2,0); led(3,0); led(4,0);       // turn off current LED
         id = (id==0) ? 2 : (id+1)%5;        // update THE LED id (=> 0 or 2,3,4)
-        return 0;                           // OK
+        return startup(o,val);              // fwd [BUTTON:PRESS] to startup
 
       case BL_ID(_RESET,DUE_):              // [RESET:DUE] - reset counter due
         return startup(o,val);              // forward to startup module
@@ -257,6 +286,7 @@
     blink(o,ticks);                    // tick blinker
     attention(o,ticks);                // tick attention module
     provision(o,ticks);                // tick provision module
+    startup(o,ticks);                  // tick startup module
     return 0;                          // OK
   }
 

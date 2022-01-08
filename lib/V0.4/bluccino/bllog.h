@@ -127,7 +127,7 @@
   void bl_logo(int lev, BL_txt msg, BL_ob *o, int value);
 
   void bl_log_color(bool attention, bool provisioned);
-  void bl_verbose(int verbose);        // set verbose level
+  int bl_verbose(int verbose);        // set verbose level
 
 //==============================================================================
 // shut off after n calls (for n > 0)

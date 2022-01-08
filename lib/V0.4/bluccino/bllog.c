@@ -60,9 +60,11 @@
     color = attention ? BL_G : (provisioned ? BL_Y : "");
   }
 
-  void bl_verbose(int verbose)              // set verbose level
+  int bl_verbose(int verbose)              // set verbose level
   {
+    int old = debug;
     debug = verbose;
+    return old;
   }
 
 //==============================================================================

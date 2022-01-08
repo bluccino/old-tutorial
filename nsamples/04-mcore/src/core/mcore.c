@@ -194,7 +194,7 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 	reset_counter = 0U;
 	save_on_flash(RESET_COUNTER);
   #if MIGRATION_STEP2
-  	LOG(1,BL_M "reset counter set to zero");
+  	LOG(2,BL_M "reset counter set to zero");
   #else
   	printk("Reset Counter set to Zero\n");
   #endif

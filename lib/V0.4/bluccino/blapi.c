@@ -187,7 +187,7 @@
         break;
     }
 
-    LOGO(level,"@api",o,val);
+    LOGO(level,"@",o,val);
     return bl_out(o,val,output);            // forward message to a
   }
 
@@ -239,6 +239,17 @@
   int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val)
   {
     BL_ob oo = {CL_SYS,op,0,cb};
+    return module(&oo,val);            // post message to module interface
+  }
+
+//==============================================================================
+// handle message addressed to module, characterized by opcode
+// - usage: bl_hdl(module,op,id,val)   // post [HDL:op @id,val] to module
+//==============================================================================
+
+  int bl_hdl(BL_fct module, BL_op op, int id, int val)
+  {
+    BL_ob oo = {CL_HDL,op,id,NULL};
     return module(&oo,val);            // post message to module interface
   }
 

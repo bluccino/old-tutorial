@@ -213,7 +213,7 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 	reset_counter = 0U;
 	save_on_flash(RESET_COUNTER);
   #if MIGRATION_STEP2
-  	LOG(1,BL_M "reset counter set to zero");
+  	LOG(2,BL_M "reset counter set to zero");
   #else
   	printk("Reset Counter set to Zero\n");
   #endif
@@ -234,7 +234,7 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
   static int increment(BL_ob *o, int ms)   // inc reset counter, set due timer
   {
 		reset_counter++;
-  	LOG(3,BL_M "reset counter: %d", reset_counter);
+  	LOG(3,BL_R "reset counter: %d", reset_counter);
 
     if (ms > 0)
       k_timer_start(&reset_counter_timer, K_MSEC(ms), K_NO_WAIT);
