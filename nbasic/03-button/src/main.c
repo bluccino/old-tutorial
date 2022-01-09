@@ -1,18 +1,20 @@
-/*
- * Copyright (c) 2016 Open-RnD Sp. z o.o.
- * Copyright (c) 2020 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//==============================================================================
+// 03-button.c
+// Get button configuration from the devicetree sw0 alias. This is mandatory.
+//==============================================================================
+// Copyright (c) 2016 Open-RnD Sp. z o.o.
+// Copyright (c) 2020 Nordic Semiconductor ASA
+// SPDX-License-Identifier: Apache-2.0
+//==============================================================================
 
-#include <zephyr.h>
-#include <device.h>
-#include <drivers/gpio.h>
-#include <sys/util.h>
-#include <sys/printk.h>
-#include <inttypes.h>
+  #include <zephyr.h>
+  #include <device.h>
+  #include <drivers/gpio.h>
+  #include <sys/util.h>
+  #include <sys/printk.h>
+  #include <inttypes.h>
 
-#define SLEEP_TIME_MS	1
+  #define SLEEP_TIME_MS	1
 
 //==============================================================================
 // some shorthands

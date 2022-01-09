@@ -1,14 +1,19 @@
 //==============================================================================
-// 02-button - original zephyr button demo, augmented with shorthands & helpers
+//  03-button
+//  original zephyr basic/button sample, augmented with shorthands & helpers
+//
+//  Created by Hugo Pristauz on 2022-01-09
+//  Copyright © 2021 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
 // - all running without Bluccino (Zephyr only)
 // - introducing typedefs
 // - introducing helpers for button init
-// - nice button demo improvement with shorthands and helpers 
+// - nice 03-button (Zephyr) sample improvement with shorthands and helpers
+
 
 //==============================================================================
-// appendix
+// Appendix (original Zephyr text)
 //==============================================================================
 
 .. _button-sample:
