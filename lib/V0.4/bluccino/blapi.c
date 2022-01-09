@@ -149,7 +149,7 @@
   __weak int bl_out(BL_ob *o, int val, BL_fct call)
   {
     if (call)                          // is an app callback provided?
-      return call(o,val);            // forward event message to app
+      return call(o,val);              // forward event message to app
 
     return 0;
   }
@@ -165,21 +165,21 @@
 
     switch (pair)                           // dispatch event
     {
-      case BL_PAIR(CL_SET,OP_PRV):          // provisioned state changed
+      case BL_PAIR(_SET,PRV_):            // provisioned state changed
         provisioned = val;
         bl_log_color(attention,provisioned);
         LOG(2,BL_M"node %sprovisioned",val?"":"un");
         return bl_out(o,val,output);
 
-      case BL_PAIR(CL_SET,OP_ATT):          // attention state changed
+      case BL_PAIR(_SET,ATT_):          // attention state changed
         attention = val;
         bl_log_color(attention,provisioned);
         LOG(2,BL_G"attention %s",val?"on":"off");
         return bl_out(o,val,output);
 
-      case BL_PAIR(CL_SYS,OP_TICK):
-      case BL_PAIR(CL_SYS,OP_TOCK):
-      case BL_PAIR(CL_SCAN,OP_ADV):
+      case BL_PAIR(_SYS,TICK_):
+      case BL_PAIR(_SYS,TOCK_):
+      case BL_PAIR(_SCAN,ADV_):
         level = 5;
         break;
 
@@ -238,7 +238,7 @@
 
   int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val)
   {
-    BL_ob oo = {CL_SYS,op,0,cb};
+    BL_ob oo = {_SYS,op,0,cb};
     return module(&oo,val);            // post message to module interface
   }
 
@@ -249,7 +249,7 @@
 
   int bl_hdl(BL_fct module, BL_op op, int id, int val)
   {
-    BL_ob oo = {CL_HDL,op,id,NULL};
+    BL_ob oo = {_HDL,op,id,NULL};
     return module(&oo,val);            // post message to module interface
   }
 
@@ -266,12 +266,12 @@
 
 //==============================================================================
 // post message (with main parameters to SYS interface of given module)
-// - usage: bl_post(module,opcode,id,val)  // class=CL_SYS, data=NULL
+// - usage: bl_post(module,opcode,id,val)  // class=_SYS, data=NULL
 //==============================================================================
 
   int bl_post(BL_fct module, BL_op op, int id, int val)
   {
-    BL_ob oo = {CL_SYS,op,id,NULL};
+    BL_ob oo = {_SYS,op,id,NULL};
     return module(&oo,val);            // post message to module interface
   }
 
@@ -288,12 +288,12 @@
 
 //==============================================================================
 // subscribe to message output
-// - usage: bl_when(module,cb)         // class=CL_SYS, val=0, data=NULL
+// - usage: bl_when(module,cb)         // class=_SYS, val=0, data=NULL
 //==============================================================================
 
   int bl_when(BL_fct module, BL_fct cb)
   {
-    BL_ob oo = {CL_SYS,OP_WHEN,0,NULL};
+    BL_ob oo = {_SYS,WHEN_,0,NULL};
     return module(&oo,0);              // post [SYS:WHEN <cb>] to module
   }
 
@@ -304,7 +304,7 @@
   int bl_use(BL_fct module, BL_txt msg)
   {
     bool use = false;                       // cannot used by default
-    BL_ob oo = {CL_SYS,OP_USE,0,NULL};
+    BL_ob oo = {_SYS,USE_,0,NULL};
 
     if (module)
       use = module(&oo,0);
@@ -327,7 +327,7 @@
 
   int bl_init(BL_fct module,BL_fct cb)
   {
-    return bl_sys(module,OP_INIT,cb,0);     // init module
+    return bl_sys(module,INIT_,cb,0);     // init module
   }
 
 //==============================================================================
@@ -337,7 +337,7 @@
 
   int bl_tick(BL_fct module, int id, int cnt)
   {
-    return bl_post(module,OP_TICK,id,cnt);  // post [SYS:TICK cnt] message
+    return bl_post(module,TICK_,id,cnt);  // post [SYS:TICK cnt] message
   }
 
 //==============================================================================
@@ -347,7 +347,7 @@
 
   int bl_tock(BL_fct module, int id, int cnt)
   {
-    return bl_post(module,OP_TOCK,id,cnt);  // post [SYS:TOCK cnt] message
+    return bl_post(module,TOCK_,id,cnt);  // post [SYS:TOCK cnt] message
   }
 
 //==============================================================================
@@ -358,17 +358,17 @@
   {
     switch (BL_PAIR(o->cl,o->op))
     {
-      case (BL_PAIR(CL_SYS,OP_INIT)):
+      case (BL_PAIR(_SYS,INIT_)):
         output = o->data;
         bl_init(bl_core,bl_up);        // init core, subscribe with bl_up()
         return 0;
 
-      case (BL_PAIR(CL_SYS,OP_WHEN)):
+      case (BL_PAIR(_SYS,WHEN_)):
         output = o->data;
         return 0;
 
-      case (BL_PAIR(CL_SYS,OP_TICK)):
-      case (BL_PAIR(CL_SYS,OP_TOCK)):
+      case (BL_PAIR(_SYS,TICK_)):
+      case (BL_PAIR(_SYS,TOCK_)):
         return 0;                      // nothing to tick/tock
 
       default:

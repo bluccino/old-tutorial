@@ -69,7 +69,7 @@
 
 //==============================================================================
 // post message (with main parameters to POST interface ofa given module)
-// - usage: bl_post(module,opcode,id,val) // class=CL_SYS, data=NULL
+// - usage: bl_post(module,opcode,id,val) // class=_SYS, data=NULL
 //==============================================================================
 
   int bl_post(BL_fct module, BL_op op, int id, int val);
@@ -104,7 +104,7 @@
 
 //==============================================================================
 // subscribe to a module's message output
-// - usage: bl_sub(module,cb)          // class=CL_SYS, id=0, val=0
+// - usage: bl_sub(module,cb)          // class=_SYS, id=0, val=0
 //==============================================================================
 
   int bl_when(BL_fct module, BL_fct cb);
@@ -115,7 +115,7 @@
 
   static inline int bl_test(int op, int id, int mode)
   {
-    BL_ob oo = {CL_TEST,op,id,NULL};
+    BL_ob oo = {_TEST,op,id,NULL};
     return bl_up(&oo,mode);            // post to test module via upward gear
   }
 
@@ -126,7 +126,7 @@
 
   static inline int bl_get(BL_fct module, BL_op op)
   {
-    BL_ob oo = {CL_GET,op,0,NULL};
+    BL_ob oo = {_GET,op,0,NULL};
     return module(&oo,0);              // post to test module via upward gear
   }
 
@@ -137,7 +137,7 @@
 
   static inline int bl_set(BL_fct module, BL_op op, int val)
   {
-    BL_ob oo = {CL_SET,op,0,NULL};
+    BL_ob oo = {_SET,op,0,NULL};
     return module(&oo,val);            // post to test module via upward gear
   }
 
