@@ -41,7 +41,7 @@
   {
     int err = gpio_pin_configure_dt(io,flags);
     if (err)
-      printk("Error %d: failed to configure %s pin %d\n",
+      printk("Error %d: failed to configure %s @ pin %d\n",
   		       err, io->port->name, io->pin);
 
     return err;

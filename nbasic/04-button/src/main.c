@@ -48,11 +48,11 @@
 
 //==============================================================================
 // config I/O pin
-// - usage: bl_ipin_cfg(pin,flags)
+// - usage: bl_pin_cfg(pin,flags)
 // -        bl_ipin(&button, GPIO_INPUT)
 //==============================================================================
 
-  static inline void bl_ipin_cfg(BL_pin *pin, GP_flags flags)
+  static inline void bl_pin_cfg(BL_pin *pin, GP_flags flags)
   {
     if (!device_is_ready(pin->io.port))
     {
@@ -65,12 +65,12 @@
 
 //==============================================================================
 // attach interrupt handler to I/O pin
-// - usage: bl_ipin_attach(pin,flags,cb)
-// -        bl_ipin_attach(&button, GPIO_INT_EDGE_TO_ACTIVE, but_cb)
-// -        bl_ipin_attach(&button, GPIO_INT_EDGE_BOTH, but_cb)
+// - usage: bl_pin_attach(pin,flags,cb)
+// -        bl_pin_attach(&button, GPIO_INT_EDGE_TO_ACTIVE, but_cb)
+// -        bl_pin_attach(&button, GPIO_INT_EDGE_BOTH, but_cb)
 //==============================================================================
 
-  static inline void bl_ipin_attach(BL_pin *pin, GP_flags flags, GP_irs cb)
+  static inline void bl_pin_attach(BL_pin *pin, GP_flags flags, GP_irs cb)
   {
     if (!device_is_ready(pin->io.port))
     {
@@ -95,10 +95,10 @@
 
   static inline void bl_pin(BL_pin *p,GP_flags flags,GP_flags iflags,GP_irs cb)
   {
-    bl_ipin_cfg(p, flags);
+    bl_pin_cfg(p, flags);
 
     if (iflags && cb)
-      bl_ipin_attach(p, iflags, cb);
+      bl_pin_attach(p, iflags, cb);
   }
 
 //==============================================================================
@@ -179,26 +179,25 @@
 // - configure GPIO
 //==============================================================================
 
-  static void config_led(void)
+  static void bl_pin_cfgo(BL_pin *pin)
   {
-    if (led.io.port && !device_is_ready(led.io.port))
+    if (pin->io.port && !device_is_ready(pin->io.port))
     {
-      printk("Error: LED device %s is not ready; ignoring it\n",
-  		       led.io.port->name);
-      led.io.port = NULL;
+      LOG(1,BL_R"error: output pin %s not ready; ignore!", pin->io.port->name);
+      pin->io.port = NULL;
     }
 
-    if (led.io.port)
+    if (pin->io.port)
     {
-      int err = gpio_pin_configure_dt(&led.io, GPIO_OUTPUT);
+      int err = gpio_pin_configure_dt(&pin->io, GPIO_OUTPUT);
       if (err != 0)
       {
-  	    printk("Error %d: failed to configure LED device %s pin %d\n",
-  	       err, led.io.port->name, led.io.pin);
-  	    led.io.port = NULL;
+  	    LOG(1,BL_R"error %d: failed to config %s pin %d",
+  	       err, pin->io.port->name, pin->io.pin);
+  	    pin->io.port = NULL;
       }
       else
-  	    printk("Set up LED at %s pin %d\n", led.io.port->name, led.io.pin);
+  	    LOG(1,BL_R"set pin %d @ port %s", pin->io.pin, pin->io.port->name);
     }
   }
 
@@ -211,20 +210,18 @@
     return gpio_pin_get_dt(&pin->io);
   }
 
-  static inline int bl_ipin_set(BL_pin *pin, int value)
+  static inline int bl_pin_set(BL_pin *pin, int value)
   {
     return gpio_pin_set_dt(&pin->io,value);
   }
 
   void main(void)
   {
-    bl_ipin_cfg(&button, GPIO_INPUT);
-    bl_ipin_attach(&button, GPIO_INT_EDGE_TO_ACTIVE, irs_button);
-    //bl_ipin_cfg(&led, GPIO_OUTPUT);
+    bl_pin_cfg(&button, GPIO_INPUT);
+    bl_pin_attach(&button, GPIO_INT_EDGE_TO_ACTIVE, irs_button);
+    bl_pin_cfg(&led, GPIO_OUTPUT);
 
-    //config_button();
-    //config_led(&led);
-    config_led();
+//    bl_pin_cfgo(&led);
 
     printk("Press the button\n");
 
@@ -235,7 +232,7 @@
         int val = bl_pin_get(&button);
 
         if (val >= 0)
-//        bl_ipin_set(&led, val);
+//        bl_pin_set(&led, val);
   	      gpio_pin_set_dt(&led.io, val);
 
         bl_sleep(1);                   // sleep 1 ms
