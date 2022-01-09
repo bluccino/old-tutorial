@@ -19,6 +19,7 @@
 - bt_mesh_reset() not directly but notification of app with [RESET:CNT] message
 - app can control bt_mesh_reset() with [RESET:PRV] message
 - startup module flashes one of RGB LEDs at 90% duty
+- startup module to support mesh reset by button press
 
 #===============================================================================
 # 04-mcore (Bluccino mesh core for 4 LEDs and 4 buttons, app can't access mesh)
