@@ -258,7 +258,7 @@
 
     	gpio_pin_interrupt_configure(button_device[0],
     				     DT_GPIO_PIN(SW0_NODE, gpios),
-    				     GPIO_INT_EDGE_TO_ACTIVE);
+    				     GPIO_INT_EDGE_BOTH);   // GPIO_INT_EDGE_TO_ACTIVE
 
       #if MIGRATION_STEP4
       	gpio_init_callback(&button_cb[0], but0_cb, BIT(DT_GPIO_PIN(SW0_NODE, gpios)));
@@ -281,7 +281,7 @@
 
     	gpio_pin_interrupt_configure(button_device[1],
     				     DT_GPIO_PIN(SW1_NODE, gpios),
-    				     GPIO_INT_EDGE_TO_ACTIVE);
+    				     GPIO_INT_EDGE_BOTH);   // GPIO_INT_EDGE_TO_ACTIVE
 
       #if MIGRATION_STEP4
     	  gpio_init_callback(&button_cb[1], but1_cb, BIT(DT_GPIO_PIN(SW1_NODE, gpios)));
@@ -304,7 +304,7 @@
 
     	gpio_pin_interrupt_configure(button_device[2],
     				     DT_GPIO_PIN(SW2_NODE, gpios),
-    				     GPIO_INT_EDGE_TO_ACTIVE);
+    				     GPIO_INT_EDGE_BOTH);   // GPIO_INT_EDGE_TO_ACTIVE
 
       #if MIGRATION_STEP4
     	  gpio_init_callback(&button_cb[2], but2_cb, BIT(DT_GPIO_PIN(SW2_NODE, gpios)));
@@ -327,7 +327,7 @@
 
     	gpio_pin_interrupt_configure(button_device[3],
     				     DT_GPIO_PIN(SW3_NODE, gpios),
-    				     GPIO_INT_EDGE_TO_ACTIVE);
+    				     GPIO_INT_EDGE_BOTH);   // GPIO_INT_EDGE_TO_ACTIVE
 
       #if MIGRATION_STEP4
     	  gpio_init_callback(&button_cb[3], but3_cb, BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
