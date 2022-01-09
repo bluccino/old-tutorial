@@ -32,9 +32,23 @@
   typedef void (*GP_irs)(const GP_device *dev, GP_ctx *ctx, GP_pins pins);
 
 //==============================================================================
+// GPIO pin structure
+//==============================================================================
+
+  typedef struct BL_pin
+  {
+    GP_io io;                          // input I/O pin
+    GP_ctx ctx;                        // context
+  } BL_pin;
+
+  #define BL_PIN(alias)      {.io = GP_IO(alias, gpios,{0}) }
+
+//==============================================================================
 // GPIO pin configuration (helper)
 // - usage: gp_pin_cfg(io,flags)
 // -        gp_pin_cfg(io,GPIO_INPUT)
+// -        gp_pin_cfg(io,GPIO_INPUT | GPIO_INT_DEBOUNCE)
+// -        gp_pin_cfg(io,GPIO_OUTPUT)
 //==============================================================================
 
   static inline int gp_pin_cfg(const GP_io *io, GP_flags flags)
@@ -76,12 +90,63 @@
     gpio_add_callback(io->port, ctx);
   }
 
+//==============================================================================
+// config I/O pin
+// - usage: bl_pin_cfg(pin,flags)
+// -        bl_ipin(&button, GPIO_INPUT)
+//==============================================================================
 
+  static inline void bl_pin_cfg(BL_pin *pin, GP_flags flags)
+  {
+    if (!device_is_ready(pin->io.port))
+    {
+      LOG_GPIO(1,BL_R"error: pin %s not ready", pin->io.port->name);
+      return;
+    }
 
-/*
-__syscall int gpio_pin_configure(const struct device *port,
-				 gpio_pin_t pin,
-				 gpio_flags_t flags);
-*/
+    gp_pin_cfg(&pin->io, flags);
+  }
+
+//==============================================================================
+// attach interrupt handler to I/O pin
+// - usage: bl_pin_attach(pin,flags,cb)
+// -        bl_pin_attach(&button, GPIO_INT_EDGE_TO_ACTIVE, but_cb)
+// -        bl_pin_attach(&button, GPIO_INT_EDGE_BOTH, but_cb)
+//==============================================================================
+
+  static inline void bl_pin_attach(BL_pin *pin, GP_flags flags, GP_irs cb)
+  {
+    if (!device_is_ready(pin->io.port))
+    {
+      LOG_GPIO(1,BL_R"error: pin %s not ready", pin->io.port->name);
+      return;
+    }
+
+    if (flags)
+      gp_int_cfg(&pin->io, flags);
+
+    if (cb)
+      gp_add_cb(&pin->io, &pin->ctx, cb);
+  }
+
+//==============================================================================
+// get input pin value
+// - usage: val = bl_pin_get(&pin)
+//==============================================================================
+
+  static inline int bl_pin_get(BL_pin *pin)
+  {
+    return gpio_pin_get_dt(&pin->io);
+  }
+
+//==============================================================================
+// get output pin value
+// - usage: bl_pin_set(&pin,val)
+//==============================================================================
+
+  static inline int bl_pin_set(BL_pin *pin, int value)
+  {
+    return gpio_pin_set_dt(&pin->io,value);
+  }
 
 #endif // __BLGPIO_H__

@@ -253,8 +253,7 @@
     #if (NBUTS >= 1)
     	button_device[0] = device_get_binding(DT_GPIO_LABEL(SW0_NODE, gpios));
     	gpio_pin_configure(button_device[0], DT_GPIO_PIN(SW0_NODE, gpios),
-    			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
-    			   DT_GPIO_FLAGS(SW0_NODE, gpios));
+    			   GPIO_INPUT | GPIO_INT_DEBOUNCE | DT_GPIO_FLAGS(SW0_NODE, gpios));
 
     	gpio_pin_interrupt_configure(button_device[0],
     				     DT_GPIO_PIN(SW0_NODE, gpios),
@@ -276,8 +275,7 @@
     	button_device[1] = device_get_binding(DT_GPIO_LABEL(SW1_NODE, gpios));
 
     	gpio_pin_configure(button_device[1], DT_GPIO_PIN(SW1_NODE, gpios),
-    			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
-    			   DT_GPIO_FLAGS(SW1_NODE, gpios));
+    			   GPIO_INPUT | GPIO_INT_DEBOUNCE | DT_GPIO_FLAGS(SW1_NODE, gpios));
 
     	gpio_pin_interrupt_configure(button_device[1],
     				     DT_GPIO_PIN(SW1_NODE, gpios),
@@ -299,8 +297,7 @@
     	button_device[2] = device_get_binding(DT_GPIO_LABEL(SW2_NODE, gpios));
 
     	gpio_pin_configure(button_device[2], DT_GPIO_PIN(SW2_NODE, gpios),
-    	       GPIO_INPUT | GPIO_INT_DEBOUNCE |
-    			   DT_GPIO_FLAGS(SW2_NODE, gpios));
+    	       GPIO_INPUT | GPIO_INT_DEBOUNCE | DT_GPIO_FLAGS(SW2_NODE, gpios));
 
     	gpio_pin_interrupt_configure(button_device[2],
     				     DT_GPIO_PIN(SW2_NODE, gpios),
@@ -321,9 +318,8 @@
     #if (NBUTS >= 4)
     	button_device[3] = device_get_binding(DT_GPIO_LABEL(SW3_NODE, gpios));
 
-    	gpio_pin_configure(button_device[3], DT_GPIO_PIN(SW3_NODE, gpios),
-    			   GPIO_INPUT | GPIO_INT_DEBOUNCE |
-    			   DT_GPIO_FLAGS(SW3_NODE, gpios));
+    	gpio_pin_configure(button_device[3],  DT_GPIO_PIN(SW3_NODE, gpios),
+             GPIO_INPUT | GPIO_INT_DEBOUNCE | DT_GPIO_FLAGS(SW3_NODE, gpios));
 
     	gpio_pin_interrupt_configure(button_device[3],
     				     DT_GPIO_PIN(SW3_NODE, gpios),
