@@ -1,4 +1,16 @@
 #===============================================================================
+#  05-button
+#  Bluccino augmented zephyr basic/button sample (using blgpio.h)
+#
+#  Created by Hugo Pristauz on 2022-01-09
+#  Copyright © 2021 Bluenetics GmbH. All rights reserved.
+#===============================================================================
+
+- pin number redefinition by SW (button @2 will turn LED @2 on/off)
+- derived from 04-button sample
+- nice super-super-simple 05-button sample
+
+#===============================================================================
 #  04-button
 #  Bluccino augmented zephyr basic/button sample (using blgpio.h)
 #

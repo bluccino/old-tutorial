@@ -31,8 +31,20 @@
     #error "Unsupported board: sw0 devicetree alias is not defined"
   #endif
 
+  struct device *dev;
+  gpio_pin_t gtyp;
+
   static BL_pin button = BL_PIN(SW0);
   static BL_pin led = BL_PIN(LED0);
+
+//==============================================================================
+// log pin information
+//==============================================================================
+
+  static inline void bl_pin_log(int lvl,BL_txt msg,BL_pin *pin)
+  {
+    LOG(lvl,"%spin %d",msg,pin->io.pin);
+  }
 
 //==============================================================================
 // provide button IRS callback (button pressed)
@@ -40,7 +52,7 @@
 
   static void irs_button(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
   {
-    LOG(1,BL_M"button pressed - pins: %08x",pins);
+    LOG(1,BL_M"button pressed - pins: %08x", pins);
   }
 
 //==============================================================================
@@ -49,11 +61,17 @@
 
   void main(void)
   {
+    button.io.pin = 14;                // setup before configuration
+    led.io.pin = 18;                   // setup before configuration
+
+    LOG(1,BL_B"button: pin #%d",button.io.pin);
+    LOG(1,BL_B"led:    pin #%d",led.io.pin);
+
+    bl_pin_cfg(&led, GPIO_OUTPUT);
     bl_pin_cfg(&button, GPIO_INPUT | GPIO_INT_DEBOUNCE);
     bl_pin_attach(&button, GPIO_INT_EDGE_TO_ACTIVE, irs_button);
-    bl_pin_cfg(&led, GPIO_OUTPUT);
 
-    LOG(1,"press button @1");
+    LOG(1,"press button @2");
 
     if (led.io.port)    // if LED is supported
     {
