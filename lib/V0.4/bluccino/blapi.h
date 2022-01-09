@@ -96,6 +96,13 @@
   int bl_hdl(BL_fct module, BL_op op, int id, int val);
 
 //==============================================================================
+// emit message to be handeled to output subscriber
+// - usage: bl_emit(o,cl,op,val,output)  // post [cl:op o->id,val] to output
+//==============================================================================
+
+  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_fct output);
+
+//==============================================================================
 // subscribe to a module's message output
 // - usage: bl_sub(module,cb)          // class=CL_SYS, id=0, val=0
 //==============================================================================

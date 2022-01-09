@@ -26,8 +26,6 @@
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
-  static BL_fct output = NULL;
-
 //==============================================================================
 // defines
 //==============================================================================
@@ -75,7 +73,7 @@
 
   void button_workhorse(struct k_work *work)
   {
-    BL_ob oo = {CL_BUTTON,OP_SET,0,NULL};
+    BL_ob oo = {_BUTTON,OP_SET,0,NULL};
 
     LOGO(1,BL_R,&oo,1);    //
     mgpio(&oo,1);          // post to public module interface for output
@@ -100,9 +98,9 @@
   #if MIGRATION_STEP4
     static void button_post(int id)
     {
-      BL_ob oo = {CL_BUTTON,OP_PRESS,id,NULL};
+      BL_ob oo = {_BUTTON,OP_PRESS,id,NULL};
       LOGO(4,BL_Y,&oo,1);
-      bl_core(&oo,1);             // post [BUTTON:PRESS @id,1] to core
+      mgpio(&oo,1);             // post [BUTTON:PRESS @id,1] to mgpio
     }
 
     #if (CFG_NUMBER_OF_BUTS >= 1)
@@ -350,7 +348,6 @@
   {
     LOG(2,BL_B "GPIO init");
 
-    output = o->data;                     // store output callback
     led_init();
     button_init();
     return 0;
@@ -362,26 +359,30 @@
 
   int mgpio(BL_ob *o, int val)
   {
+    static BL_fct output = NULL;
+
     switch (BL_PAIR(o->cl,o->op))
     {
-      case BL_PAIR(CL_SYS,OP_INIT):       // [SYS:INIT]
+      case BL_PAIR(_SYS,INIT_):           // [SYS:INIT]
+        output = o->data;
       	return init(o,val);               // delegate to init();
 
-      case BL_PAIR(CL_LED,OP_SET):        // [LED:set]
+      case BL_PAIR(_LED,SET_):            // [LED:set]
       {
         BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
         o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
 	      return led_set(o,val != 0);       // delegate to led_set();
       }
 
-      case BL_PAIR(CL_LED,OP_TOGGLE):     // [LED:toggle]
+      case BL_PAIR(_LED,TOGGLE_):         // [LED:toggle]
       {
         BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
         o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
 	      return led_toggle(o,val);         // delegate to led_toggle();
       }
 
-      case BL_PAIR(CL_BUTTON,OP_PRESS):   // [BUTTON:PRESS @id]
+      case BL_PAIR(_BUTTON,PRESS_):       // [HDL:PRESS @id]
+      case BL_PAIR(_BUTTON,RELEASE_):     // [HDL:RELEASE @id]
 	      return bl_out(o,val,output);      // output message
 
       default:

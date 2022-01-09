@@ -77,14 +77,10 @@
         bl_hdl(startup,INC_,0,0);           // handle STARTUP[HDL:INC]
 
         if (count <= 3)                     // <= 3 times resetted?
-          led(map[count],1);                // indicate by turn on LED @count+1
-        else                                // more than 3-times resetted
-        {
-          LOG(1,"unprovision node");        // let us know
-          bl_msg(bl_down,_RESET,PRV_,0,NULL,0);   // unprovision node
-        }
+          return led(map[count],1);         // indicate by turn on LED @count+1
 
-        return 0;                           // OK
+        LOG(1,BL_R"unprovision node");      // let us know
+        return bl_msg(bl_down,_RESET,PRV_,0,NULL,0); // unprovision node
 
       case BL_ID(_HDL,INC_):                // handle [HDL:INC] entry point
         count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
@@ -98,11 +94,8 @@
           bool onoff = rem < (900/T_TICK);  // 90% of time on
 
           if (onoff != old)                 // LED on/odd state changed?
-          {
-            bool save = bl_verbose(0);      // verbose off
             led(map[count],onoff);          // turn off LED @count+1
-            bl_verbose(save);               // restore verbose level
-          }
+
           old = onoff;                      // saveLED on/off state
         }
         return 0;                           // OK
@@ -117,6 +110,12 @@
         return (count != 0);                // return busy state
 
       case BL_ID(_BUTTON,PRESS_):           // button press during startup
+        if (count > 3)
+        {
+          LOG(1,BL_R"unprovision node");    // let us know
+          return bl_msg(bl_down,_RESET,PRV_,0,NULL,0);   // unprovision node
+        }
+
         if (count > 0)                      // if we are still in startup phase
           bl_hdl(startup,INC_,0,0);         // handle STARTUP[HDL:INC]
         return 0;                           // OK

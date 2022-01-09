@@ -254,6 +254,17 @@
   }
 
 //==============================================================================
+// emit message to be handeled to output subscriber
+// - usage: bl_emit(o,cl,op,val,output)  // post [cl:op o->id,val] to output
+//==============================================================================
+
+  int bl_emit(BL_ob *o, BL_cl cl, BL_op op, int val, BL_fct output)
+  {
+    BL_ob oo = {cl,op,o->id,o->data};
+    return bl_out(&oo,val,output);
+  }
+
+//==============================================================================
 // post message (with main parameters to SYS interface of given module)
 // - usage: bl_post(module,opcode,id,val)  // class=CL_SYS, data=NULL
 //==============================================================================

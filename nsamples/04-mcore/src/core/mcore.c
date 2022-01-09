@@ -179,7 +179,7 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
   else
   {
     #if MIGRATION_STEP2
-  		LOG(1,BL_M "reset counter -> %d", reset_counter);
+  		LOG(3,BL_M "reset counter -> %d", reset_counter);
     #else
 		  printk("Reset Counter -> %d\n", reset_counter);
     #endif
@@ -194,7 +194,7 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 	reset_counter = 0U;
 	save_on_flash(RESET_COUNTER);
   #if MIGRATION_STEP2
-  	LOG(2,BL_M "reset counter set to zero");
+  	LOG(3,BL_M "reset counter set to zero");
   #else
   	printk("Reset Counter set to Zero\n");
   #endif

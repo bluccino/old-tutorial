@@ -18,15 +18,15 @@
 //                             |             |
 //                             +-------------+
 //                             |             |
-//                     PRESS ->o   BUTTON    |-> PRESS
+//                     PRESS ->|   BUTTON    |-> PRESS
 //                             |             |
 //                             +-------------+
 //  Input Messages:
-//    - [LED:SET @id onoff]   // set LED @id on/off (id=0..4)
-//    - [BUTTON:PRESS @id]    // relay module internal message to output
+//    - [LED:<SET @id onoff]  // set LED @id on/off (id=0..4)
+//    - [BUTTON:<PRESS @id]   // relay module internal message to output
 //
 //  Output Messages:
-//    - [BUTTON:PRESS @id]    // notify button press
+//    - [BUTTON:>PRESS @id]   // notify button press
 //
 //==============================================================================
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
@@ -55,9 +55,9 @@
 // - usage: app_gpio_init()
 //==============================================================================
 
-  static inline int app_gpio_init(void)
+  static inline int app_gpio_init(BL_fct cb)
   {
-    return bl_init(mgpio,NULL);
+    return bl_init(mgpio,cb);
   }
 
 #endif // _APP_GPIO_H

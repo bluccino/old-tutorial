@@ -179,7 +179,7 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
   else
   {
     #if MIGRATION_STEP2
-  		LOG(1,BL_M "reset counter -> %d", reset_counter);
+  		LOG(3,BL_M "reset counter -> %d", reset_counter);
     #else
 		  printk("Reset Counter -> %d\n", reset_counter);
     #endif
@@ -213,14 +213,13 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 	reset_counter = 0U;
 	save_on_flash(RESET_COUNTER);
   #if MIGRATION_STEP2
-  	LOG(2,BL_M "reset counter set to zero");
+  	LOG(3,BL_M "reset counter set to zero");
   #else
   	printk("Reset Counter set to Zero\n");
   #endif
 
   #if MIGRATION_STEP5
-    BL_ob oo = {_RESET,DUE_,0,NULL};
-    bl_core(&oo,0);                    // post to bl_core for upward posting
+    bl_hdl(bl_core,DUE_,0,0);    // bl_core to handle [HDL:DUE] message
   #endif
 }
 
@@ -234,10 +233,9 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
   static int increment(BL_ob *o, int ms)   // inc reset counter, set due timer
   {
 		reset_counter++;
-  	LOG(3,BL_R "reset counter: %d", reset_counter);
+  	LOG(3,BL_M "reset counter: %d", reset_counter);
 
-    if (ms > 0)
-      k_timer_start(&reset_counter_timer, K_MSEC(ms), K_NO_WAIT);
+    k_timer_start(&reset_counter_timer, K_MSEC(ms<1000?1000:ms), K_NO_WAIT);
 
   	save_on_flash(RESET_COUNTER);
     return reset_counter;                   // return counter value after inc
@@ -259,7 +257,9 @@ void main(void)
 
 	light_default_var_init();
 
-	app_gpio_init();
+  #if !MIGRATION_STEP5
+	  app_gpio_init();
+  #endif
 
 	#if defined(CONFIG_MCUMGR)
 		smp_svr_init();
@@ -318,8 +318,9 @@ void main(void)
 
   static int init(BL_ob *o, int val)
   {
-    LOGO(5,BL_B,o,val);                // log trace
+    LOGO(4,BL_B"init:",o,val);         // log trace
     bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
+    bl_init(mgpio,bl_core);            // output of MGPIO goes to here!
     init_mcore();                      // init THIS module
     return 0;
   }
@@ -337,22 +338,23 @@ void main(void)
 
     switch (BL_PAIR(o->cl,o->op))
     {
-      case BL_PAIR(CL_SYS,OP_INIT):    // [SYS:INIT]
+      case BL_PAIR(_SYS,INIT_):        // [SYS:INIT]
         output = o->data;              // store output callback
         return init(o,val);            // forward to init()
 
-      case BL_PAIR(CL_SYS,OP_TICK):    // [SYS:TICK @0,cnt]
-      case BL_PAIR(CL_SYS,OP_TOCK):    // [SYS:TICK @0,cnt]
+      case BL_PAIR(_SYS,TICK_):        // [SYS:TICK @0,cnt]
+      case BL_PAIR(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
         return 0;                      // OK - nothing to tick/tock
 
-      case BL_PAIR(CL_SET,OP_PRV):     // [SET:PRV val]  (provision)
-      case BL_PAIR(CL_SET,OP_ATT):     // [SET:ATT val]  (attention)
-      case BL_PAIR(CL_BUTTON,OP_PRESS):// [BUTTON:PRESS @id](button pressed)
-        LOGO(4,"",o,val);
-        return bl_out(o,val,output);   // output message to subscriber
+      case BL_PAIR(_SET,PRV_):         // [SET:PRV val]  (provision)
+      case BL_PAIR(_SET,ATT_):         // [SET:ATT val]  (attention)
+      case BL_PAIR(_BUTTON,PRESS_):    // [BUTTON:PRESS @id] (button pressed)
+      case BL_PAIR(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
+        LOGO(3,"",o,val);
+        return bl_out(o,val,output);   // output to subscriber
 
-      case BL_PAIR(CL_LED,OP_SET):     // [LED:SET @id,onoff]
-      case BL_PAIR(CL_LED,OP_TOGGLE):  // [LED:SET @id,onoff]
+      case BL_PAIR(_LED,SET_):         // [LED:SET @id,onoff]
+      case BL_PAIR(_LED,TOGGLE_):      // [LED:SET @id,onoff]
         return mgpio(o,val);           // delegate to MGPIO submodule
 
       case BL_PAIR(_RESET,INC_):       // cnt = [RESET:INC <ms>]
@@ -361,8 +363,8 @@ void main(void)
       case BL_PAIR(_RESET,PRV_):       // [RESET:PRV]
         return unprovision(o,val);     // unprovision node
 
-      case BL_PAIR(_RESET,DUE_):       // [RESET:DUE] reset timer is due
-        return bl_out(o,val,output);   // post to subscriber
+      case BL_PAIR(_HDL,DUE_):         // [HDL:DUE] reset timer is due
+        return bl_emit(o,_RESET,DUE_,val,output); // emit [RESET:DUE] to output
 
       default:
         return -1;                     // bad input

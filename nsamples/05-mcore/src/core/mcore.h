@@ -11,36 +11,43 @@
 //       [CNT]=MCORE.RESET(PRV);
 //       [SET]=MCORE.BUTTON(SET);
 //
-//                                  INIT  TICK TOCK
-//                                    |    |    |
-//                                    v    v    v
-//                                  +-------------+
-//                            PRV ->:             |-> PRV
-//                                  |   ==SYS==   |
-//                            ATT ->:             |-> ATT
-//                                  +-------------+
-//                            INC ->|             |
-//                                  |  ==RESET==  |-> DUE
-//                            PRV ->|             |
-//                                  +-------------+
-//                            SET ->:  ==BUTTON== |-> SET
-//                                  +-------------+
-//                                       MCORE
+//                                +-------------+
+//                                |    MCORE    |
+//                                +-------------+
+//                         INIT ->|             |
+//                         TICK ->|   ==SYS==   |
+//                         TOCK ->|             |
+//                                +-------------+
+//                          PRV ->|             |-> PRV
+//                                |   ==SET==   |
+//                          ATT ->|             |-> ATT
+//                                +-------------+
+//                          INC ->|             |
+//                                |  ==RESET==  |-> DUE
+//                          PRV ->|             |
+//                                +-------------+
+//                        PRESS ->|             |-> PRESS
+//                                |  ==BUTTON== |
+//                      RELEASE ->|             |-> RELEASE
+//                                +-------------+
+//
 //  Input Messages:
-//    - [SYS<INIT <cb>]     init module
-//    - [SYS<TICK @id cnt]  tick the module
-//    - [SYS<TOCK @id cnt]  tock the module
-//    - [RESET<INC <ms>]    inc reset counter and set due (<ms>) timer
-//    - [RESET<PRV]         unprovision node
-//    - [SET:PRV val]       provisioning on/off
-//    - [SET:ATT val]       attentioning on/off
-//    - [BUTTON:SET @id 1]  button press @ channel @id
+//    - [SYS:<INIT <cb>]          init module
+//    - [SYS:<TICK @id cnt]       tick the module
+//    - [SYS:<TOCK @id cnt]       tock the module
+//    - [RESET:<INC <ms>]         inc reset counter and set due (<ms>) timer
+//    - [RESET:<PRV]              unprovision node
+//    - [SET:$PRV val]            provision on/off
+//    - [SET:$ATT val]            attention on/off
+//    - [BUTTON:<PRESS @id 1]     button press @ channel @id
+//    - [BUTTON:<RELEASE @id 1]   button release @ channel @id
 //
 //  Output Messages:
-//    - [SET>PRV val]       provisioning on/off
-//    - [SET>ATT val]       attentioning on/off
-//    - [RESET>DUE]         reset timer due notification
-//    - [BUTTON>SET @id 1]  button press @ channel @id
+//    - [SET:>PRV val]            provision on/off
+//    - [SET:>ATT val]            attention on/off
+//    - [RESET:>DUE]              reset timer due notification
+//    - [BUTTON:>PRESS @id 1]     button press @ channel @id
+//    - [BUTTON:>RELEASE @id 1]   button release @ channel @id
 //
 //==============================================================================
 //  Reset system
@@ -54,16 +61,18 @@
 //    mesh node reset [RESET:PRV] to unprovision the node
 //==============================================================================
 //
-//     INIT TICK TOCK       PRV   ATT     INC DUE PRV     SET    SET TOGGLE
-//       |    |    |         ^     ^       |   ^   |       ^      |     |
-//       v    v    v         |     |       v   |   v       |      v     v
+//     INIT TICK TOCK       PRV   ATT     DUE INC PRV     SET    SET TOGGLE
+//       |    |    |         ^     ^       ^   |   |       ^      |     |
+//       v    v    v         |     |       |   v   v       |      v     v
 //   +--------------------------------------------------------------------+
 //   |  =====SYS=====        ==SET==      ===RESET===  ==BUTTON== ==LED== |
-//   +-----------------------o-----o-------o---o---o-------o---------o----+
-//                           ^     ^       |   ^   |       ^         |
-//                           |     |      INC  |  PRV      |        LED:
-//                          PRV   ATT      |  DUE  |      SET        |
-//                           |     |       v   |   v       |         v
+//   |                                                                    |
+//   |  =====SYS=====        ======HDL======  =RESET=  ==BUTTON== ==LED== |
+//   +-------------------------------------o---------------o---------o----+
+//                           ^     ^       ^   |   |       ^         |
+//                           |     |       |  INC PRV      |        LED:
+//                          PRV   ATT     DUE  |   |      SET        |
+//                           |     |       |   v   v       |         v
 //                       +-------------+ +-----------+ +------------------+
 //                       |   ==SET==   | | ==RESET== | |=BUTTON=  ==LED== |
 //                       |             | |           | |                  |
