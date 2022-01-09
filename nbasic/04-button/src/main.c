@@ -6,7 +6,7 @@
 // Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 //
-// - led0 device tree alias is optional 
+// - led0 device tree alias is optional
 // - if present, we'll use it to turn on the LED whenever button is pressed
 //
 //==============================================================================
@@ -40,7 +40,7 @@
 
   static void irs_button(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
   {
-    LOG(1,BL_M"button pressed");
+    LOG(1,BL_M"button pressed - pins: %08x",pins);
   }
 
 //==============================================================================

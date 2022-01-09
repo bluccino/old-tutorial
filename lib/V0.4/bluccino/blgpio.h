@@ -5,6 +5,16 @@
 // Created by Hugo Pristauz on 2022-Jan-09
 // Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
+//
+// GPIO interrupt callback context: used to register a callback in drv cb list
+// - struct BL_ctx // as many cb's as needed may be added
+// - {
+// -   sys_node_t node;
+// -   gpio_callback_handler_t handler;    // actual callback function
+// -   gpio_port_pins_t pin_mask;          // pin mask of interest for cb
+// - };
+//
+//==============================================================================
 
 #ifndef __BLGPIO_H__
 #define __BLGPIO_H__
