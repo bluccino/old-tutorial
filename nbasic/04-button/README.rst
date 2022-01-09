@@ -1,15 +1,14 @@
 #===============================================================================
-#  03-button
-#  original zephyr basic/button sample, augmented with shorthands & helpers
+#  04-button
+#  Bluccino augmented zephyr basic/button sample (using blgpio.h)
 #
 #  Created by Hugo Pristauz on 2022-01-09
 #  Copyright © 2021 Bluenetics GmbH. All rights reserved.
 #===============================================================================
 
-- all running without Bluccino (Zephyr only)
-- introducing typedefs
-- introducing helpers for button init
-- nice 03-button (Zephyr) sample improvement with shorthands and helpers
+- use typedefs from blgpio.h
+- use helpers from blgpio.h
+- nice super-super-simple 04-button sample (Zephyr basic/button sample equiv.)
 
 
 #===============================================================================

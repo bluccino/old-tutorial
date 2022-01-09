@@ -1,3 +1,21 @@
+//==============================================================================
+//  01-blinky
+//  original zephyr basic/blinky sample, augmented with shorthands & helpers
+//
+//  Created by Hugo Pristauz on 2022-01-09
+//  Copyright © 2021 Bluenetics GmbH. All rights reserved.
+//==============================================================================
+
+- all running without Bluccino (Zephyr only)
+- introducing typedefs
+- introducing helpers for button init
+- nice 03-blinky (Zephyr) sample improvement with shorthands and helpers
+
+
+//==============================================================================
+// Appendix (original Zephyr text)
+//==============================================================================
+
 .. _blinky-sample:
 
 Blinky

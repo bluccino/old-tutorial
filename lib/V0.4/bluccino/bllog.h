@@ -51,6 +51,22 @@
 #endif
 
 //==============================================================================
+// APP Logging
+//==============================================================================
+
+#ifndef CFG_LOG_APP
+    #define CFG_LOG_APP    1           // no APP logging by default
+#endif
+
+#if (CFG_LOG_APP)
+    #define LOG_APP(l,f,...)    BL_LOG(CFG_LOG_APP-1+l,f,##__VA_ARGS__)
+    #define LOGO_APP(l,f,o,v)   bl_logo(CFG_LOG_APP-1+l,f,o,v)
+#else
+    #define LOG_APP(l,f,...)    {}     // empty
+    #define LOGO_APP(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
 // CORE Logging
 //==============================================================================
 
@@ -67,19 +83,19 @@
 #endif
 
 //==============================================================================
-// APP Logging
+// GPIO Logging
 //==============================================================================
 
-#ifndef CFG_LOG_APP
-    #define CFG_LOG_APP    1           // no APP logging by default
+#ifndef CFG_LOG_GPIO
+    #define CFG_LOG_GPIO    0           // no GPIO logging by default
 #endif
 
-#if (CFG_LOG_APP)
-    #define LOG_APP(l,f,...)    BL_LOG(CFG_LOG_APP-1+l,f,##__VA_ARGS__)
-    #define LOGO_APP(l,f,o,v)   bl_logo(CFG_LOG_APP-1+l,f,o,v)
+#if (CFG_LOG_GPIO)
+    #define LOG_GPIO(l,f,...)    BL_LOG(CFG_LOG_GPIO-1+l,f,##__VA_ARGS__)
+    #define LOGO_GPIO(l,f,o,v)   bl_logo(CFG_LOG_GPIO-1+l,f,o,v)
 #else
-    #define LOG_APP(l,f,...)    {}     // empty
-    #define LOGO_APP(l,f,o,v)   {}     // empty
+    #define LOG_GPIO(l,f,...)    {}     // empty
+    #define LOGO_GPIO(l,f,o,v)   {}     // empty
 #endif
 
 //==============================================================================

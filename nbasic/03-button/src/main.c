@@ -1,6 +1,9 @@
 //==============================================================================
 // 03-button.c
 // Get button configuration from the devicetree sw0 alias. This is mandatory.
+//
+// Created by Hugo Pristauz on 2022-Jan-09
+// Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 // Copyright (c) 2016 Open-RnD Sp. z o.o.
 // Copyright (c) 2020 Nordic Semiconductor ASA
@@ -22,7 +25,7 @@
 
   #define GP_SPEC GPIO_DT_SPEC_GET_OR
 
-  typedef struct gpio_dt_spec GP_spec;           // GPIO device tree spec
+  typedef struct gpio_dt_spec GP_io;             // GPIO device tree spec
   typedef struct gpio_callback GP_ctx;           // GPIO callback context
   typedef gpio_flags_t GP_flags;                 // GPIO flags
   typedef struct device GP_device;               // GPIO device
@@ -46,7 +49,7 @@
 // Get button configuration from the devicetree sw0 alias. This is mandatory.
 //==============================================================================
 
-  static const GP_spec button = GP_SPEC(SW0_NODE, gpios,{0});
+  static const GP_io button = GP_SPEC(SW0_NODE, gpios,{0});
   static GP_ctx  butctx;                         // button context
 
 //==============================================================================
@@ -54,51 +57,51 @@
 // to turn on the LED whenever the button is pressed.
 //==============================================================================
 
-  static GP_spec led = GP_SPEC(DT_ALIAS(led0), gpios, {0});
+  static GP_io led = GP_SPEC(DT_ALIAS(led0), gpios, {0});
 
 //==============================================================================
 // GPIO pin configuration (helper)
-// - usage: gp_pin_cfg(spec,flags)
-// -        gp_pin_cfg(spec,GPIO_INPUT)
+// - usage: gp_pin_cfg(io,flags)
+// -        gp_pin_cfg(io,GPIO_INPUT)
 //==============================================================================
 
-  static int gp_pin_cfg(const GP_spec *spec, GP_flags flags)
+  static int gp_pin_cfg(const GP_io *io, GP_flags flags)
   {
-    int err = gpio_pin_configure_dt(spec,flags);
+    int err = gpio_pin_configure_dt(io,flags);
     if (err)
       printk("Error %d: failed to configure %s pin %d\n",
-  		       err, button.port->name, button.pin);
+  		       err, io->port->name, io->pin);
 
     return err;
   }
 
 //==============================================================================
 // GPIO pin interrupt configuration (helper)
-// - usage: gp_int_cfg(spec,flags)
-// -        gp_int_cfg(spec,GPIO_INT_EDGE_TO_ACTIVE)
-// -        gp_int_cfg(spec,GPIO_INT_EDGE_BOTH)
+// - usage: gp_int_cfg(io,flags)
+// -        gp_int_cfg(io,GPIO_INT_EDGE_TO_ACTIVE)
+// -        gp_int_cfg(io,GPIO_INT_EDGE_BOTH)
 //==============================================================================
 
-  static int gp_int_cfg(const GP_spec *spec, GP_flags flags)
+  static int gp_int_cfg(const GP_io *io, GP_flags flags)
   {
-    int err = gpio_pin_interrupt_configure_dt(spec,flags);
+    int err = gpio_pin_interrupt_configure_dt(io,flags);
     if (err)
       printk("Error %d: failed to config %s pin %d interrupt\n",
-  			     err, button.port->name, button.pin);
+  			     err, io->port->name, io->pin);
 
     return err;
   }
 
 //==============================================================================
 // GPIO pin add interrupt callback (helper)
-// - usage: gp_add_cb(spec,ctx,irs)
+// - usage: gp_add_cb(io,ctx,irs)
 // -        gp_add_cb(&but,&but_ctx,but_irs)
 //==============================================================================
 
-  static void gp_add_cb(const GP_spec *spec, GP_ctx *ctx, GP_irs cb)
+  static void gp_add_cb(const GP_io *io, GP_ctx *ctx, GP_irs cb)
   {
-    gpio_init_callback(ctx, cb, BIT(spec->pin));
-    gpio_add_callback(spec->port, ctx);
+    gpio_init_callback(ctx, cb, BIT(io->pin));
+    gpio_add_callback(io->port, ctx);
   }
 
 //==============================================================================
@@ -135,12 +138,13 @@
   }
 
 //==============================================================================
-// main program
+// configure LED
+// - check whether device is ready
+// - configure GPIO
 //==============================================================================
 
-  void main(void)
+  static void config_led(void)
   {
-    config_button();
     if (led.port && !device_is_ready(led.port))
     {
       printk("Error: LED device %s is not ready; ignoring it\n",
@@ -153,15 +157,23 @@
       int err = gpio_pin_configure_dt(&led, GPIO_OUTPUT);
       if (err != 0)
       {
-  	printk("Error %d: failed to configure LED device %s pin %d\n",
+  	    printk("Error %d: failed to configure LED device %s pin %d\n",
   	       err, led.port->name, led.pin);
-  	led.port = NULL;
+  	    led.port = NULL;
       }
       else
-      {
-  	printk("Set up LED at %s pin %d\n", led.port->name, led.pin);
-      }
+  	    printk("Set up LED at %s pin %d\n", led.port->name, led.pin);
     }
+  }
+
+//==============================================================================
+// main program
+//==============================================================================
+
+  void main(void)
+  {
+    config_button();
+    config_led();
 
     printk("Press the button\n");
 
@@ -169,14 +181,14 @@
     {
       while (1)
       {
-  	  // if we have an LED, match its state to the button's
+  	    // if we have an LED, match its state to the button's
 
         int val = gpio_pin_get_dt(&button);
 
-  	if (val >= 0)
+  	    if (val >= 0)
         {
-  	  gpio_pin_set_dt(&led, val);
-  	}
+  	      gpio_pin_set_dt(&led, val);
+  	    }
 
         k_msleep(SLEEP_TIME_MS);
       }
