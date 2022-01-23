@@ -1,10 +1,3 @@
 //==============================================================================
-// main.c for 01-hello demo (hello world)
+// 08-tock - exploring tock function
 //==============================================================================
-
-#include "bluccino.h"
-
-  void main(void)
-  {
-    bl_prt("hello, world!\n");
-  }

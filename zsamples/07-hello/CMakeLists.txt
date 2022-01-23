@@ -10,11 +10,15 @@
 
   project(01-hello)
 
-  set (LIB ../../lib/V0.5)
+  set (LIB ../../lib/V0.4)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 
   include_directories(${SRC} ${BLU})
+
+# add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
+# add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
+# add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
 
 #===============================================================================
 # source files

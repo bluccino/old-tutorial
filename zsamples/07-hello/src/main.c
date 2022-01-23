@@ -1,10 +1,10 @@
 //==============================================================================
-// main.c for 01-hello demo (hello world)
+// main.c for 07-hello demo (hello Bluccino)
 //==============================================================================
 
 #include "bluccino.h"
 
   void main(void)
   {
-    bl_prt("hello, world!\n");
+    bl_hello(4,"07-hello");
   }
