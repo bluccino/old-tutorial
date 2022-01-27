@@ -9,9 +9,9 @@
 # project definition and path setup
 #===============================================================================
 
-  project(04-mcore)
+  project(03-mcore)
 
-  set (LIB ../../lib/V0.4)
+  set (LIB ../../lib/V0.5)
   set (BLU ${LIB}/bluccino)
   set (SRC src)
 

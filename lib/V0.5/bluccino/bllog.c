@@ -153,7 +153,7 @@
 //==============================================================================
 // log messages
 //==============================================================================
-
+/*
      // basic bl_log(lev,msg) function always automatically terminates with
      // newline, except an empty string is passed. So the possibilities arw:
      //
@@ -190,7 +190,7 @@
     msg = (msg[0] == '@') ? msg+1 : msg;
     printk("%s%s: @%d,%d\n"BL_0, col, msg, id,value);
   }
-
+*/
   void bl_logo(int lev, BL_txt msg, BL_ob *o, int value) // log event message
   {
     if ( !bl_dbg(lev) )

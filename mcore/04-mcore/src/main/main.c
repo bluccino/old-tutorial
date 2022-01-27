@@ -28,8 +28,8 @@
 
   static int led(int id, int val)           // control LED
   {
-    BL_op op = val<0 ? OP_TOGGLE:OP_SET;    // SET or TOGGLE?
-    BL_ob oo = {CL_LED,op,id,NULL};
+    BL_op op = val<0 ? TOGGLE_:SET_;    // SET or TOGGLE?
+    BL_ob oo = {_LED,op,id,NULL};
     return bl_down(&oo,val);                // post [LED:op @id,val] to core
   }
 
@@ -39,9 +39,9 @@
 
   static int when(BL_ob *o, int val)
   {
-    switch (BL_PAIR(o->cl,o->op))
+    switch (BL_ID(o->cl,o->op))
     {
-      case BL_PAIR(CL_BUTTON,OP_PRESS):     // button press to cause LED on off
+      case BL_ID(_BUTTON,PRESS_):     // button press to cause LED on off
         LOGO(1,"@",o,val);
 
         led(id,0);                          // turn off current LED

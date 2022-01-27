@@ -336,34 +336,34 @@ void main(void)
   {
     static BL_fct output = NULL;
 
-    switch (BL_PAIR(o->cl,o->op))
+    switch (BL_ID(o->cl,o->op))
     {
-      case BL_PAIR(_SYS,INIT_):        // [SYS:INIT]
+      case BL_ID(_SYS,INIT_):        // [SYS:INIT]
         output = o->data;              // store output callback
         return init(o,val);            // forward to init()
 
-      case BL_PAIR(_SYS,TICK_):        // [SYS:TICK @0,cnt]
-      case BL_PAIR(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
+      case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
+      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
         return 0;                      // OK - nothing to tick/tock
 
-      case BL_PAIR(_SET,PRV_):         // [SET:PRV val]  (provision)
-      case BL_PAIR(_SET,ATT_):         // [SET:ATT val]  (attention)
-      case BL_PAIR(_BUTTON,PRESS_):    // [BUTTON:PRESS @id] (button pressed)
-      case BL_PAIR(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
+      case BL_ID(_SET,PRV_):         // [SET:PRV val]  (provision)
+      case BL_ID(_SET,ATT_):         // [SET:ATT val]  (attention)
+      case BL_ID(_BUTTON,PRESS_):    // [BUTTON:PRESS @id] (button pressed)
+      case BL_ID(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
         LOGO(3,"",o,val);
         return bl_out(o,val,output);   // output to subscriber
 
-      case BL_PAIR(_LED,SET_):         // [LED:SET @id,onoff]
-      case BL_PAIR(_LED,TOGGLE_):      // [LED:SET @id,onoff]
+      case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
+      case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
         return mgpio(o,val);           // delegate to MGPIO submodule
 
-      case BL_PAIR(_RESET,INC_):       // cnt = [RESET:INC <ms>]
+      case BL_ID(_RESET,INC_):       // cnt = [RESET:INC <ms>]
         return increment(o,val);       // delegate to increment()
 
-      case BL_PAIR(_RESET,PRV_):       // [RESET:PRV]
+      case BL_ID(_RESET,PRV_):       // [RESET:PRV]
         return unprovision(o,val);     // unprovision node
 
-      case BL_PAIR(_HDL,DUE_):         // [HDL:DUE] reset timer is due
+      case BL_ID(_HDL,DUE_):         // [HDL:DUE] reset timer is due
         return bl_emit(o,_RESET,DUE_,val,output); // emit [RESET:DUE] to output
 
       default:

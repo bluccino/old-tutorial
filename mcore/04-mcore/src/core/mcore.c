@@ -273,22 +273,22 @@ void main(void)
 
   int bl_core(BL_ob *o, int val)
 	{
-    switch (BL_PAIR(o->cl,o->op))
+    switch (BL_ID(o->cl,o->op))
     {
-      case BL_PAIR(CL_SYS,OP_INIT):        // [SYS:INIT]
+      case BL_ID(_SYS,INIT_):        // [SYS:INIT]
         return init(o,val);                // forward to init()
 
-      case BL_PAIR(CL_SYS,OP_TICK):        // [SYS:TICK @0,cnt]
-      case BL_PAIR(CL_SYS,OP_TOCK):        // [SYS:TICK @0,cnt]
+      case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
+      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
 				return 0;                          // OK - nothing to tick/tock
 
-      case BL_PAIR(CL_MESH,OP_PRV):        // [MESH:PRV val]  (provision)
-      case BL_PAIR(CL_MESH,OP_ATT):        // [MESH:ATT val]  (attention)
-      case BL_PAIR(CL_BUTTON,OP_PRESS):    // [BUTTON:PRESS @id](button pressed)
+      case BL_ID(_MESH,PRV_):        // [MESH:PRV val]  (provision)
+      case BL_ID(_MESH,ATT_):        // [MESH:ATT val]  (attention)
+      case BL_ID(_BUTTON,PRESS_):    // [BUTTON:PRESS @id](button pressed)
 				return bl_out(o,val,notify);       // output message to subscriber
 
-      case BL_PAIR(CL_LED,OP_SET):         // [LED:SET @id,onoff]
-      case BL_PAIR(CL_LED,OP_TOGGLE):      // [LED:SET @id,onoff]
+      case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
+      case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
 				return gpio(o,val);                // delegate to GPIO submodule
 
       default:

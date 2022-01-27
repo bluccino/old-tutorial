@@ -40,8 +40,8 @@
 
   static int led(int id, int val)           // control LED
   {
-    BL_op op = val<0 ? OP_TOGGLE:OP_SET;    // SET or TOGGLE?
-    BL_ob oo = {CL_LED,op,id,NULL};
+    BL_op op = val<0 ? TOGGLE_:SET_;    // SET or TOGGLE?
+    BL_ob oo = {_LED,op,id,NULL};
     if (id)                                 // don't log status LED @0 logs
       LOGO(1,"@",&oo,val);                  // see what LEDs will do
     return bl_down(&oo,val);                // post [LED:op @id,val] to core
@@ -145,18 +145,18 @@
       case BL_ID(_SYS,INIT_):               // [SYS:INIT @id <cb>]
         return 0;                           // OK (nothing to init)
 
-      case BL_ID(CL_SYS,OP_TICK):
+      case BL_ID(_SYS,TICK_):
         if (!state || !bl_due(&due,T_ATT))  // attention state? due?
           return 0;                         // neither attention state nor due
         return led(0,-1);                   // toggle status LED @1
 
-      case BL_ID(CL_SET,OP_ATT):
+      case BL_ID(_SET,ATT_):
         state = val;                        // store attention state
         led(0,0);                           // turn status LED off
         led(id,0);                          // turn current LED off
         return 0;
 
-      case BL_ID(CL_GET,OP_ATT):            // state = ATTENTION[GET:ATT]
+      case BL_ID(_GET,ATT_):            // state = ATTENTION[GET:ATT]
         return state;
 
       default:
@@ -187,7 +187,7 @@
       {
         int ms = (state ? T_PRV:T_UNP);     // 2000 ms versus 350 ms period
         int rem = val % (ms/T_TICK);        // remainder modulo (ticks/period)
-        if (rem > 1 || bl_get(attention,OP_ATT) || bl_get(startup,OP_BUSY))
+        if (rem > 1 || bl_get(attention,ATT_) || bl_get(startup,BUSY_))
           return 0;                         // no provision blinking during att!
         else
           return led(0,rem == 0);           // update status LED @1
@@ -240,13 +240,13 @@
   {
     switch (bl_id(o))
     {
-      case BL_ID(CL_SET,OP_ATT):            // [MESH:ATT state]
+      case BL_ID(_SET,ATT_):            // [MESH:ATT state]
         return attention(o,val);            // change attention state
 
-      case BL_ID(CL_SET,OP_PRV):            // [MESH:ATT state]
+      case BL_ID(_SET,PRV_):            // [MESH:ATT state]
         return provision(o,val);            // change provision state
 
-      case BL_ID(CL_BUTTON,OP_PRESS):       // button press to cause LED on off
+      case BL_ID(_BUTTON,PRESS_):       // button press to cause LED on off
         LOGO(1,"@",o,val);
 
         led(2,0); led(3,0); led(4,0);       // turn off current LED
@@ -267,7 +267,7 @@
 
   int bl_down(BL_ob *o, int val)
   {
-    if ( o->cl == CL_LED && !o->id)    // special logging of status LED messages
+    if ( o->cl == _LED && !o->id)    // special logging of status LED messages
       LOGO(5,"status:down:",o,val);
     else
       LOGO(3,BL_Y "down:",o,val);

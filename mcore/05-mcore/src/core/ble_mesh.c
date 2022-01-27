@@ -60,36 +60,36 @@ static int output_string(const char *str)
 
 static void prov_complete(uint16_t net_idx, uint16_t addr)
 {
-  #if MIGRATION_STEP2
-	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
-	  bl_core(&o,1);            // post [MESH:PRV 1] to core, which posts it up
+  #if MIGRATION_STEP2   // pimped in MIGRATION_STEP5
+    BL_ob oo = {_SET,PRV_,0,NULL};
+    blemesh(&oo,1);         // post [SET:PRV 1] to pub ifc, which posts it up
   #endif // MIGRATION_STEP2
 }
 
 static void prov_reset(void)
 {
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
-  #if MIGRATION_STEP2
-	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
-	  bl_core(&o,0);            // post [MESH:PRV 0] to core, which posts it up
+  #if MIGRATION_STEP2  // pimped in MIGRATION_STEP5
+    BL_ob oo = {_SET,PRV_,0,NULL};
+    blemesh(&oo,0);         // post [SET:PRV 0] to pub ifc, which posts it up
   #endif // MIGRATION_STEP2
 }
 
-#if MIGRATION_STEP2
+#if MIGRATION_STEP2  // pimped in MIGRATION_STEP5
 //==============================================================================
 // provisioning link open/close callbacks
 //==============================================================================
 
 static void link_open(bt_mesh_prov_bearer_t bearer)
 {
-	BL_ob o = {CL_MESH, OP_ATT, 1, NULL};
-	bl_core(&o,1);              // post [MESH:ATT 1] to core, which posts it up
+  BL_ob oo = {_SET,ATT_, 1, NULL};
+  blemesh(&oo,1);             // post [SET:ATT 1] to pub ifc, which posts it up
 }
 
 static void link_close(bt_mesh_prov_bearer_t bearer)
 {
-	BL_ob o = {CL_MESH, OP_ATT, 0, NULL};
-	bl_core(&o,0);              // post [MESH:ATT 0] to core, which posts it up
+  BL_ob oo = {_SET,ATT_, 0, NULL};
+  blemesh(&oo,0);            // post [MESH:ATT 0] pub ifc, which posts it up
 }
 
 //==============================================================================
@@ -118,7 +118,11 @@ static const struct bt_mesh_prov prov = {
 	.reset = prov_reset,
 };
 
+#if MIGRATION_STEP5
+static void bt_ready(void)
+#else
 void bt_ready(void)
+#endif
 {
 	int err;
 	struct bt_le_oob oob;
@@ -164,3 +168,31 @@ void bt_ready(void)
     printk("Mesh initialized\n");
 	#endif
 }
+
+//==============================================================================
+// public module interface
+//==============================================================================
+
+  int blemesh(BL_ob *o, int val)
+  {
+    static BL_fct output = NULL;       // output callback
+
+    switch (bl_id(o))
+    {
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>] init sub module
+        output = o->data;              // store output cb
+        return 0;                      // OK
+
+      case BL_ID(_SYS,READY_):         // [SYS:READY] BLE/MESH init
+        bt_ready();                    // init BLE/Mesh when Bluetooth is ready
+        return 0;                      // OK
+
+      case BL_ID(_SET,ATT_):           // [HDL:ATT] handle attention state
+      case BL_ID(_SET,PRV_):           // [HDL:PRV] handle provision state
+        bl_out(o,val,output);          // output message to subscriber
+        return 0;                      // OK
+
+      default:
+        return -1;                     // bad args
+    }
+  }

@@ -25,14 +25,22 @@
 #endif
 //==============================================================================
 // generic log function
+// - the whole macro is a weird construction, but it fulfills what expected!
+// - the outer do {..} while(0) construct seems weird, but it allows a syntax:
+// - if (condition) BL_LOG(1,"..."); else BL_LOG(1,"...");
 //==============================================================================
 
     #define BL_LOG(lvl,fmt,...)                  \
+         do                                      \
+         {                                       \
             if (bl_dbg(lvl))                     \
             {                                    \
                 bl_prt(fmt BL_0, ##__VA_ARGS__); \
                 if (*fmt) bl_prt("\n");          \
-            }
+            }                                    \
+         } while(0)
+
+    #define bl_log BL_LOG              // log alias
 
 //==============================================================================
 // API Logging
@@ -137,9 +145,9 @@
 //==============================================================================
 
   bool bl_dbg(int lev);                // if debug level trace timestamp
-  void bl_log(int lev, BL_txt msg);
-  void bl_log1(int lev, BL_txt msg, int value);
-  void bl_log2(int lev, BL_txt msg, int id, int value);
+//void bl_log(int lev, BL_txt msg);
+//void bl_log1(int lev, BL_txt msg, int value);
+//void bl_log2(int lev, BL_txt msg, int id, int value);
   void bl_logo(int lev, BL_txt msg, BL_ob *o, int value);
 
   void bl_log_color(bool attention, bool provisioned);

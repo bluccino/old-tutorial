@@ -4,7 +4,12 @@ cmake_minimum_required(VERSION 3.20.0)
 set(QEMU_EXTRA_FLAGS -s)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(onoff_level_lighting_vnd_app)
+#project(onoff_level_lighting_vnd_app)
+project(02-ollv)
+
+set (LIB ../../lib/V0.5)
+set (BLU ${LIB}/bluccino)
+include_directories(${BLU})
 
 target_sources(app PRIVATE
 	       src/main.c

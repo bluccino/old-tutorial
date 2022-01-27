@@ -149,7 +149,7 @@
 
   static inline void blemesh_ready(void)
   {
-    bl_sys(blemesh,OP_READY,NULL,0);
+    bl_sys(blemesh,READY_,NULL,0);
   }
 
 #endif
