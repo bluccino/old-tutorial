@@ -9,16 +9,16 @@
 # project definition and path setup
 #===============================================================================
 
-  project(05-mcore)
+  project(99-mcore)
 
   set (LIB ../../lib/V0.5)
   set (BLU ${LIB}/bluccino)
+  set (MCORE ${LIB}/mcore)
   set (SRC src)
 
   set (MAIN ${SRC}/main)
-  set (CORE ${SRC}/core)
 
-  include_directories(${SRC} ${BLU} ${MAIN} ${CORE})
+  include_directories(${SRC} ${BLU} ${MAIN} ${MCORE})
 
   add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
   add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
@@ -30,15 +30,7 @@
 target_sources(app PRIVATE
 	       ${MAIN}/main.c
 				 ${BLU}/bluccino.c
-	       ${CORE}/mcore.c
-	       ${CORE}/app_gpio.c
-	       ${CORE}/storage.c
-	       ${CORE}/ble_mesh.c
-	       ${CORE}/device_composition.c
-	       ${CORE}/no_transition_work_handler.c
-	       ${CORE}/publisher.c
-	       ${CORE}/state_binding.c
-	       ${CORE}/transition.c
+	       ${MCORE}/mcore.c
 	       )
 
 #target_sources_ifdef(CONFIG_MCUMGR app PRIVATE ${CORE}/smp_svr.c)

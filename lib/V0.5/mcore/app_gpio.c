@@ -340,7 +340,7 @@
 // init
 //==============================================================================
 
-  static int init(BL_ob *o, int val)
+  static int app_init(BL_ob *o, int val)
   {
     LOG(2,BL_B "GPIO init");
 
@@ -359,18 +359,18 @@
 
     switch (BL_ID(o->cl,o->op))
     {
-      case BL_ID(_SYS,INIT_):           // [SYS:INIT]
+      case BL_ID(_SYS,INIT_):             // [SYS:INIT]
         output = o->data;
-      	return init(o,val);               // delegate to init();
+      	return app_init(o,val);           // delegate to app_init();
 
-      case BL_ID(_LED,SET_):            // [LED:set]
+      case BL_ID(_LED,SET_):              // [LED:set]
       {
         BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
         o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
 	      return led_set(o,val != 0);       // delegate to led_set();
       }
 
-      case BL_ID(_LED,TOGGLE_):         // [LED:toggle]
+      case BL_ID(_LED,TOGGLE_):           // [LED:toggle]
       {
         BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
         o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo

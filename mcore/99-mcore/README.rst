@@ -1,10 +1,52 @@
-===============================================================================
-# 04-mcore (Bluccino mesh core)
+#===============================================================================
+# 99-mcore (Bluccino mesh core for 1 button and 4 LEDs, app cannot access mesh)
 #===============================================================================
 
-- derived from 03-mcore
-- add public module interface to app_gpio module
+- a trial version to link an mcore.c file, which includes plenty of .c files
 
+#===============================================================================
+# 05-mcore (Bluccino mesh core for 1 button and 4 LEDs, app cannot access mesh)
+# - 4 LEDs, 1 BUTTON and mesh GOOSRV/GOOCLIare are controllable from app level
+# - any button @id press selects next LED blinking process
+# - after selection of 4 different LEDs all LEDs are turned off
+# - main program involves an attention-, provision- and startup-module
+# - remark: program is suitable for nRF52832/840 DK and nRF52840 dongle
+#===============================================================================
+
+- derived from 04-mcore, and thus
+  derived from zephyr/samples/boards/nrf/mesh/onoff_level_lighting_vnd_app
+- #define CFG_NUMBER_OF_BUTTONS 1 in config.h
+- change app (main) to achieve specified behavior
+- excellent, runs on nRF52840 dongle
+- performing MIGRATION_STEP5 (define in config.h)
+- add public module interface for ble_mesh.c/.h
+- call BLEMESH[SYS:INIT] in mcore init
+- introduced status LED @0, where @0 is re-mapped to @1 at the lowest level
+- bt_mesh_reset() not directly but notification of app with [RESET:CNT] message
+- app can control bt_mesh_reset() with [RESET:PRV] message
+- startup module flashes one of RGB LEDs at 90% duty
+- startup module to support mesh reset by button press
+
+#===============================================================================
+# 04-mcore (Bluccino mesh core for 4 LEDs and 4 buttons, app can't access mesh)
+# - 4 LEDs and 4 BUTTONS are now controllable from app level (mesh not)
+# - any button @id press turns on blinking process of LED @id
+# - repeated button press turns off blinking process
+# - press of different button @id turns on LED @id blinking (stops current)
+# - remark 1: suitable program for nRF52832/840 DK, but not for nRF52840 dongle
+# - remark 2: mesh is running in the background, but not accessible by app
+#===============================================================================
+
+- derived from 03-mcore, and thus
+  derived from zephyr/samples/boards/nrf/mesh/onoff_level_lighting_vnd_app
+- performing MIGRATION_STEP4
+- creation of mcore.h with #include "bluccino.h" and setting migration defaults
+- app_gpio adopted to allow independent LED control and receive of button events
+- all publishing commands deactivated
+- main adopted to toogle active LED in tock callback
+- main adopted with when callback to change active LED selection by button press
+- led() helper function added to main - now test program looking fine
+- nice 03-mcore with lED and button functionality (and deactivated publisher)
 
 #===============================================================================
 # 03-mcore (Bluccino mesh core)
@@ -14,7 +56,7 @@
 - we call it 'ollv-app by short name'
 -
 - performing MIGRATION_STEP1
-- add MIGRATION define defaults to blcore.c
+- add MIGRATION define defaults to mcore.c
 - added main.c
 - moved all *.c stuff into folder src/core or src/main
 - increased main stack size from 1024 to 2048 bytes
@@ -35,6 +77,7 @@
   - use LOG for reset counter logging
 - most system messages replaced by Bluccino LOGs
 - [MESH:PRV] and [MESH:ATT] posted upward via bl_core()
+- performing MIGRATION_STEP3
 
 
 #===============================================================================

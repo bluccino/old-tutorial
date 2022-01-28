@@ -30,8 +30,6 @@
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
-  static BL_fct notify = NULL;
-
 //==============================================================================
 // let's go ...
 //==============================================================================
@@ -164,6 +162,7 @@ void update_light_state(void)
 	}
 }
 
+#if !MIGRATION_STEP5             // explicite reset control by app
 static void short_time_multireset_bt_mesh_unprovisioning(void)
 {
 	if (reset_counter >= 4U)
@@ -174,7 +173,8 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
     #else
 		  printk("BT Mesh reset\n");
     #endif
-		bt_mesh_reset();
+
+	  bt_mesh_reset();
 	}
   else
   {
@@ -188,6 +188,25 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
 
 	save_on_flash(RESET_COUNTER);
 }
+#endif // MIGRATION_STEP5
+//==============================================================================
+// unprovision node
+//==============================================================================
+#if MIGRATION_STEP5
+
+  static int unprovision(BL_ob *o, int val) // uprovision mesh node
+  {
+		reset_counter = 0U;
+		LOG(3,BL_B "unprovision node");
+	  bt_mesh_reset();
+    return 0;                               // OK
+  }
+
+#endif // MIGRATION_STEP5
+
+//==============================================================================
+// reset timer
+//==============================================================================
 
 static void reset_counter_timer_handler(struct k_timer *dummy)
 {
@@ -198,19 +217,38 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
   #else
   	printk("Reset Counter set to Zero\n");
   #endif
+
+  #if MIGRATION_STEP5
+    bl_hdl(bl_core,DUE_,0,0);    // bl_core to handle [HDL:DUE] message
+  #endif
 }
 
 K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
 //==============================================================================
+// increment reset counter (set due timer, return reset counter after increment)
+//==============================================================================
+#if MIGRATION_STEP5
+
+  static int increment(BL_ob *o, int ms)   // inc reset counter, set due timer
+  {
+		reset_counter++;
+  	LOG(3,BL_M "reset counter: %d", reset_counter);
+
+    k_timer_start(&reset_counter_timer, K_MSEC(ms<1000?1000:ms), K_NO_WAIT);
+
+  	save_on_flash(RESET_COUNTER);
+    return reset_counter;                   // return counter value after inc
+  }
+
+#endif // MIGRATION_STEP5
+//==============================================================================
 // init (fomer main())
 //==============================================================================
 
 #if MIGRATION_STEP1
-static int init(BL_ob *o, int val)
+static int init_mcore(void)
 {
-  LOGO(5,BL_B,o,val);                // log trace
-  notify = o->data;                  // store notify callback
 #else
 void main(void)
 {
@@ -219,7 +257,9 @@ void main(void)
 
 	light_default_var_init();
 
-	app_gpio_init();
+  #if !MIGRATION_STEP5
+	  app_gpio_init();
+  #endif
 
 	#if defined(CONFIG_MCUMGR)
 		smp_svr_init();
@@ -236,7 +276,7 @@ void main(void)
 	/* Initialize the Bluetooth Subsystem */
 	err = bt_enable(NULL);
 	if (err)
-  {
+        {
     #if MIGRATION_STEP2
 		  LOG(ERR "Bluetooth init failed (err %d)", err);
     #else
@@ -245,14 +285,20 @@ void main(void)
 		return err;
 	}
 
-	bt_ready();
+  #if MIGRATION_STEP5
+    blemesh_ready();
+  #else
+	  bt_ready();
+  #endif
 
 	light_default_status_init();
 
 	update_light_state();
 
-	short_time_multireset_bt_mesh_unprovisioning();
-	k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
+        #if !MIGRATION_STEP5
+	  short_time_multireset_bt_mesh_unprovisioning();
+	  k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
+        #endif
 
 	#if defined(CONFIG_MCUMGR)
 		/* Initialize the Bluetooth mcumgr transport. */
@@ -265,35 +311,64 @@ void main(void)
 	#endif
 }
 
-//==============================================================================
-// THE core interface
-// - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
-//==============================================================================
 #if MIGRATION_STEP1
+//==============================================================================
+// init mcore modules
+//==============================================================================
+
+  static int init(BL_ob *o, int val)
+  {
+    LOGO(4,BL_B"init:",o,val);         // log trace
+    bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
+    bl_init(mgpio,bl_core);            // output of MGPIO goes to here!
+    init_mcore();                      // init THIS module
+    return 0;
+  }
+
+//==============================================================================
+// public core interface
+// - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
+// - [RESET:PRV]   // unprovision node
+// - [RESET:INC]   // return incremented reset counter while <due> timer started
+//==============================================================================
 
   int bl_core(BL_ob *o, int val)
-	{
+  {
+    static BL_fct output = NULL;
+
     switch (BL_ID(o->cl,o->op))
     {
       case BL_ID(_SYS,INIT_):        // [SYS:INIT]
-        return init(o,val);                // forward to init()
+        output = o->data;              // store output callback
+        return init(o,val);            // forward to init()
 
       case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
       case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
-				return 0;                          // OK - nothing to tick/tock
+        return 0;                      // OK - nothing to tick/tock
 
-      case BL_ID(_MESH,PRV_):        // [MESH:PRV val]  (provision)
-      case BL_ID(_MESH,ATT_):        // [MESH:ATT val]  (attention)
-      case BL_ID(_BUTTON,PRESS_):    // [BUTTON:PRESS @id](button pressed)
-				return bl_out(o,val,notify);       // output message to subscriber
+      case BL_ID(_SET,PRV_):         // [SET:PRV val]  (provision)
+      case BL_ID(_SET,ATT_):         // [SET:ATT val]  (attention)
+      case BL_ID(_BUTTON,PRESS_):    // [BUTTON:PRESS @id] (button pressed)
+      case BL_ID(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
+        LOGO(3,"",o,val);
+        return bl_out(o,val,output);   // output to subscriber
 
       case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
       case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
-				return gpio(o,val);                // delegate to GPIO submodule
+        return mgpio(o,val);           // delegate to MGPIO submodule
+
+      case BL_ID(_RESET,INC_):       // cnt = [RESET:INC <ms>]
+        return increment(o,val);       // delegate to increment()
+
+      case BL_ID(_RESET,PRV_):       // [RESET:PRV]
+        return unprovision(o,val);     // unprovision node
+
+      case BL_ID(_HDL,DUE_):         // [HDL:DUE] reset timer is due
+        return bl_emit(o,_RESET,DUE_,val,output); // emit [RESET:DUE] to output
 
       default:
-    		return -1;                         // bad input
+        return -1;                     // bad input
     }
-	}
+  }
 
 #endif // MIGRATION_STEP1

@@ -1,6 +1,6 @@
 //==============================================================================
-// fm_lll.h (high level part)
-// LLL communication module (LLL = Location detect, Location evt. @ Low power)
+// blcore.c
+// Bluccino core
 //
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 fuseAware. All rights reserved.

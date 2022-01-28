@@ -18,15 +18,18 @@
 
   static int tock(BL_ob *o, int val)
   {
+    BL_ob oo = {_LED,SET_,1,NULL};
     LOGO(4,BL_B,o,val);
 
     if (val % 2 == 0)
     {
       LOG(1,BL_G "LED on");
+      bl_down(&oo,1);
     }
     else
     {
       LOG(1,BL_M "LED off");
+      bl_down(&oo,0);
     }
 
     if (val % 10 == 0)

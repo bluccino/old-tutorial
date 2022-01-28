@@ -10,11 +10,12 @@
 
   project(01-hello)
 
-  set (LIB ../../lib/V0.4)
+  set (LIB ../../lib/V0.5)
   set (BLU ${LIB}/bluccino)
+  set (MCORE ${LIB}/mcore)
   set (SRC src)
 
-  include_directories(${SRC} ${BLU})
+  include_directories(${SRC} ${BLU} ${MCORE})
 
 # add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
 # add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
@@ -27,4 +28,5 @@
   target_sources(app PRIVATE
                  ${SRC}/main.c
                  ${BLU}/bluccino.c
+                 ${MCORE}/mcore.c
                 )

@@ -30,7 +30,7 @@
 target_sources(app PRIVATE
 	       ${MAIN}/main.c
 				 ${BLU}/bluccino.c
-	       ${CORE}/mcore.c
+	       ${CORE}/blcore.c
 	       ${CORE}/app_gpio.c
 	       ${CORE}/storage.c
 	       ${CORE}/ble_mesh.c
