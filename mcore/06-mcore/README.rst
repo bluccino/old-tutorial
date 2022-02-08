@@ -1,8 +1,15 @@
 #===============================================================================
-# 99-mcore (Bluccino mesh core for 1 button and 4 LEDs, app cannot access mesh)
+# 06-mcore (Bluccino mesh core for 1 button and 4 LEDs, app accesses mesh)
+# - 4 LEDs, 1 BUTTON and mesh GOOSRV/GOOCLIare are controllable from app level
+# - any button @id press selects next LED blinking process
+# - after selection of 4 different LEDs all LEDs are turned off
+# - main program involves an attention-, provision- and startup-module
+# - remark: program is suitable for nRF52832/840 DK and nRF52840 dongle
 #===============================================================================
 
-- a trial version to link an mcore.c file, which includes plenty of .c files
+- derived from 05-mcore, and thus
+  derived from zephyr/samples/boards/nrf/mesh/onoff_level_lighting_vnd_app
+- #define CFG_NUMBER_OF_BUTTONS 1 in config.h
 
 #===============================================================================
 # 05-mcore (Bluccino mesh core for 1 button and 4 LEDs, app cannot access mesh)

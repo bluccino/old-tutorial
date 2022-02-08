@@ -34,7 +34,7 @@
 // app personality
 //==============================================================================
 
-  #define CFG_APP_VERSION        "03-mcore"
+  #define CFG_APP_VERSION        "06-mcore"
   #define CFG_APP_VERBOSE         4    // verbose level for application
 
   #define CFG_NUMBER_OF_LEDS      4    // nRF52832/840 DK, nRF52840 dongle
