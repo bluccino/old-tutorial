@@ -42,7 +42,15 @@
     //     b) sufficient long time () before overrun
     //        (1 year .= 2^35 ms, 2^28 years .= 268 million years = 2^63 ms)
 
-  typedef int64_t BL_ms;                  // mili seconds
-  typedef int64_t BL_us;                  // micro seconds
+  typedef int64_t BL_ms;               // mili seconds
+  typedef int64_t BL_us;               // micro seconds
+
+  typedef struct BL_pace               // tick/tock pace control
+          {
+            BL_ms start;               // start time frame for pace maker
+            BL_ms clock;               // pace clock
+            BL_ms period;              // tick period
+            int divider;               // tock divider
+          } BL_pace;                   // tick/tock pace control
 
 #endif // __BLTYPE_H__
