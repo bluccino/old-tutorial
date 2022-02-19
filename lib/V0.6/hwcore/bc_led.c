@@ -140,38 +140,56 @@
     			   GPIO_OUTPUT_INACTIVE);
     #endif
 
-    return 0;                             // OK
+    return 0;                          // OK
   }
 
 //==============================================================================
 // public module interface
 //==============================================================================
+//
+// SYS Interface:  [] = SYS(INIT)
+// LED Interface:  [] = LED(SET)
+//
+//                             +-------------+
+//                             |   BC_LED    |
+//                             +-------------+
+//                      INIT ->|    SYS:     |
+//                             +-------------+
+//                       SET ->|    LED:     |
+//                    TOGGLE ->|             |
+//                             +-------------+
+//  Input Messages:
+//    - [SYS:INIT <cb>]                // init module, provide output callback
+//    - [LED:SET @id onoff]            // set LED(@id) on/off, (id: 0..4)
+//    - [LED:TOGGLE @id]               // toggle LED(@id), (id: 0..4)
+//
+//==============================================================================
 
-  int bc_led(BL_ob *o, int val)           // HW core module interface
+  int bc_led(BL_ob *o, int val)        // HW core module interface
   {
-    static BL_fct output = NULL;          // to store output callback
+    static BL_fct output = NULL;       // to store output callback
 
     switch (bl_id(o))
     {
-      case BL_ID(_SYS,INIT_):             // [SYS:INIT <cb>]
-        output = o->data;                 // store output callback
-      	return init(o,val);               // delegate to init() worker
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
+        output = o->data;              // store output callback
+      	return init(o,val);            // delegate to init() worker
 
-      case BL_ID(_LED,SET_):              // [LED:set]
+      case BL_ID(_LED,SET_):           // [LED:set]
       {
-        BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
-        o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
-	      return led_set(o,val != 0);       // delegate to led_set();
+        BL_ob oo ={o->cl,o->op,1,NULL};// change @id=0 -> @id=1
+        o = o->id ? o : &oo;           // if (o->id==0) re-map o to &oo
+	      return led_set(o,val != 0);    // delegate to led_set();
       }
 
-      case BL_ID(_LED,TOGGLE_):           // [LED:toggle]
+      case BL_ID(_LED,TOGGLE_):        // [LED:toggle]
       {
         BL_ob oo = {o->cl,o->op,1,NULL};  // change @id=0 -> @id=1
-        o = o->id ? o : &oo;              // if (o->id==0) re-map o to &oo
-	      return led_toggle(o,val);         // delegate to led_toggle();
+        o = o->id ? o : &oo;           // if (o->id==0) re-map o to &oo
+	      return led_toggle(o,val);      // delegate to led_toggle();
       }
 
       default:
-	      return -1;                        // bad input
+	      return -1;                     // bad input
     }
   }

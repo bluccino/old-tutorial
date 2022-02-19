@@ -26,10 +26,12 @@
 //                      INIT ->|    SYS:     |
 //                             +-------------+
 //                       SET ->|    LED:     |
+//                    TOGGLE ->|             |
 //                             +-------------+
 //  Input Messages:
 //    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [LED:SET @id onoff]            // set LED @id on/off (id=0..4)
+//    - [LED:SET @id onoff]            // set LED(@id) on/off, (id: 0..4)
+//    - [LED:TOGGLE @id]               // toggle LED(@id), (id: 0..4)
 //
 //==============================================================================
 
