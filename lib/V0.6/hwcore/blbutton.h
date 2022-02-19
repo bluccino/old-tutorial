@@ -15,19 +15,29 @@
 //                     PRESS ->|   BUTTON:   |-> PRESS
 //                   RELEASE ->|             |-> RELEASE
 //                             +-------------+
+//                       STS ->|   SWITCH:   |-> STS
+//                             +-------------+
 //  Input Messages:
 //    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [BUTTON:PRESS @id,active]      // relay a button press event to output
-//    - [BUTTON:RELEASE @id,active]    // relay a button release event to output
+//    - [BUTTON:PRESS @id,active]      // forward button press event to output
+//    - [BUTTON:RELEASE @id,active]    // forward button release event to output
+//    - [SWITCH:STS @id,onoff]         // forward switch status update to output
 //
 //  Output Messages:
 //    - [BUTTON:PRESS @id 1]           // output a button press event
 //    - [BUTTON:RELEASE @id 0]         // output a button release event
+//    - [SWITCH:STS @id,onoff]         // output switch status update
 //
 //==============================================================================
-// Button interface
+// BUTTON interface
 // - button presses notify with [BUTTON:PRESS @id 1] with @id = 1..4
 // - button releases notify with [BUTTON:RELESE @id 1] with @id = 1..4
+//
+// SWITCH interface
+// - each button (1..4) is assigned with a logical switch which is toggled
+//   on [BUTTON:PRESS @id,val] events
+// - each change of the logical switch state is notified by a
+//   [SWITCH:SET @id,onoff] event message
 //==============================================================================
 
 #ifndef __BLBUTTON_H__

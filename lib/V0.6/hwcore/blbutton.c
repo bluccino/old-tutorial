@@ -47,23 +47,43 @@
                  GP_IO(SW3_NODE, gpios,{0}),
                };
 
+  static bool toggle[N] = {0,0,0,0};   // toggle switch states
+
 //==============================================================================
 // button work horse - posts [BUTTON:PRESS @id 1] or [BUTTON:RELEASE @id 0]
 // - IRS routine sets id (button ID) and submits (button) work, which invokes
 // - workhorse to process [BUTTON:PRESS @id 1] or [BUTTON:RELEASE @id,0]
 //==============================================================================
 
-  void workhorse(struct k_work *work)
+  static void workhorse(struct k_work *work)
   {
     if (id < 1 || id > N)
       return;                          // ignore out of range ID values
 
     int idx = id-1;
-    int val = gp_pin_get(button+idx);  // read I/O pin input value
-    BL_ob oo = {_BUTTON, val?PRESS_:RELEASE_, id,NULL};
 
-    LOGO(4,BL_Y,&oo,val);
-    bl_button(&oo,val);                // post to module interface for output
+    int val = gp_pin_get(button+idx);  // read I/O pin input value
+
+      // post button state to module interface for output
+
+    if (1)
+    {
+      BL_ob oo = {_BUTTON, val?PRESS_:RELEASE_, id,NULL};
+
+      LOGO(4,BL_Y,&oo,val);
+      bl_button(&oo,val);              // post to module interface for output
+    }
+
+      // post switch status update to module interface for output
+
+    if (val)                           // if button pressed
+    {
+      BL_ob oo = {_SWITCH,STS_, id,NULL};
+      val = toggle[idx] = !toggle[idx];
+
+      LOGO(4,BL_Y,&oo,val);
+      bl_button(&oo,val);              // post to module interface for output
+    }
   }
 
   K_WORK_DEFINE(work, workhorse);      // assign work with workhorse
@@ -151,6 +171,30 @@
 //==============================================================================
 // public module interface
 //==============================================================================
+//
+// SYS Interface:  [] = SYS(INIT)
+// BUTTON Interface:  [] = BUTTON(SET)
+//
+//                             +-------------+
+//                             |    BL_HW    |
+//                             +-------------+
+//                     PRESS ->|   BUTTON:   |-> PRESS
+//                   RELEASE ->|             |-> RELEASE
+//                             +-------------+
+//                       STS ->|   SWITCH:   |-> STS
+//                             +-------------+
+//  Input Messages:
+//    - [SYS:INIT <cb>]                // init module, provide output callback
+//    - [BUTTON:PRESS @id,active]      // forward button press event to output
+//    - [BUTTON:RELEASE @id,active]    // forward button release event to output
+//    - [SWITCH:STS @id,onoff]         // forward switch status update to output
+//
+//  Output Messages:
+//    - [BUTTON:PRESS @id 1]           // output a button press event
+//    - [BUTTON:RELEASE @id 0]         // output a button release event
+//    - [SWITCH:STS @id,onoff]         // output switch status update
+//
+//==============================================================================
 
   int bl_button(BL_ob *o, int val)        // BUTTON core module interface
   {
@@ -165,6 +209,9 @@
       case BL_ID(_BUTTON,PRESS_):         // [BUTTON:PRESS @id]
       case BL_ID(_BUTTON,RELEASE_):       // [BUTTON:RELEASE @id]
 	      return bl_out(o,val,output);      // output message
+
+      case BL_ID(_SWITCH,STS_):           // [SWITCH:STS @id,onoff]
+	      return bl_out(o,val,output);      // output switch status message
 
       default:
 	      return -1;                        // bad input

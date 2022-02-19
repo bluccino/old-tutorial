@@ -23,8 +23,11 @@
 
   static int when(BL_ob *o, int val)
   {
-    if (bl_id(o) == BL_ID(_BUTTON,PRESS_))  // [BUTTON:PRESS @id]
+    if (bl_id(o) == BL_ID(_SWITCH,STS_))    // [SWITCH:STS @id]
+    {
+      bl_logo(1,BL_G,o,val);
       bl_led(o->id,val);
+    }
     return 0;                               // OK
   }
 

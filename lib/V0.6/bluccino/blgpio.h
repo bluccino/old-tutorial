@@ -103,6 +103,26 @@
   }
 
 //==============================================================================
+// get I/O input value
+// - usage: val = bl_pin_get(&io)
+//==============================================================================
+
+  static inline int gp_pin_get(const GP_io *io)
+  {
+    return gpio_pin_get_dt(io);
+  }
+
+//==============================================================================
+// set I/O output value
+// - usage: gp_pin_set(&io,val)
+//==============================================================================
+
+  static inline int gp_pin_set(const GP_io *io, int value)
+  {
+    return gpio_pin_set_dt(io,value);
+  }
+
+//==============================================================================
 // config I/O pin
 // - usage: bl_pin_cfg(pin,flags)
 // -        bl_ipin(&button, GPIO_INPUT)
@@ -139,26 +159,6 @@
 
     if (cb)
       gp_add_cb(&pin->io, &pin->ctx, cb);
-  }
-
-//==============================================================================
-// get I/O input value
-// - usage: val = bl_pin_get(&io)
-//==============================================================================
-
-  static inline int gp_pin_get(const GP_io *io)
-  {
-    return gpio_pin_get_dt(io);
-  }
-
-//==============================================================================
-// set I/O output value
-// - usage: gp_pin_set(&io,val)
-//==============================================================================
-
-  static inline int gp_pin_set(const GP_io *io, int value)
-  {
-    return gpio_pin_set_dt(io,value);
   }
 
 //==============================================================================
