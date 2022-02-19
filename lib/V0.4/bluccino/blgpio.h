@@ -1,6 +1,6 @@
 //==============================================================================
 // blgpio.h
-// shorthannd typedefs and helpers for GPIO setup
+// shorthand typedefs and helpers for GPIO setup
 //
 // Created by Hugo Pristauz on 2022-Jan-09
 // Copyright © 2022 Bluenetics. All rights reserved.

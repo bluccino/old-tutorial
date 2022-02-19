@@ -144,7 +144,7 @@
 // - usage: val = bl_pin_get(&pin)
 //==============================================================================
 
-  static inline int bl_pin_get(BL_pin *pin)
+    static inline int bl_pin_get(BL_pin *pin)
   {
     return gpio_pin_get_dt(&pin->io);
   }
