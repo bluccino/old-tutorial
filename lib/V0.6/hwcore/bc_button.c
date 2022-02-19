@@ -1,5 +1,5 @@
 //==============================================================================
-// blbutton.c
+// bc_button.c
 // Bluccino HW core supporting basic functions for button & LED
 //
 // Created by Hugo Pristauz on 2022-Feb-18
@@ -7,7 +7,7 @@
 //==============================================================================
 
   #include "bluccino.h"
-  #include "blbutton.h"
+  #include "bc_button.h"
   #include "blgpio.h"
 
 //==============================================================================
@@ -71,7 +71,7 @@
       BL_ob oo = {_BUTTON, val?PRESS_:RELEASE_, id,NULL};
 
       LOGO(4,BL_Y,&oo,val);
-      bl_button(&oo,val);              // post to module interface for output
+      bc_button(&oo,val);              // post to module interface for output
     }
 
       // post switch status update to module interface for output
@@ -82,7 +82,7 @@
       val = toggle[idx] = !toggle[idx];
 
       LOGO(4,BL_Y,&oo,val);
-      bl_button(&oo,val);              // post to module interface for output
+       bc_button(&oo,val);              // post to module interface for output
     }
   }
 
@@ -149,7 +149,7 @@
     //gpio_init_callback(&context, irs_button, BIT(button.pin));
     //gpio_add_callback(button.port, &context);
 
-    LOG(4,"set up button[@%d] @ %s pin %d",
+    LOG(5,"set up button[@%d] @ %s pin %d",
            id, button[idx].port->name, button[idx].pin);
   }
 
@@ -172,11 +172,12 @@
 // public module interface
 //==============================================================================
 //
-// SYS Interface:  [] = SYS(INIT)
-// BUTTON Interface:  [] = BUTTON(SET)
+// SYS Interface:     [] = SYS(INIT)
+// BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
+// SWITCH Interface:  [STS] = SWITCH(STS)
 //
 //                             +-------------+
-//                             |    BL_HW    |
+//                             |  BC_BUTTON  |
 //                             +-------------+
 //                     PRESS ->|   BUTTON:   |-> PRESS
 //                   RELEASE ->|             |-> RELEASE
@@ -196,9 +197,9 @@
 //
 //==============================================================================
 
-  int bl_button(BL_ob *o, int val)        // BUTTON core module interface
+  int bc_button(BL_ob *o, int val)     // BUTTON core module interface
   {
-    static BL_fct output = NULL;          // to store output callback
+    static BL_fct output = NULL;       // to store output callback
 
     switch (bl_id(o))
     {

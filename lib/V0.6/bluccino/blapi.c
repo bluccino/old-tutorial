@@ -161,43 +161,61 @@
   __weak int bl_in(BL_ob *o, int val)
   {
     int level = 2;                          // default verbose level
-    int pair = BL_PAIR(o->cl,o->op);
 
-    switch (pair)                           // dispatch event
+    switch (bl_id(o))                           // dispatch event
     {
-      case BL_PAIR(_SET,PRV_):            // provisioned state changed
+      case BL_ID(_SET,PRV_):            // provisioned state changed
         provisioned = val;
         bl_log_color(attention,provisioned);
         LOG(2,BL_M"node %sprovisioned",val?"":"un");
         return bl_out(o,val,output);
 
-      case BL_PAIR(_SET,ATT_):          // attention state changed
+      case BL_ID(_SET,ATT_):          // attention state changed
         attention = val;
         bl_log_color(attention,provisioned);
         LOG(2,BL_G"attention %s",val?"on":"off");
         return bl_out(o,val,output);
 
-      case BL_PAIR(_SYS,TICK_):
-      case BL_PAIR(_SYS,TOCK_):
-      case BL_PAIR(_SCAN,ADV_):
+      case BL_ID(_SYS,TICK_):
+      case BL_ID(_SYS,TOCK_):
+      case BL_ID(_SCAN,ADV_):
         level = 5;
         break;
+
+case BL_ID(_BUTTON,STS_):
+LOGO(2,BL_R"bl_in:",o,val);
+  return 0;
 
       default:
         break;
     }
 
     LOGO(level,"@",o,val);
-    return bl_out(o,val,output);            // forward message to a
+    return bl_out(o,val,output);            // forward message to subscriber
   }
 
 //==============================================================================
 // dummy interface for core module public interface (default/__weak)
 //==============================================================================
 
+  __weak int bc_button(BL_ob *o, int val) { return -1; }
+  __weak int bc_led(BL_ob *o, int val)    { return -1; }
+
   __weak int bl_core(BL_ob *o, int val)
   {
-    return -1;                              // not supported by default
+    switch (o->cl)
+    {
+      case _SYS:
+        bc_button(o,val);
+        bc_led(o,val);
+        return 0;                      // OK
+
+      case _LED:
+        return bc_led(o,val);
+
+      default:
+        return -1;                     // not supported by default
+    }
   }
 
 //==============================================================================
@@ -213,7 +231,20 @@
 //==============================================================================
 // message upward posting to API layer (default/__weak)
 //==============================================================================
+/*
+  static int bl_inn(BL_ob *o, int val)
+  {
+    switch (bl_id(o))                           // dispatch event
+    {
+      case BL_ID(_SWITCH,STS_):
+        LOGO(2,BL_R"bl_in:",o,val);
+        return bl_out(o,val,output);
 
+      default:
+        return -1;
+    }
+  }
+*/
   __weak int bl_up(BL_ob *o, int val)
   {
     bl_logo(3,"up",o,val);
@@ -356,19 +387,19 @@
 
   int bluccino(BL_ob *o, int val)
   {
-    switch (BL_PAIR(o->cl,o->op))
+    switch (bl_id(o))
     {
-      case (BL_PAIR(_SYS,INIT_)):
+      case BL_ID(_SYS,INIT_):
         output = o->data;
         bl_init(bl_core,bl_up);        // init core, subscribe with bl_up()
         return 0;
 
-      case (BL_PAIR(_SYS,WHEN_)):
+      case BL_ID(_SYS,WHEN_):
         output = o->data;
         return 0;
 
-      case (BL_PAIR(_SYS,TICK_)):
-      case (BL_PAIR(_SYS,TOCK_)):
+      case BL_ID(_SYS,TICK_):
+      case BL_ID(_SYS,TOCK_):
         return 0;                      // nothing to tick/tock
 
       default:

@@ -28,5 +28,6 @@
   target_sources(app PRIVATE
                  ${SRC}/main.c
                  ${BLU}/bluccino.c
-                 ${HWCORE}/blbutton.c
+                 ${HWCORE}/bc_button.c
+                 ${HWCORE}/bc_led.c
                 )

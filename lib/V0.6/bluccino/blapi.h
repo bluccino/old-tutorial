@@ -25,7 +25,7 @@
 
   static inline int bl_id(BL_ob *o)
   {
-    return BL_PAIR(o->cl,o->op);
+    return BL_ID(o->cl,o->op);
   }
 
 //==============================================================================

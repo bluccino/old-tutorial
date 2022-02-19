@@ -27,6 +27,7 @@
 
     #include "blapi.h"
     #include "bllog.h"
+    #include "bl_hw.h"
 
   #endif
 
