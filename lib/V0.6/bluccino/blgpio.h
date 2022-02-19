@@ -6,13 +6,14 @@
 // Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 //
-// GPIO interrupt callback context: used to register a callback in drv cb list
-// - struct BL_ctx // as many cb's as needed may be added
-// - {
-// -   sys_node_t node;
-// -   gpio_callback_handler_t handler;    // actual callback function
-// -   gpio_port_pins_t pin_mask;          // pin mask of interest for cb
-// - };
+// GP_io structure
+//
+//   typedef struct gpio_dt_spec
+//           {
+//          	 const GP_device *port;        // const struct device *port;
+//           	 GP_pin pin;                   // gpio_pin_t pin;
+//             gpio_dt_flags_t dt_flags;
+//           } GP_io;
 //
 //==============================================================================
 
@@ -34,6 +35,7 @@
 
   typedef uint32_t             GP_pins;          // PINs qualifier in irs
   typedef gpio_flags_t         GP_flags;         // GPIO flags
+  typedef gpio_pin_t           GP_pin;           // GPIO pin
 
   typedef struct device        GP_device;        // GPIO device
   typedef struct gpio_dt_spec  GP_io;            // GPIO device tree spec
@@ -140,17 +142,37 @@
   }
 
 //==============================================================================
+// get I/O input value
+// - usage: val = bl_pin_get(&io)
+//==============================================================================
+
+  static inline int gp_pin_get(const GP_io *io)
+  {
+    return gpio_pin_get_dt(io);
+  }
+
+//==============================================================================
+// set I/O output value
+// - usage: gp_pin_set(&io,val)
+//==============================================================================
+
+  static inline int gp_pin_set(const GP_io *io, int value)
+  {
+    return gpio_pin_set_dt(io,value);
+  }
+
+//==============================================================================
 // get input pin value
 // - usage: val = bl_pin_get(&pin)
 //==============================================================================
 
-    static inline int bl_pin_get(BL_pin *pin)
+  static inline int bl_pin_get(BL_pin *pin)
   {
     return gpio_pin_get_dt(&pin->io);
   }
 
 //==============================================================================
-// get output pin value
+// set output pin value
 // - usage: bl_pin_set(&pin,val)
 //==============================================================================
 

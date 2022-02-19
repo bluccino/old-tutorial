@@ -206,7 +206,7 @@
 
   __weak int bl_down(BL_ob *o, int val)
   {
-    bl_logo(3,BL_Y "down",o,val);
+    bl_logo(3,"down",o,val);
     return bl_core(o,val);
   }
 
@@ -216,7 +216,7 @@
 
   __weak int bl_up(BL_ob *o, int val)
   {
-    bl_logo(3,BL_Y "@up",o,val);
+    bl_logo(3,"up",o,val);
     return bl_in(o,val);
   }
 

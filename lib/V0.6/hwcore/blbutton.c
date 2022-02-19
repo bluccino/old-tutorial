@@ -15,7 +15,7 @@
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"blbutton:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"button:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
@@ -23,29 +23,29 @@
 // defines
 //==============================================================================
 
-  #define NBUTS  CFG_NUMBER_OF_BUTS
+//#define NBUTS  CFG_NUMBER_OF_BUTS
 
-  #define SW0_NODE DT_ALIAS(sw0)
-  #define SW1_NODE DT_ALIAS(sw1)
-  #define SW2_NODE DT_ALIAS(sw2)
-  #define SW3_NODE DT_ALIAS(sw3)
+  #define N             4              // number of buttons
+
+  #define SW0_NODE      DT_ALIAS(sw0)
+  #define SW1_NODE      DT_ALIAS(sw1)
+  #define SW2_NODE      DT_ALIAS(sw2)
+  #define SW3_NODE      DT_ALIAS(sw3)
 
 //==============================================================================
 // Get button configuration from the devicetree sw0 alias. This is mandatory.
 //==============================================================================
 
-//#define BL_PIN(alias)      {.io = GP_IO(alias, gpios,{0}) }
+  static int id = 0;                   // button ID
+  static GP_ctx context[N];            // button context
 
-  static const GP_io button[4] =
+  static const GP_io button[N] =
                {
                  GP_IO(SW0_NODE, gpios,{0}),
-                 GP_IO(SW1_NODE, gpios,{1}),
-                 GP_IO(SW2_NODE, gpios,{2}),
-                 GP_IO(SW3_NODE, gpios,{3}),
+                 GP_IO(SW1_NODE, gpios,{0}),
+                 GP_IO(SW2_NODE, gpios,{0}),
+                 GP_IO(SW3_NODE, gpios,{0}),
                };
-
-  static GP_ctx context[4];              // button context
-  static int id = 0;                  // button ID
 
 //==============================================================================
 // button work horse - posts [BUTTON:PRESS @id 1] or [BUTTON:RELEASE @id 0]
@@ -55,34 +55,54 @@
 
   void workhorse(struct k_work *work)
   {
-    if (id < 1 || id > 4)
+    if (id < 1 || id > N)
       return;                          // ignore out of range ID values
 
-    int val = 1;
-    BL_ob oo = {_BUTTON,val?PRESS_:RELEASE_,id,NULL};
+    int idx = id-1;
+    int val = gp_pin_get(button+idx);  // read I/O pin input value
+    BL_ob oo = {_BUTTON, val?PRESS_:RELEASE_, id,NULL};
 
-    LOGO(1,BL_R,&oo,val);
+    LOGO(4,BL_Y,&oo,val);
     bl_button(&oo,val);                // post to module interface for output
   }
 
   K_WORK_DEFINE(work, workhorse);      // assign work with workhorse
 
 //==============================================================================
-// provide button IRS callback (button pressed)
+// submit button work for button @id
 //==============================================================================
 
-  static void irs_button(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
+  static void submit(int bid)
   {
-    int id1 = 1 * ((pins & 0x02000) != 0);
-    int id2 = 2 * ((pins & 0x04000) != 0);
-    int id3 = 3 * ((pins & 0x08000) != 0);
-    int id4 = 4 * ((pins & 0x10000) != 0);
-
-    id = id1 + id2 + id3 + id4;
-    LOG(4,BL_Y "Button @%d pressed (pins:%05X)", id,pins);
-
-  	k_work_submit(&work);
+    id = bid;                          // store global button ID
+    k_work_submit(&work);              // invoke workhorse(), which picks id
   }
+
+//==============================================================================
+// provide button IRS callback (button pressed/released)
+//==============================================================================
+
+  static void irs1(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
+  {
+    submit(1);
+  }
+
+  static void irs2(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
+  {
+    submit(2);
+  }
+
+  static void irs3(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
+  {
+    submit(3);
+  }
+
+  static void irs4(const GP_device *dev, GP_ctx *ctx, GP_pins pins)
+  {
+    submit(4);
+  }
+
+  static GP_irs irs[N] = {irs1,irs2,irs3,irs4};
 
 //==============================================================================
 // configure button
@@ -92,24 +112,25 @@
 
   static void config(int id)
   {
-    if (id < 0 || id > 3)
+    int idx = id - 1;                  // button index (0..3)
+    if (idx < 0 || idx > 3)
        return;                         // bad arg
 
-    if (!device_is_ready(button[id].port))
+    if (!device_is_ready(button[idx].port))
     {
-      LOG(1,BL_R"error: button device %s not ready\n", button[0].port->name);
+      LOG(1,BL_R"error: button device %s not ready\n", button[idx].port->name);
       return;
     }
 
-    gp_pin_cfg(&button[id], GPIO_INPUT | GPIO_INT_DEBOUNCE);
-    gp_int_cfg(&button[id], GPIO_INT_EDGE_BOTH);
-    gp_add_cb(&button[id], &context[id], irs_button);
+    gp_pin_cfg(&button[idx], GPIO_INPUT | GPIO_INT_DEBOUNCE);
+    gp_int_cfg(&button[idx], GPIO_INT_EDGE_BOTH);
+    gp_add_cb(&button[idx], &context[idx], irs[idx]);
 
     //gpio_init_callback(&context, irs_button, BIT(button.pin));
     //gpio_add_callback(button.port, &context);
 
     LOG(4,"set up button[@%d] @ %s pin %d",
-           id, button[id].port->name, button[id].pin);
+           id, button[idx].port->name, button[idx].pin);
   }
 
 //==============================================================================
@@ -122,7 +143,7 @@
 
   	k_work_init(&work, workhorse);
 
-    for (int i=0; i < 4; i++)
+    for (int i=1; i <= N; i++)
       config(i);
     return 0;
   }
