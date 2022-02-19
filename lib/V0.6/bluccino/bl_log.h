@@ -1,17 +1,17 @@
 //==============================================================================
-//  bllog.h
+//  bl_log.h
 //  bluccino logging and us/ms clock support
 //
 //  Created by Hugo Pristauz on 2021-11-06
 //  Copyright © 2021 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
-#ifndef __BLLOG_H__
-#define __BLLOG_H__
+#ifndef __BL_LOG_H__
+#define __BL_LOG_H__
 
-#include "blrtos.h"
-#include "bltype.h"
-#include "blapi.h"
+#include "bl_rtos.h"
+#include "bl_type.h"
+#include "bl_api.h"
 
 #if 0
 //==============================================================================
@@ -107,6 +107,22 @@
 #endif
 
 //==============================================================================
+// MESH Logging
+//==============================================================================
+
+#ifndef CFG_LOG_MESH
+    #define CFG_LOG_MESH    1           // MESH logging by default
+#endif
+
+#if (CFG_LOG_MESH)
+    #define LOG_MESH(l,f,...)    BL_LOG(CFG_LOG_MESH-1+l,f,##__VA_ARGS__)
+    #define LOGO_MESH(l,f,o,v)   bl_logo(CFG_LOG_MESH-1+l,f,o,v)
+#else
+    #define LOG_MESH(l,f,...)    {}     // empty
+    #define LOGO_MESH(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
 // TEST Logging
 //==============================================================================
 
@@ -175,4 +191,15 @@
 
   void bl_assert(bool assertion);
 
-#endif // __BLLOG_H__
+//==============================================================================
+// error message
+// - usage: bl_error(err,msg)
+//==============================================================================
+
+  static inline void bl_error(int err, BL_txt msg)
+  {
+    if (bl_dbg(1))                          // errors come @ verbose level 1
+      bl_prt(BL_R "error %d: %s",err,msg);  // in RED text!
+  }
+
+#endif // __BL_LOG_H__

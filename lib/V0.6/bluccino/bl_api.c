@@ -1,5 +1,5 @@
 //==============================================================================
-// blapi.c - bluccino API layer
+// bl_api.c - bluccino API layer
 //==============================================================================
 //
 // The whole concept is based on having bluccino objects which control

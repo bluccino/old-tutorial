@@ -1,10 +1,10 @@
 //==============================================================================
-// blhook.c - hooking up in Zephyr Bluetooth mesh stack
+// bl_hook.c - hooking up in Zephyr Bluetooth mesh stack
 //            copyright(c): Bluenetics 2021, Hugo Pristauz (2021-Nov-16)
 //==============================================================================
 
 #include "bluccino.h"
-#include "blhook.h"
+#include "bl_hook.h"
 
 
    typedef struct net_buf_simple BL_nbs;

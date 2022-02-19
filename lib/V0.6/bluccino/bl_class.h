@@ -1,13 +1,13 @@
 //==============================================================================
-//  blclass.h
+//  bl_class.h
 //  bluccino C++ class definitions
 //
 //  Created by Hugo Pristauz on 2021-12-04
 //  Copyright © 2021 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
-#ifndef __BLCLASS_H__
-#define __BLCLASS_H__
+#ifndef __BL_CLASS_H__
+#define __BL_CLASS_H__
 
   #include <stdint.h>
   #include <stdbool.h>
@@ -132,4 +132,4 @@
   void Init(int verbose=1);                 // Blucion init function
   void Loop(int ms=0,const char *msg=0);    // bluccino loop function
 
-#endif // __BLCLASS_H__
+#endif // __BL_CLASS_H__

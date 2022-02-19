@@ -40,7 +40,7 @@
 
   static int led(int id, int val)           // control LED
   {
-    BL_op op = val<0 ? TOGGLE_:SET_;        // SET or TOGGLE?
+    BL_op op = val<0 ? TOGGLE_:SET_;    // SET or TOGGLE?
     BL_ob oo = {_LED,op,id,NULL};
     if (id)                                 // don't log status LED @0 logs
       LOGO(1,"@",&oo,val);                  // see what LEDs will do
@@ -102,10 +102,6 @@
         LOG(1,BL_R"unprovision node");      // let us know
         return bl_msg(bl_down,_RESET,PRV_,0,NULL,0); // unprovision node
 
-      case BL_ID(_HDL,INC_):                // handle [HDL:INC] entry point
-        count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
-        return 0;                           // OK
-
       case BL_ID(_SYS,TICK_):               // receive [RESET<DUE] event
         if (count > 0)                      // if startup in progress
         {
@@ -118,6 +114,10 @@
 
           old = onoff;                      // saveLED on/off state
         }
+        return 0;                           // OK
+
+      case BL_ID(_HDL,INC_):                // handle [HDL:INC] entry point
+        count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
         return 0;                           // OK
 
       case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
@@ -199,16 +199,16 @@
 
 //==============================================================================
 //
-//                          +-----------------+
-//                          |    PROVISION    |
-//                          +-----------------+
-//                   INIT ->|      SYS:       |
-//                   TICK ->|                 |
-//                          +-----------------+
-//                    PRV ->|      SET:       |
-//                          +-----------------+
-//                    PRV ->|      GET:       |
-//                          +-----------------+
+//                      +-----------------+
+//                      |    PROVISION    |
+//                      +-----------------+
+//               INIT ->|      SYS:       |
+//               TICK ->|                 |
+//                      +-----------------+
+//                PRV ->|      SET:       |
+//                      +-----------------+
+//                PRV ->|      GET:       |
+//                      +-----------------+
 //
 //==============================================================================
 // module provision (handle provision state changes and perform blinking)
@@ -286,24 +286,35 @@
   {
     switch (bl_id(o))
     {
-      case BL_ID(_SET,ATT_):            // [MESH:ATT state]
-        return attention(o,val);            // change attention state
+      case BL_ID(_SET,ATT_):           // [MESH:ATT state]
+        return attention(o,val);       // change attention state
 
-      case BL_ID(_SET,PRV_):            // [MESH:ATT state]
-        return provision(o,val);            // change provision state
+      case BL_ID(_SET,PRV_):           // [MESH:ATT state]
+        return provision(o,val);       // change provision state
 
-      case BL_ID(_BUTTON,PRESS_):       // button press to cause LED on off
+      case BL_ID(_BUTTON,PRESS_):      // button press to cause LED on off
         LOGO(1,"@",o,val);
+        if ( !bl_get(provision,PRV_))  // if not provisioned
+        {
+          led(2,0); led(3,0); led(4,0);// turn off current LED
+          id = (id==0) ? 2 : (id+1)%5; // update THE LED id (=> 0 or 2,3,4)
+        }
+        return startup(o,val);         // fwd [BUTTON:PRESS] to startup
 
-        led(2,0); led(3,0); led(4,0);       // turn off current LED
-        id = (id==0) ? 2 : (id+1)%5;        // update THE LED id (=> 0 or 2,3,4)
-        return startup(o,val);              // fwd [BUTTON:PRESS] to startup
+      case BL_ID(_SWITCH,STS_):        // button press to cause LED on off
+        LOGO(1,"@",o,val);
+        if ( bl_get(provision,PRV_))   // only if provisioned
+        {
+          BL_ob oo = {_GOOCLI,LET_,o->id,NULL};
+          bl_down(&oo,val);            // post via generic on/off client
+        }
+        return 0;                      // OK
 
-      case BL_ID(_RESET,DUE_):              // [RESET:DUE] - reset counter due
-        return startup(o,val);              // forward to startup module
+      case BL_ID(_RESET,DUE_):         // [RESET:DUE] - reset counter due
+        return startup(o,val);         // forward to startup module
 
       default:
-        return -1;                          // bad args
+        return -1;                     // bad args
     }
   }
 

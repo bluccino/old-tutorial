@@ -1,5 +1,5 @@
 //==============================================================================
-// blmain.c skeleton for BLE/mesh applications
+// bl_main.c skeleton for BLE/mesh applications
 //==============================================================================
 
   #include "bluccino.h"

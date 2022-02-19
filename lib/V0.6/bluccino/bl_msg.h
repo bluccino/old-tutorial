@@ -1,9 +1,9 @@
 //==============================================================================
-// blmsg.h - Bluccino message definitions
+// bl_msg.h - Bluccino message definitions
 //==============================================================================
 
-#ifndef __BLMSG_H__
-#define __BLMSG_H__
+#ifndef __BL_MSG_H__
+#define __BL_MSG_H__
 
 //==============================================================================
 // message class definitions
@@ -126,4 +126,4 @@
 
   typedef int (*BL_fct)(BL_ob *o, int value);
 
-#endif // __BLMSG_H__
+#endif // __BL_MSG_H__

@@ -1,5 +1,5 @@
 //==============================================================================
-// blgpio.h
+// bl_gpio.h
 // shorthannd typedefs and helpers for GPIO setup
 //
 // Created by Hugo Pristauz on 2022-Jan-09
@@ -17,8 +17,8 @@
 //
 //==============================================================================
 
-#ifndef __BLGPIO_H__
-#define __BLGPIO_H__
+#ifndef __BL_GPIO_H__
+#define __BL_GPIO_H__
 
   #include <zephyr.h>
   #include <device.h>
@@ -181,4 +181,4 @@
     return gpio_pin_set_dt(&pin->io,value);
   }
 
-#endif // __BLGPIO_H__
+#endif // __BL_GPIO_H__

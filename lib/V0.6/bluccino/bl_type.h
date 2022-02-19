@@ -1,9 +1,9 @@
 //==============================================================================
-// bltype.h - bluccino typedefs
+// bl_type.h - bluccino typedefs
 //==============================================================================
 
-#ifndef __BLTYPE_H__
-#define __BLTYPE_H__
+#ifndef __BL_TYPE_H__
+#define __BL_TYPE_H__
 
   #include <stdint.h>
   #include <stdbool.h>
@@ -33,6 +33,16 @@
 
   typedef uint8_t BL_byte;
 
+  typedef int8_t   BL_s8;               // we like short type identifiers :-)
+  typedef int16_t  BL_s16;              // we like short type identifiers :-)
+  typedef int32_t  BL_s32;              // we like short type identifiers :-)
+  typedef int64_t  BL_s64;              // we like short type identifiers :-)
+
+  typedef uint8_t  BL_u8;               // we like short type identifiers :-)
+  typedef uint16_t BL_u16;              // we like short type identifiers :-)
+  typedef uint32_t BL_u32;              // we like short type identifiers :-)
+  typedef uint64_t BL_u64;              // we like short type identifiers :-)
+
   typedef const char *BL_txt;
 
     // we define ZL_ms to represent miliseconds since system start or clock
@@ -45,6 +55,14 @@
   typedef int64_t BL_ms;               // mili seconds
   typedef int64_t BL_us;               // micro seconds
 
+  typedef enum
+  {
+      BL_ERR_ANY     = 1100,           // any error
+      BL_ERR_BADARG  = 1200,           // bad input arg
+      BL_ERR_FAILED  = 1300,           // operation failed
+      BL_ERR_MEMORY  = 1400,           // out of memory
+  } BL_err;
+
   typedef struct BL_pace               // tick/tock pace control
           {
             BL_ms start;               // start time frame for pace maker
@@ -53,4 +71,4 @@
             int divider;               // tock divider
           } BL_pace;                   // tick/tock pace control
 
-#endif // __BLTYPE_H__
+#endif // __BL_TYPE_H__

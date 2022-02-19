@@ -1,13 +1,13 @@
 //==============================================================================
-//  blrtos.h
+//  bl_rtos.h
 //  realtime OS dependent includes
 //
 //  Created by Hugo Pristauz on 2021-12-11
 //  Copyright © 2021 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
-#ifndef __BLRTOS_H__
-#define __BLRTOS_H__
+#ifndef __BL_RTOS_H__
+#define __BL_RTOS_H__
 
   #ifdef ZEPHYR
     #ifndef __ZEPHYR__
@@ -61,4 +61,4 @@
 //
 //==============================================================================
 
-#endif // __BLRTOS_H__
+#endif // __BL_RTOS_H__

@@ -6,5 +6,5 @@
 //  Copyright © 2022 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
-  #include "blapi.c"                   // Bluccino API stuff
-  #include "bllog.c"                   // Bluccino logging stuff
+  #include "bl_api.c"                  // Bluccino API stuff
+  #include "bl_log.c"                  // Bluccino logging stuff

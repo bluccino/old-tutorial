@@ -13,20 +13,20 @@
     #include "blclass.h"               // include Bluccino C++ class definitions
   #else
 
-    #include "bltype.h"
+    #include "bl_type.h"
 
     #ifdef BL_CONFIG
       #include "config.h"
     #endif
 
-    #include "blmsg.h"
+    #include "bl_msg.h"
 
     #ifdef BL_LOGGING
       #include "logging.h"
     #endif
 
-    #include "blapi.h"
-    #include "bllog.h"
+    #include "bl_api.h"
+    #include "bl_log.h"
     #include "bl_hw.h"
 
   #endif

@@ -1,13 +1,13 @@
 //==============================================================================
-// blapi.h - bluccino API
+// bl_api.h - bluccino API
 //==============================================================================
 
-#ifndef __BLAPI_H__
-#define __BLAPI_H__
+#ifndef __BL_API_H__
+#define __BL_API_H__
 
-#include "bllog.h"
-#include "bltype.h"
-#include "blmsg.h"
+#include "bl_log.h"
+#include "bl_type.h"
+#include "bl_msg.h"
 
   extern bool bl_attention;            // attention mode
   extern bool bl_provisioned;          // provisioned mode
@@ -211,4 +211,4 @@
 
   int bluccino(BL_ob *o, int val);
 
-#endif // __BLAPI_H__
+#endif // __BL_API_H__
