@@ -17,13 +17,23 @@
   }
 
 //==============================================================================
-// syntactic sugar: identify a switch status event ([SWITCH:STS val])
+// syntactic sugar: identify a button press event ([BUTTON:PRESS @id,val])
+// - usage: changed = bl_press(o)
+//==============================================================================
+
+  static inline int bl_press(BL_ob *o)
+  {
+    return (bl_id(o) == BL_ID(_BUTTON,PRESS_));  // [BUTTON:PRESS @id,val]
+  }
+
+//==============================================================================
+// syntactic sugar: identify a switch status event ([SWITCH:STS @id,val])
 // - usage: changed = bl_switch(o)
 //==============================================================================
 
   static inline int bl_switch(BL_ob *o)
   {
-    return (bl_id(o) == BL_ID(_SWITCH,STS_));    // [SWITCH:STS val]
+    return (bl_id(o) == BL_ID(_SWITCH,STS_));    // [SWITCH:STS @id,val]
   }
 
 #endif // __BL_HW_H__
