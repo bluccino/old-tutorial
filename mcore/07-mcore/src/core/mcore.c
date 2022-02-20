@@ -22,6 +22,7 @@
 #include "state_binding.h"
 #include "storage.h"
 #include "transition.h"
+#include "publisher.h"
 
 //==============================================================================
 // CORE level logging shorthands
@@ -131,7 +132,7 @@ void update_led_gpio(void)
 		       (ctl->temp->range_max - ctl->temp->range_min));
 
   #if MIGRATION_STEP2
-	  LOG(3,BL_G "power-> %d, color-> %d", power, color);
+	  LOG(5,"power-> %d, color-> %d", power, color);
   #else
 	  printk("power-> %d, color-> %d\n", power, color);
   #endif
@@ -322,7 +323,8 @@ void main(void)
   {
     LOGO(4,BL_B"init:",o,val);         // log trace
     bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
-    bl_init(bl_hw,bl_core);            // output of BC_HW goes to here!
+    bl_init(bl_devcomp,bl_core);       // output of BL_DEVCMP goes to here!
+    bl_init(bl_hw,bl_core);            // output of BL_HW goes to here!
     init_mcore();                      // init THIS module
     return 0;
   }
@@ -332,6 +334,8 @@ void main(void)
 // - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
 // - [RESET:PRV]   // unprovision node
 // - [RESET:INC]   // return incremented reset counter while <due> timer started
+//==============================================================================
+//
 //==============================================================================
 
   int bl_core(BL_ob *o, int val)
@@ -369,8 +373,17 @@ void main(void)
       case BL_ID(_HDL,DUE_):         // [HDL:DUE] reset timer is due
         return bl_emit(o,_RESET,DUE_,val,output); // emit [RESET:DUE] to output
 
+      case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
+      case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
+        return bl_pub(o,val);        // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+
+      case BL_ID(_GOOSRV,LET_):      // [GOOSRV:LET] post unacked GOO msg upward
+      case BL_ID(_GOOSRV,SET_):      // [GOOSRV:SET] post ack'ed GOO msg upward
+      case BL_ID(_GOOSRV,STS_):      // [GOOSRV:STS] post GOO status msg upward
+        return bl_out(o,val,output); // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+
       default:
-        return -1;                     // bad input
+        return -1;                   // bad input
     }
   }
 

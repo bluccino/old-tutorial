@@ -110,5 +110,8 @@
   #ifndef MIGRATION_STEP5
     #define MIGRATION_STEP5         0
   #endif
+  #ifndef MIGRATION_STEP6
+    #define MIGRATION_STEP6         0
+  #endif
 
 #endif // __MCORE_H__

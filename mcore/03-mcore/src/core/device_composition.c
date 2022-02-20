@@ -89,7 +89,7 @@ static int gen_onoff_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_ONOFF_SRV Status response\n");
+		LOG(5,"Unable to send GEN_ONOFF_SRV Status response");
 	}
 
 	return 0;
@@ -115,7 +115,7 @@ void gen_onoff_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -265,12 +265,13 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_ONOFF_SRV\n");
-	printk("Present OnOff = %02x\n", net_buf_simple_pull_u8(buf));
+	LOG(5,"Acknownledgement from GEN_ONOFF_SRV");
+	LOG(5,"Present OnOff = %02x", net_buf_simple_pull_u8(buf));
 
-	if (buf->len == 2U) {
-		printk("Target OnOff = %02x\n", net_buf_simple_pull_u8(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+	if (buf->len == 2U)
+  {
+		LOG(5,"Target OnOff = %02x", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -298,7 +299,7 @@ static int gen_level_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_LEVEL_SRV Status response\n");
+		LOG(5,"Unable to send GEN_LEVEL_SRV Status response");
 	}
 
 	return 0;
@@ -324,7 +325,7 @@ void gen_level_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -787,12 +788,12 @@ static int gen_level_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_LEVEL_SRV\n");
-	printk("Present Level = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from GEN_LEVEL_SRV");
+	LOG(5,"Present Level = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Level = %04x\n", net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Target Level = %04x", net_buf_simple_pull_le16(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -809,7 +810,7 @@ static int gen_def_trans_time_get(struct bt_mesh_model *model,
 	net_buf_simple_add_u8(msg, ctl->tt);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_DEF_TT_SRV Status response\n");
+		LOG(5,"Unable to send GEN_DEF_TT_SRV Status response");
 	}
 
 	return 0;
@@ -829,7 +830,7 @@ static void gen_def_trans_time_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -885,8 +886,8 @@ static int gen_def_trans_time_status(struct bt_mesh_model *model,
 				     struct bt_mesh_msg_ctx *ctx,
 				     struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_DEF_TT_SRV\n");
-	printk("Transition Time = %02x\n", net_buf_simple_pull_u8(buf));
+	LOG(5,"Acknownledgement from GEN_DEF_TT_SRV");
+	LOG(5,"Transition Time = %02x", net_buf_simple_pull_u8(buf));
 
 	return 0;
 }
@@ -902,7 +903,7 @@ static int gen_onpowerup_get(struct bt_mesh_model *model,
 	net_buf_simple_add_u8(msg, ctl->onpowerup);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_POWER_ONOFF_SRV Status response\n");
+		LOG(5,"Unable to send GEN_POWER_ONOFF_SRV Status response");
 	}
 
 	return 0;
@@ -913,8 +914,8 @@ static int gen_onpowerup_status(struct bt_mesh_model *model,
 				struct bt_mesh_msg_ctx *ctx,
 				struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_POWER_ONOFF_SRV\n");
-	printk("OnPowerUp = %02x\n", net_buf_simple_pull_u8(buf));
+	LOG(5,"Acknownledgement from GEN_POWER_ONOFF_SRV");
+	LOG(5,"OnPowerUp = %02x", net_buf_simple_pull_u8(buf));
 
 	return 0;
 }
@@ -935,7 +936,7 @@ static void gen_onpowerup_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1001,7 +1002,7 @@ static int vnd_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 	net_buf_simple_add_le32(msg, state->response);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send VENDOR Status response\n");
+		LOG(5,"Unable to send VENDOR Status response");
 	}
 
 	return 0;
@@ -1033,7 +1034,7 @@ static int vnd_set_unack(struct bt_mesh_model *model,
 	state->last_msg_timestamp = now;
 	state->current = current;
 
-	printk("Vendor model message = %04x\n", state->current);
+	LOG(5,"Vendor model message = %04x", state->current);
 
 	update_vnd_led_gpio();
 
@@ -1052,9 +1053,9 @@ static int vnd_set(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 static int vnd_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 		      struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from Vendor\n");
-	printk("cmd = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("response = %08x\n", net_buf_simple_pull_le32(buf));
+	LOG(5,"Acknownledgement from Vendor");
+	LOG(5,"cmd = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"response = %08x", net_buf_simple_pull_le32(buf));
 
 	return 0;
 }
@@ -1081,7 +1082,7 @@ static int light_lightness_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessAct Status response\n");
+		LOG(5,"Unable to send LightLightnessAct Status response");
 	}
 
 	return 0;
@@ -1107,7 +1108,7 @@ void light_lightness_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1268,7 +1269,7 @@ static int light_lightness_linear_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessLin Status response\n");
+		LOG(5,"Unable to send LightLightnessLin Status response");
 	}
 
 	return 0;
@@ -1295,7 +1296,7 @@ void light_lightness_linear_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1444,7 +1445,7 @@ static int light_lightness_last_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->light->last);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessLast Status response\n");
+		LOG(5,"Unable to send LightLightnessLast Status response");
 	}
 
 	return 0;
@@ -1461,7 +1462,7 @@ static int light_lightness_default_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->light->def);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessDef Status response\n");
+		LOG(5,"Unable to send LightLightnessDef Status response");
 	}
 
 	return 0;
@@ -1481,7 +1482,7 @@ static int light_lightness_range_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->light->range_max);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessRange Status response\n");
+		LOG(5,"Unable to send LightLightnessRange Status response");
 	}
 
 	return 0;
@@ -1504,7 +1505,7 @@ static void light_lightness_default_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1565,7 +1566,7 @@ static void light_lightness_range_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1645,13 +1646,13 @@ static int light_lightness_status(struct bt_mesh_model *model,
 				  struct bt_mesh_msg_ctx *ctx,
 				  struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Actual)\n");
-	printk("Present Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Actual)");
+	LOG(5,"Present Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Lightness = %04x\n",
+		LOG(5,"Target Lightness = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -1661,13 +1662,13 @@ static int light_lightness_linear_status(struct bt_mesh_model *model,
 					 struct bt_mesh_msg_ctx *ctx,
 					 struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Linear)\n");
-	printk("Present Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Linear)");
+	LOG(5,"Present Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Lightness = %04x\n",
+		LOG(5,"Target Lightness = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -1677,8 +1678,8 @@ static int light_lightness_last_status(struct bt_mesh_model *model,
 				       struct bt_mesh_msg_ctx *ctx,
 				       struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Last)\n");
-	printk("Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Last)");
+	LOG(5,"Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -1687,8 +1688,8 @@ static int light_lightness_default_status(struct bt_mesh_model *model,
 					  struct bt_mesh_msg_ctx *ctx,
 					  struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Default)\n");
-	printk("Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Default)");
+	LOG(5,"Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -1697,10 +1698,10 @@ static int light_lightness_range_status(struct bt_mesh_model *model,
 					struct bt_mesh_msg_ctx *ctx,
 					struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Lightness Range)\n");
-	printk("Status Code = %02x\n", net_buf_simple_pull_u8(buf));
-	printk("Range Min = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Range Max = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Lightness Range)");
+	LOG(5,"Status Code = %02x", net_buf_simple_pull_u8(buf));
+	LOG(5,"Range Min = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Range Max = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -1730,7 +1731,7 @@ static int light_ctl_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Status response\n");
+		LOG(5,"Unable to send LightCTL Status response");
 	}
 
 	return 0;
@@ -1762,7 +1763,7 @@ void light_ctl_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1941,7 +1942,7 @@ static int light_ctl_temp_range_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->temp->range_max);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Temp Range Status response\n");
+		LOG(5,"Unable to send LightCTL Temp Range Status response");
 	}
 
 	return 0;
@@ -1959,7 +1960,7 @@ static int light_ctl_default_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->duv->def);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Default Status response\n");
+		LOG(5,"Unable to send LightCTL Default Status response");
 	}
 
 	return 0;
@@ -1983,7 +1984,7 @@ static void light_ctl_default_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2068,7 +2069,7 @@ static void light_ctl_temp_range_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2152,17 +2153,17 @@ static int light_ctl_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_SRV\n");
-	printk("Present CTL Lightness = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Present CTL Temperature = %04x\n",
+	LOG(5,"Acknownledgement from LIGHT_CTL_SRV");
+	LOG(5,"Present CTL Lightness = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Present CTL Temperature = %04x",
 	       net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 5U) {
-		printk("Target CTL Lightness = %04x\n",
+		LOG(5,"Target CTL Lightness = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Target CTL Temperature = %04x\n",
+		LOG(5,"Target CTL Temperature = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -2172,10 +2173,10 @@ static int light_ctl_temp_range_status(struct bt_mesh_model *model,
 				       struct bt_mesh_msg_ctx *ctx,
 				       struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_SRV (Temperature Range)\n");
-	printk("Status Code = %02x\n", net_buf_simple_pull_u8(buf));
-	printk("Range Min = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Range Max = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_CTL_SRV (Temperature Range)");
+	LOG(5,"Status Code = %02x", net_buf_simple_pull_u8(buf));
+	LOG(5,"Range Min = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Range Max = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -2184,18 +2185,18 @@ static int light_ctl_temp_status(struct bt_mesh_model *model,
 				 struct bt_mesh_msg_ctx *ctx,
 				 struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_TEMP_SRV\n");
-	printk("Present CTL Temperature = %04x\n",
+	LOG(5,"Acknownledgement from LIGHT_CTL_TEMP_SRV");
+	LOG(5,"Present CTL Temperature = %04x",
 	       net_buf_simple_pull_le16(buf));
-	printk("Present CTL Delta UV = %04x\n",
+	LOG(5,"Present CTL Delta UV = %04x",
 	       net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 5U) {
-		printk("Target CTL Temperature = %04x\n",
+		LOG(5,"Target CTL Temperature = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Target CTL Delta UV = %04x\n",
+		LOG(5,"Target CTL Delta UV = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -2205,10 +2206,10 @@ static int light_ctl_default_status(struct bt_mesh_model *model,
 				    struct bt_mesh_msg_ctx *ctx,
 				    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_SRV (Default)\n");
-	printk("Lightness = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Temperature = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Delta UV = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_CTL_SRV (Default)");
+	LOG(5,"Lightness = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Temperature = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Delta UV = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -2238,7 +2239,7 @@ static int light_ctl_temp_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Temp. Status response\n");
+		LOG(5,"Unable to send LightCTL Temp. Status response");
 	}
 
 	return 0;
@@ -2266,7 +2267,7 @@ void light_ctl_temp_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2445,7 +2446,7 @@ static int gen_level_get_temp(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_LEVEL_SRV Status response\n");
+		LOG(5,"Unable to send GEN_LEVEL_SRV Status response");
 	}
 
 	return 0;
@@ -2471,7 +2472,7 @@ void gen_level_publish_temp(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2935,12 +2936,12 @@ static int gen_level_status_temp(struct bt_mesh_model *model,
 				 struct bt_mesh_msg_ctx *ctx,
 				 struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_LEVEL_SRV\n");
-	printk("Present Level = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from GEN_LEVEL_SRV");
+	LOG(5,"Present Level = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Level = %04x\n", net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Target Level = %04x", net_buf_simple_pull_le16(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;

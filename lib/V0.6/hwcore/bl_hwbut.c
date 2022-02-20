@@ -86,7 +86,7 @@
     }
   }
 
-  K_WORK_DEFINE(work, workhorse);      // assign work with workhorse
+  static K_WORK_DEFINE(work,workhorse);// assign work with workhorse
 
 //==============================================================================
 // submit button work for button @id

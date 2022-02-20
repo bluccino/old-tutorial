@@ -305,13 +305,19 @@
         LOGO(1,"@",o,val);
         if ( bl_get(provision,PRV_))   // only if provisioned
         {
-          BL_ob oo = {_GOOCLI,LET_,o->id,NULL};
+          BL_ob oo = {_GOOCLI,SET_,o->id,NULL};
           bl_down(&oo,val);            // post via generic on/off client
         }
         return 0;                      // OK
 
       case BL_ID(_RESET,DUE_):         // [RESET:DUE] - reset counter due
         return startup(o,val);         // forward to startup module
+
+      case BL_ID(_GOOSRV,LET_):        // [GOOSRV:LET] notification
+      case BL_ID(_GOOSRV,SET_):        // [GOOSRV:SET] notification
+        LOGO(1,BL_R,o,val);
+        led(o->id,val);                // switch LED
+        return 0;                      // OK
 
       default:
         return -1;                     // bad args
@@ -327,7 +333,7 @@
     if ( o->cl == _LED && !o->id)    // special logging of status LED messages
       LOGO(5,"status:down:",o,val);
     else
-      LOGO(3,BL_Y "down:",o,val);
+      LOGO(3,BL_C "down:",o,val);
 
     return bl_core(o,val);
   }
@@ -338,7 +344,7 @@
 
   static int tick(BL_ob *o, int ticks) // system ticker: ticks all subsystems
   {
-    LOGO(5,BL_Y,o,ticks);              // log to see we are alife
+    LOGO(6,BL_Y,o,ticks);              // log to see we are alife
     blink(o,ticks);                    // tick blinker
     attention(o,ticks);                // tick attention module
     provision(o,ticks);                // tick provision module
