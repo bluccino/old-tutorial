@@ -182,10 +182,6 @@
         level = 5;
         break;
 
-case BL_ID(_BUTTON,STS_):
-LOGO(2,BL_R"bl_in:",o,val);
-  return 0;
-
       default:
         break;
     }
@@ -198,20 +194,20 @@ LOGO(2,BL_R"bl_in:",o,val);
 // dummy interface for core module public interface (default/__weak)
 //==============================================================================
 
-  __weak int bc_button(BL_ob *o, int val) { return -1; }
-  __weak int bc_led(BL_ob *o, int val)    { return -1; }
+  __weak int bl_hwbut(BL_ob *o, int val) { return -1; }
+  __weak int bl_hwled(BL_ob *o, int val)    { return -1; }
 
   __weak int bl_core(BL_ob *o, int val)
   {
     switch (o->cl)
     {
       case _SYS:
-        bc_button(o,val);
-        bc_led(o,val);
+        bl_hwbut(o,val);
+        bl_hwled(o,val);
         return 0;                      // OK
 
       case _LED:
-        return bc_led(o,val);
+        return bl_hwled(o,val);
 
       default:
         return -1;                     // not supported by default
@@ -231,20 +227,7 @@ LOGO(2,BL_R"bl_in:",o,val);
 //==============================================================================
 // message upward posting to API layer (default/__weak)
 //==============================================================================
-/*
-  static int bl_inn(BL_ob *o, int val)
-  {
-    switch (bl_id(o))                           // dispatch event
-    {
-      case BL_ID(_SWITCH,STS_):
-        LOGO(2,BL_R"bl_in:",o,val);
-        return bl_out(o,val,output);
 
-      default:
-        return -1;
-    }
-  }
-*/
   __weak int bl_up(BL_ob *o, int val)
   {
     bl_logo(3,"up",o,val);

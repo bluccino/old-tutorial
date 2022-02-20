@@ -1,5 +1,5 @@
 //==============================================================================
-// bc_led.h
+// bl_hwled.h
 // basic LED functions
 //
 // Created by Hugo Pristauz on 2022-Feb-18
@@ -10,18 +10,19 @@
 // - LEDs @1..@4. LED @0 is the status LED which will be remapped to LED @1
 //==============================================================================
 
-#ifndef __BC_LED_H__
-#define __BC_LED_H__
+#ifndef __BL_HWLED_H__
+#define __BL_HWLED_H__
 
 //==============================================================================
 // public module interface
 //==============================================================================
 //
-// SYS Interface:  [] = SYS(INIT)
-// LED Interface:  [] = LED(SET)
+// BL_HWLED Interfaces:
+//   SYS Interface:  [] = SYS(INIT)
+//   LED Interface:  [] = LED(SET,TOGGLE)
 //
 //                             +-------------+
-//                             |   BC_LED    |
+//                             |  BL_HWLED   |
 //                             +-------------+
 //                      INIT ->|    SYS:     |
 //                             +-------------+
@@ -35,27 +36,27 @@
 //
 //==============================================================================
 
-  int bc_led(BL_ob *o, int val);       // HW core module interface
+  int bl_hwled(BL_ob *o, int val);       // HW core module interface
 
 //==============================================================================
 // syntactic sugar: LED moduler init
-// - usage: bc_led_init(cb)
+// - usage: bl_hwled_init(cb)
 //==============================================================================
 
-  static inline int bc_led_init(BL_fct cb)
+  static inline int bl_hwled_init(BL_fct cb)
   {
-    return bl_init(bc_led,cb);
+    return bl_init(bl_hwled,cb);
   }
 
 //==============================================================================
 // syntactic sugar: set LED @id on off (@id: 0..4)
-// - usage: bc_led_set(id,val)
+// - usage: bl_hwled_set(id,val)
 //==============================================================================
 
-  static inline int bc_led_set(int id, int val)
+  static inline int bl_hwled_set(int id, int val)
   {
     BL_ob oo = {_LED,SET_,id,NULL};
-    return bc_led(&oo,val);
+    return bl_hwled(&oo,val);
   }
 
-#endif // __BC_LED_H__
+#endif // __BL_HWLED_H__

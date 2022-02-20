@@ -1,5 +1,5 @@
 //==============================================================================
-// bc_led.c
+// bl_hwled.c
 // core LED functions
 //
 // Created by Hugo Pristauz on 2022-Feb-18
@@ -9,8 +9,8 @@
   #include <drivers/gpio.h>
 
   #include "bluccino.h"
-  #include "blgpio.h"
-  #include "bc_led.h"
+  #include "bl_gpio.h"
+  #include "bl_hwled.h"
 
 //==============================================================================
 // CORE level logging shorthands
@@ -147,11 +147,12 @@
 // public module interface
 //==============================================================================
 //
-// SYS Interface:  [] = SYS(INIT)
-// LED Interface:  [] = LED(SET)
+// BL_HWLED Interfaces:
+//   SYS Interface:  [] = SYS(INIT)
+//   LED Interface:  [] = LED(SET,TOGGLE)
 //
 //                             +-------------+
-//                             |   BC_LED    |
+//                             |  BL_HWLED   |
 //                             +-------------+
 //                      INIT ->|    SYS:     |
 //                             +-------------+
@@ -165,7 +166,7 @@
 //
 //==============================================================================
 
-  int bc_led(BL_ob *o, int val)        // HW core module interface
+  int bl_hwled(BL_ob *o, int val)        // HW core module interface
   {
     static BL_fct output = NULL;       // to store output callback
 

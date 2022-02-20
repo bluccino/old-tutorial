@@ -28,5 +28,5 @@
   target_sources(app PRIVATE
                  ${SRC}/main.c
                  ${BLU}/bluccino.c
-                 ${HWCORE}/bc_hw.c
+                 ${HWCORE}/bl_hw.c
                 )

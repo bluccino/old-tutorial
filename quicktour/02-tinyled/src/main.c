@@ -13,6 +13,6 @@
 
   void main(void)
   {
-    bl_hello(5,"09-tiny (click button to toggle related LED");
+    bl_hello(5,"02-tinyled (click button to toggle related LED");
     bl_init(bluccino,when);            // init Bluccino - output goes to when()
   }

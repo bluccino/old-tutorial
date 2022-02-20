@@ -1,5 +1,5 @@
 //==============================================================================
-// bc_hw.c
+// bl_hw.c
 // Bluccino HW core supporting basic functions for button & LED
 //
 // Created by Hugo Pristauz on 2022-Feb-18
@@ -7,7 +7,7 @@
 //==============================================================================
 
   #define init  init_button
-  #include "bc_button.c"               // button core driver
+  #include "bl_hwbut.c"                // button core driver
 
   #undef LOG
   #undef LOGO
@@ -15,7 +15,7 @@
   #undef init
 
   #define init  init_led
-  #include "bc_led.c"                  // LED core driver
+  #include "bl_hwled.c"                // LED core driver
 
 //==============================================================================
 // public module interface
@@ -55,7 +55,7 @@
 //
 //==============================================================================
 
-  int bc_hw(BL_ob *o, int val)         // HW core module interface
+  int bl_hw(BL_ob *o, int val)         // HW core module interface
   {
     static BL_fct output = NULL;       // to store output callback
 
@@ -64,18 +64,18 @@
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
       {
         output = o->data;              // store output callback
-        BL_ob oo = {_SYS,INIT_,o->id,bc_hw};
+        BL_ob oo = {_SYS,INIT_,o->id,bl_hw};
 
           // for BC_BUTTON and BC_LED output needs to go to BC_HW
 
-        bc_button(&oo,val);            // init BUTTON module
-        bc_led(&oo,val);               // init LED module
+        bl_hwbut(&oo,val);             // init BUTTON module
+        bl_hwled(&oo,val);               // init LED module
       	return 0;                      // OK
       }
 
       case BL_ID(_LED,SET_):           // [LED:set @id,val]
       case BL_ID(_LED,TOGGLE_):        // [LED:toggle @id]
-        return bc_led(o,val);
+        return bl_hwled(o,val);
 
       case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,val]
       case BL_ID(_BUTTON,RELEASE_):    // [BUTTON:RELEASE @id,val]
