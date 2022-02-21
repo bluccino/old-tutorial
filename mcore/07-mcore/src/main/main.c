@@ -254,6 +254,86 @@
   }
 
 //==============================================================================
+//
+// BL_BASE Interfaces:
+//   SYS Interface:      [] = SYS(INIT,TICK)
+//   GET Interface:      [] = GET(PRV,ATT,BUSY)
+//   SET Interface:      [] = SET(PRV,ATT)
+//   HDL Interface:      [] = HDL(INC)
+//   BUTTON Interface:   [] = BUTTON(PRESS)
+//   LED Interface:      [LED] = HDL()
+//   RESET Interface:    [INC,PRV] = RESET(INC,DUE)
+//
+//                          +-----------------+
+//                          |     BL_BASE     |
+//                          +-----------------+
+//                   INIT ->|      SYS:       |
+//                   TICK ->|                 |
+//                          +-----------------+
+//                    PRV ->|      GET:       |
+//                    ATT ->|                 |
+//                   BUSY ->|                 |
+//                          +-----------------+
+//                    PRV ->|      SET:       |
+//                    ATT ->|                 |
+//                          +-----------------+
+//                    INC ->|      HDL:       |
+//                          +-----------------+
+//                  PRESS ->|     BUTTON:     |
+//                          +-----------------+
+//                          |       LED:      %-> LED (DOWN)
+//                          +-----------------+
+//                    INC ->|     RESET:      %-> INC (DOWN)
+//                    DUE ->|                 %-> PRV (DOWN)
+//                          +-----------------+
+//
+//==============================================================================
+
+  int bl_base(BL_ob *o, int val)
+  {
+    BL_fct output = NULL;              // to store output callback
+
+    switch (bl_id(o))                  // dispatch message ID
+    {
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT state] - init system command
+        startup(o,val);                // forward to startup() worker
+        provision(o,val);              // forward to provision() worker
+        attention(o,val);              // forward to attention() worker
+        return 0;                      // OK
+
+      case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt] - tick module
+        startup(o,val);                // forward to startup() worker
+        attention(o,val);              // forward to startup() worker
+        provision(o,val);              // forward to provision() worker
+        return tick();                 // forward to tick() worker
+
+      case BL_ID(_SET,ATT_):           // set attention blinking on/off
+        return attention(o,val);       // change attention state
+
+      case BL_ID(_SET,PRV_):           // [MESH:ATT state]
+        return provision(o,val);       // change provision state
+
+      case BL_ID(_GET,BUSY_):          // [MESH:ATT state]
+        return startup(o,val);         // change provision state
+
+      case BL_ID(_BUTTON,PRESS_):      // button press to cause LED on off
+        LOGO(1,"@",o,val);
+        if ( !bl_get(provision,PRV_))  // if not provisioned
+        {
+          led(2,0); led(3,0); led(4,0);// turn off current LED
+          id = (id==0) ? 2 : (id+1)%5; // update THE LED id (=> 0 or 2,3,4)
+        }
+        return startup(o,val);         // fwd [BUTTON:PRESS] to startup
+
+      case BL_ID(_RESET,DUE_):         // [RESET:DUE] - reset counter due
+        return startup(o,val);         // forward to startup module
+
+      default:
+        return -1;                     // bad args
+    }
+  }
+
+//==============================================================================
 // helper: attention blinker (let green status LED @0 attention blinking)
 // - @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
 //==============================================================================
