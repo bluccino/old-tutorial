@@ -37,7 +37,7 @@
   #define CFG_APP_VERSION        "07-mcore"
   #define CFG_APP_VERBOSE         4    // verbose level for application
 
-  #define CFG_NUMBER_OF_LEDS      4    // nRF52832/840 DK, nRF52840 dongle
+  #define CFG_NUMBER_OF_LEDS      5    // nRF52832/840 DK, nRF52840 dongle
   #define CFG_NUMBER_OF_BUTS      1    // nRF52832/840 DK, nRF52840 dongle
 
 //==============================================================================

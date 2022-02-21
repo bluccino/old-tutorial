@@ -296,6 +296,7 @@
     switch (bl_id(o))                  // dispatch message ID
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT state] - init system command
+        output = o->data;              // store output callback
         startup(o,val);                // forward to startup() worker
         provision(o,val);              // forward to provision() worker
         attention(o,val);              // forward to attention() worker
@@ -305,7 +306,7 @@
         startup(o,val);                // forward to startup() worker
         attention(o,val);              // forward to startup() worker
         provision(o,val);              // forward to provision() worker
-        return tick();                 // forward to tick() worker
+        return 0;                      // OK
 
       case BL_ID(_SET,ATT_):           // set attention blinking on/off
         return attention(o,val);       // change attention state
@@ -366,6 +367,7 @@
   {
     switch (bl_id(o))
     {
+/*
       case BL_ID(_SET,ATT_):           // [MESH:ATT state]
         return attention(o,val);       // change attention state
 
@@ -381,6 +383,9 @@
         }
         return startup(o,val);         // fwd [BUTTON:PRESS] to startup
 
+      case BL_ID(_RESET,DUE_):         // [RESET:DUE] - reset counter due
+        return startup(o,val);         // forward to startup module
+*/
       case BL_ID(_SWITCH,STS_):        // button press to cause LED on off
         LOGO(1,"@",o,val);
         if ( bl_get(provision,PRV_))   // only if provisioned
@@ -390,9 +395,6 @@
         }
         return 0;                      // OK
 
-      case BL_ID(_RESET,DUE_):         // [RESET:DUE] - reset counter due
-        return startup(o,val);         // forward to startup module
-
       case BL_ID(_GOOSRV,LET_):        // [GOOSRV:LET] notification
       case BL_ID(_GOOSRV,SET_):        // [GOOSRV:SET] notification
         LOGO(1,BL_R,o,val);
@@ -400,7 +402,7 @@
         return 0;                      // OK
 
       default:
-        return -1;                     // bad args
+        return bl_base(o,val);         // else forward event to BL_BASE module
     }
   }
 
@@ -426,9 +428,7 @@
   {
     LOGO(6,BL_Y,o,ticks);              // log to see we are alife
     blink(o,ticks);                    // tick blinker
-    attention(o,ticks);                // tick attention module
-    provision(o,ticks);                // tick provision module
-    startup(o,ticks);                  // tick startup module
+    bl_base(o,ticks);
     return 0;                          // OK
   }
 
@@ -452,9 +452,7 @@
 
   static int init(BL_ob *o, int val)   // init all modules
   {
-    bl_init(attention,NULL);           // init atttention module
-    bl_init(provision,NULL);           // init provision module
-    bl_init(startup,NULL);             // init startup module
+    bl_init(bl_base,NULL);             // init atttention module
     return 0;                          // OK
   }
 
