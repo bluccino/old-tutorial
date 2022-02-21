@@ -33,16 +33,16 @@
 //                             +-------------+
 //                      INIT ->|    SYS:     |
 //                             +-------------+
-//                     PRESS ->|   BUTTON:   |-> PRESS
-//                   RELEASE ->|             |-> RELEASE
+//                    #PRESS ->|   BUTTON:   |-> PRESS
+//                  #RELEASE ->|             |-> RELEASE
 //                             +-------------+
-//                       STS ->|   SWITCH:   |-> STS
+//                      #STS ->|   SWITCH:   |-> STS
 //                             +-------------+
 //  Input Messages:
 //    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [BUTTON:PRESS @id,active]      // forward button press event to output
-//    - [BUTTON:RELEASE @id,active]    // forward button release event to output
-//    - [SWITCH:STS @id,onoff]         // forward switch status update to output
+//    - [BUTTON:#PRESS @id,active]     // forward button press event to output
+//    - [BUTTON:#RELEASE @id,active]   // forward button release event to output
+//    - [SWITCH:#STS @id,onoff]        // forward switch status update to output
 //
 //  Output Messages:
 //    - [BUTTON:PRESS @id 1]           // output a button press event

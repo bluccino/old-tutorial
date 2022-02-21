@@ -8,6 +8,50 @@
 #ifndef _DEVICE_COMPOSITION_H
 #define _DEVICE_COMPOSITION_H
 
+//================================================================================================
+// retrieving a model pointer
+//================================================================================================
+
+  #define CONFIG_SRV0   0       // config server
+  #define HEALTH_SRV0   1       // health server
+
+  #define GONOFF_SRV0   2       // generic onoff server
+  #define GONOFF_CLI0   3       // generic onoff client
+  #define GLEVEL_SRV0   4       // generic level server
+  #define GLEVEL_CLI0   5       // generic level client
+
+  #define GDEFTT_SRV0   6       // generic deftt server
+  #define GDEFTT_CLI0   7       // generic deftt client
+
+  #define GPOWER_SRV0   8       // generic power onoff server
+  #define GSETUP_SRV0   9       // generic power onoff setup server
+  #define GPOWER_CLI0  10       // generic power onoff client
+
+  #define LLIGHT_SRV0  11       // light lightness server 0
+  #define LLSETUP_SRV0 12       // light lightness setup server 0
+  #define LLIGHT_CLI0  13       // light lightness client 0
+
+  #define LCTLT_SRV0   14       // light CTL temperature server 0
+  #define LCSETUP_SRV0 15       // light CTL setup server 0
+  #define LCTLT_CLI0   16       // light CTL temperature client 0
+
+  #define HEALTH_CLI0  17       // health client
+
+  #define VMONI_SRV0   18       // vendor monitor server
+
+  #define GLEVEL_SRV1  19       // generic level server
+  #define GLEVEL_CLI1  20       // generic level client
+
+  #define LCTLT_SRV1   21       // light CTL temperature server 1
+
+  #define VSIMP_SRV0   22       // vendor simple server
+
+  struct bt_mesh_model *mesh_model_pointer(uint8_t element, uint8_t iid);
+
+//================================================================================================
+// other defines
+//================================================================================================
+
 #define CID_ZEPHYR 0x0002
 
 #define STATE_OFF       0x00
@@ -106,5 +150,31 @@ void light_lightness_linear_publish(struct bt_mesh_model *model);
 void light_ctl_publish(struct bt_mesh_model *model);
 void light_ctl_temp_publish(struct bt_mesh_model *model);
 void gen_level_publish_temp(struct bt_mesh_model *model);
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BL_DEVCOMP Interfaces
+//   SYS Interface:     [] = SYS(INIT)
+//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
+//
+//                            +-------------------+
+//                            |    BL_DEVCOMP     |
+//                            +-------------------+
+//                     INIT ->|       SYS:        |
+//                            +-------------------+
+//                     #STS ->|      GOOSRV:      |-> STS
+//                            +-------------------+
+// Input Messages:
+//   [SYS:INIT <cb>]              init module, store callback
+//   [GOOSRV:#STS @id,val,<data>] internal input for [GOOSRV:STS ...] output
+//
+// Output Messages:
+//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+//
+//==============================================================================
+
+  int bl_devcomp(BL_ob *o, int val);
 
 #endif

@@ -63,7 +63,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_APP
-    #define CFG_LOG_APP    1           // no APP logging by default
+    #define CFG_LOG_APP    1           // APP logging is by default on
 #endif
 
 #if (CFG_LOG_APP)
@@ -75,11 +75,27 @@
 #endif
 
 //==============================================================================
+// BASIS Logging
+//==============================================================================
+
+#ifndef CFG_LOG_BASIS
+    #define CFG_LOG_BASIS    0         // BASIS logging is by default off
+#endif
+
+#if (CFG_LOG_BASIS)
+    #define LOG_BASIS(l,f,...)    BL_LOG(CFG_LOG_BASIS-1+l,f,##__VA_ARGS__)
+    #define LOGO_BASIS(l,f,o,v)   bl_logo(CFG_LOG_BASIS-1+l,f,o,v)
+#else
+    #define LOG_BASIS(l,f,...)    {}     // empty
+    #define LOGO_BASIS(l,f,o,v)   {}     // empty
+#endif
+
+//==============================================================================
 // CORE Logging
 //==============================================================================
 
 #ifndef CFG_LOG_CORE
-    #define CFG_LOG_CORE    1           // no CORE logging by default
+    #define CFG_LOG_CORE    1           // CORE logging is by default on
 #endif
 
 #if (CFG_LOG_CORE)
@@ -95,7 +111,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_GPIO
-    #define CFG_LOG_GPIO    0           // no GPIO logging by default
+    #define CFG_LOG_GPIO    0           // GPIO logging is by default off
 #endif
 
 #if (CFG_LOG_GPIO)
@@ -111,7 +127,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_MESH
-    #define CFG_LOG_MESH    1           // MESH logging by default
+    #define CFG_LOG_MESH    1           // MESH logging is by default on
 #endif
 
 #if (CFG_LOG_MESH)
@@ -127,7 +143,7 @@
 //==============================================================================
 
 #ifndef CFG_LOG_TEST
-    #define CFG_LOG_TEST    1           // no TEST logging by default
+    #define CFG_LOG_TEST    1           // TEST logging is by default on
 #endif
 
 #if (CFG_LOG_TEST)

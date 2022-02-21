@@ -29,6 +29,7 @@
 
 target_sources(app PRIVATE
 	       ${MAIN}/main.c
+	       ${MAIN}/bl_basis.c
 				 ${BLU}/bluccino.c
 				 ${BLU}/bl_mesh.c
 	       ${CORE}/bl_hw.c

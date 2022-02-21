@@ -200,10 +200,10 @@
     msg = (msg[0] == '@') ? msg+1 : msg;
 
     #if CFG_PRETTY_LOGGING             // pretty text for class tag & opcode
-      printk("%s%s [%s:%s @%d (%d)]\n"BL_0, col,msg,
+      printk("%s%s [%s:%s @%d,%d]\n"BL_0, col,msg,
              cltext(o->cl),optext(o->op),o->id,value);
     #else
-      printk("%s%s [%d:%d @%d (%d)]\n"BL_0,col,msg,
+      printk("%s%s [%d:%d @%d,%d]\n"BL_0,col,msg,
              o->cl,o->op, o->id,value);
     #endif
   }

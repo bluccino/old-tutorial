@@ -5,33 +5,6 @@
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
-//
-//                             +-------------+
-//                             |             |
-//                             |   GOOCLI    |
-//                             |             |
-//                             +-------------+
-//                             |             |
-//                             |   GOOSRV    |
-//                             |             |
-//                             +-------------+
-//                             |             |
-//                             |   GLVCLI    |
-//                             |             |
-//                             +-------------+
-//                             |             |
-//                             |   GLVSRV    |
-//                             |             |
-//                             +-------------+
-//
-//  Input Messages:
-//    - [:]
-//
-//  Output Messages:
-//    - [:]
-//    - [:]
-//
-//==============================================================================
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
 // Copyright (c) 2018 Vikrant More
 // SPDX-License-Identifier: Apache-2.0
@@ -50,7 +23,9 @@
 // Bluccino migration ...
 //==============================================================================
 
-#include "bluccino.h"
+  #include "bluccino.h"
+
+  #define _STS_   BL_HASH(STS_)        // hashed STS opcode
 
 //==============================================================================
 // CORE level logging shorthands
@@ -80,19 +55,60 @@
 //==============================================================================
 // some additional includes
 //==============================================================================
-#if MIGRATION_STEP6
-  #include "bl_mesh.h"
-  #include "bl_gonoff.h"
+
+  #if MIGRATION_STEP6
+    #include "bl_mesh.h"
+    #include "bl_gonoff.h"
+  #endif
+
+//==============================================================================
+// workhorse which post messages through the upward gear to the application
+//==============================================================================
+#if MIGRATION_STEP6                  // data structures for notification
+
+  typedef struct TP_post
+          {
+            BL_ob oo;                // message object
+            int val;                 // value to be posted
+
+            union pay
+            {
+              BL_gonoff_set gooset;
+            } pay;
+          } TP_post;
+
+  static TP_post post;
+
 #endif
 //==============================================================================
-// receive tracing
+// workhorse which post messages through the upward gear to the application
+//==============================================================================
+#if MIGRATION_STEP6                    // data structures for notification
+
+  static void workhorse(struct k_work *work)
+  {
+    bl_devcomp(&post.oo,post.val);     // post to module interface for output
+  }
+
+  static K_WORK_DEFINE(work,workhorse);// assign work with workhorse
+
+  static void submit(BL_ob *o, int val)
+  {
+    memcpy(&post.oo,o,sizeof(BL_ob));
+    post.val = val;                    // copy val to note
+    k_work_submit(&work);              // invoke workhorse() to post note
+  }
+
+#endif
+//==============================================================================
+// receive logging
 //==============================================================================
 
-  static void rx_trace(int lvl, BL_txt ptxt, uint16_t oc,
+  static void log_rx(int lvl, BL_txt ptxt, uint16_t oc,
       BL_model *pmod, BL_ctx *ctx, BL_gonoff_set *ppay, long cnt)
   {
     LOG(lvl,
-      "%s($%d:%d:%d, <%04x.%04x>, [%04x]->[%04x], %s, #%d, /%dms, &%dms) #%ld#\n",
+      "%s($%d:%d:%d, <%04x.%04x>, [%04x]->[%04x], %s,#%d,/%dms,&%dms) #%ld#",
       ptxt, bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, BL_SIG_CID, oc,
       bl_src(ctx), bl_dst(ctx), ppay->onoff ? "ON" : "OFF",
       ppay->tid, bl_mesh2ms(ppay->tt), bl_tick2ms(ppay->delay), cnt);
@@ -155,7 +171,10 @@ static struct bt_mesh_elem elements[];
 
 /* message handlers (Start) */
 
-/* Generic OnOff Server message handlers */
+//==============================================================================
+// GOOGET server message handler
+//==============================================================================
+
 static int gen_onoff_get(struct bt_mesh_model *model,
 			 struct bt_mesh_msg_ctx *ctx,
 			 struct net_buf_simple *buf)
@@ -177,11 +196,15 @@ static int gen_onoff_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_ONOFF_SRV Status response\n");
+		LOG(5,"Unable to send GEN_ONOFF_SRV Status response");
 	}
 
 	return 0;
 }
+
+//==============================================================================
+// GOOPUB server helper
+//==============================================================================
 
 void gen_onoff_publish(struct bt_mesh_model *model)
 {
@@ -203,9 +226,13 @@ void gen_onoff_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
+
+//==============================================================================
+// GOOLET server message handler
+//==============================================================================
 
 static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx,
@@ -276,99 +303,122 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	return 0;
 }
 
-static int gen_onoff_set(struct bt_mesh_model *model,
-			 struct bt_mesh_msg_ctx *ctx,
-			 struct net_buf_simple *buf)
-{
-  #if MIGRATION_STEP6
-    uint32_t oc = BL_OC_GONOFF_SET;
-    static long bl_log_gonoff_set_rx = 0;
-    long cnt = ++bl_log_gonoff_set_rx;
-    BL_gonoff_set pay;
-  #endif
-	uint8_t tid, onoff, tt, delay;
-	int64_t now;
+//==============================================================================
+// GOOSET server message handler
+//==============================================================================
 
-	pay.onoff = onoff = net_buf_simple_pull_u8(buf);
-	pay.tid = tid = net_buf_simple_pull_u8(buf);
+  static int gen_onoff_set(struct bt_mesh_model *model,
+  			 struct bt_mesh_msg_ctx *ctx,
+  			 struct net_buf_simple *buf)
+  {
+          #if MIGRATION_STEP6
+            uint32_t oc = BL_OC_GONOFF_SET;
+            static long bl_log_gonoff_set_rx = 0;
+            long cnt = ++bl_log_gonoff_set_rx;
+            BL_gonoff_set *pay = &post.pay.gooset;
+          #endif
 
-	if (onoff > STATE_ON) {
-		return 0;
-	}
+  	uint8_t tid, onoff, tt, delay;
+  	int64_t now;
 
-	now = k_uptime_get();
-	if (ctl->last_tid == tid &&
-	    ctl->last_src_addr == ctx->addr &&
-	    ctl->last_dst_addr == ctx->recv_dst &&
-	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
-		(void)gen_onoff_get(model, ctx, buf);
-		return 0;
-	}
+  	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
+  	pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-	switch (buf->len) {
-	case 0x00:      /* No optional fields are available */
-		pay.tt = tt = ctl->tt;
-		pay.delay = delay = 0U;
-		break;
-	case 0x02:      /* Optional fields are available */
-		pay.tt = tt = net_buf_simple_pull_u8(buf);
-		if ((tt & 0x3F) == 0x3F) {
-			return 0;
-		}
+  	if (onoff > STATE_ON)
+  		return 0;
 
-		pay.delay = delay = net_buf_simple_pull_u8(buf);
-		break;
-	default:
-		return 0;
-	}
+  	now = k_uptime_get();
+  	if (ctl->last_tid == tid &&
+  	    ctl->last_src_addr == ctx->addr &&
+  	    ctl->last_dst_addr == ctx->recv_dst &&
+  	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
+  		(void)gen_onoff_get(model, ctx, buf);
+  		return 0;
+  	}
 
-  #if MIGRATION_STEP6
-    rx_trace(3,BL_C "rx_gonoff_set", oc, model, ctx, &pay, cnt);
-  #endif
+  	switch (buf->len)
+    {
+    	case 0x00:      /* No optional fields are available */
+    		pay->tt = tt = ctl->tt;
+    		pay->delay = delay = 0U;
+    		break;
+    	case 0x02:      /* Optional fields are available */
+    		pay->tt = tt = net_buf_simple_pull_u8(buf);
+    		if ((tt & 0x3F) == 0x3F)
+        {
+          goto SUBMIT;
+    			return 0;
+    		}
 
-	ctl->transition->counter = 0U;
-	k_timer_stop(&ctl->transition->timer);
+    		pay->delay = delay = net_buf_simple_pull_u8(buf);
+    		break;
+    	default:
+        goto SUBMIT;
+    		return 0;
+  	}
 
-	ctl->last_tid = tid;
-	ctl->last_src_addr = ctx->addr;
-	ctl->last_dst_addr = ctx->recv_dst;
-	ctl->last_msg_timestamp = now;
-	ctl->transition->tt = tt;
-	ctl->transition->delay = delay;
-	ctl->transition->type = NON_MOVE;
-	set_target(ONOFF, &onoff);
+    #if MIGRATION_STEP6
+      log_rx(5,BL_C "rx_gooset", oc, model, ctx, pay, cnt);
+    #endif
 
-	if (ctl->light->target != ctl->light->current) {
-		set_transition_values(ONOFF);
-	} else {
-		(void)gen_onoff_get(model, ctx, buf);
-		return 0;
-	}
+  	ctl->transition->counter = 0U;
+  	k_timer_stop(&ctl->transition->timer);
 
-	/* For Instantaneous Transition */
-	if (ctl->transition->counter == 0U) {
-		ctl->light->current = ctl->light->target;
-	}
+  	ctl->last_tid = tid;
+  	ctl->last_src_addr = ctx->addr;
+  	ctl->last_dst_addr = ctx->recv_dst;
+  	ctl->last_msg_timestamp = now;
+  	ctl->transition->tt = tt;
+  	ctl->transition->delay = delay;
+  	ctl->transition->type = NON_MOVE;
+  	set_target(ONOFF, &onoff);
 
-	ctl->transition->just_started = true;
-	(void)gen_onoff_get(model, ctx, buf);
-	gen_onoff_publish(model);
-	onoff_handler();
+  	if (ctl->light->target != ctl->light->current)
+    {
+  		set_transition_values(ONOFF);
+  	}
+    else
+    {
+  		(void)gen_onoff_get(model, ctx, buf);
+  		//return 0;
+      goto SUBMIT;
+  	}
 
-	return 0;
-}
+  	/* For Instantaneous Transition */
+  	if (ctl->transition->counter == 0U)
+    {
+  		ctl->light->current = ctl->light->target;
+  	}
 
-/* Generic OnOff Client message handlers */
+  	ctl->transition->just_started = true;
+  	(void)gen_onoff_get(model, ctx, buf);
+  	gen_onoff_publish(model);
+  	onoff_handler();
+
+    #if MIGRATION_STEP6                  // post upward
+      bool dummy = 0;
+  SUBMIT:  dummy = 1;                    // need this in order to use label
+      BL_ob oo = {_GOOSRV,_STS_,1,pay};
+      LOG0(4,BL_R"goosrv:rcv:",&oo,pay->onoff);
+      submit(&oo,pay->onoff);
+    #endif
+    return 0;
+  }
+
+//==============================================================================
+// Generic OnOff Client message handlers
+//==============================================================================
+
 static int gen_onoff_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_ONOFF_SRV\n");
-	printk("Present OnOff = %02x\n", net_buf_simple_pull_u8(buf));
+	LOG(5,"Acknownledgement from GEN_ONOFF_SRV");
+	LOG(5,"Present OnOff = %02x", net_buf_simple_pull_u8(buf));
 
 	if (buf->len == 2U) {
-		printk("Target OnOff = %02x\n", net_buf_simple_pull_u8(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Target OnOff = %02x", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -396,7 +446,7 @@ static int gen_level_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_LEVEL_SRV Status response\n");
+		LOG(5,"Unable to send GEN_LEVEL_SRV Status response");
 	}
 
 	return 0;
@@ -422,7 +472,7 @@ void gen_level_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -885,12 +935,12 @@ static int gen_level_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_LEVEL_SRV\n");
-	printk("Present Level = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from GEN_LEVEL_SRV");
+	LOG(5,"Present Level = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Level = %04x\n", net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Target Level = %04x", net_buf_simple_pull_le16(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -907,7 +957,7 @@ static int gen_def_trans_time_get(struct bt_mesh_model *model,
 	net_buf_simple_add_u8(msg, ctl->tt);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_DEF_TT_SRV Status response\n");
+		LOG(5,"Unable to send GEN_DEF_TT_SRV Status response");
 	}
 
 	return 0;
@@ -927,7 +977,7 @@ static void gen_def_trans_time_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -983,8 +1033,8 @@ static int gen_def_trans_time_status(struct bt_mesh_model *model,
 				     struct bt_mesh_msg_ctx *ctx,
 				     struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_DEF_TT_SRV\n");
-	printk("Transition Time = %02x\n", net_buf_simple_pull_u8(buf));
+	LOG(5,"Acknownledgement from GEN_DEF_TT_SRV");
+	LOG(5,"Transition Time = %02x", net_buf_simple_pull_u8(buf));
 
 	return 0;
 }
@@ -1000,7 +1050,7 @@ static int gen_onpowerup_get(struct bt_mesh_model *model,
 	net_buf_simple_add_u8(msg, ctl->onpowerup);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_POWER_ONOFF_SRV Status response\n");
+		LOG(5,"Unable to send GEN_POWER_ONOFF_SRV Status response");
 	}
 
 	return 0;
@@ -1011,8 +1061,8 @@ static int gen_onpowerup_status(struct bt_mesh_model *model,
 				struct bt_mesh_msg_ctx *ctx,
 				struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_POWER_ONOFF_SRV\n");
-	printk("OnPowerUp = %02x\n", net_buf_simple_pull_u8(buf));
+	LOG(5,"Acknownledgement from GEN_POWER_ONOFF_SRV");
+	LOG(5,"OnPowerUp = %02x", net_buf_simple_pull_u8(buf));
 
 	return 0;
 }
@@ -1033,7 +1083,7 @@ static void gen_onpowerup_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1099,7 +1149,7 @@ static int vnd_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 	net_buf_simple_add_le32(msg, state->response);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send VENDOR Status response\n");
+		LOG(5,"Unable to send VENDOR Status response");
 	}
 
 	return 0;
@@ -1131,7 +1181,7 @@ static int vnd_set_unack(struct bt_mesh_model *model,
 	state->last_msg_timestamp = now;
 	state->current = current;
 
-	printk("Vendor model message = %04x\n", state->current);
+	LOG(5,"Vendor model message = %04x", state->current);
 
 	update_vnd_led_gpio();
 
@@ -1150,9 +1200,9 @@ static int vnd_set(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 static int vnd_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 		      struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from Vendor\n");
-	printk("cmd = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("response = %08x\n", net_buf_simple_pull_le32(buf));
+	LOG(5,"Acknownledgement from Vendor");
+	LOG(5,"cmd = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"response = %08x", net_buf_simple_pull_le32(buf));
 
 	return 0;
 }
@@ -1179,7 +1229,7 @@ static int light_lightness_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessAct Status response\n");
+		LOG(5,"Unable to send LightLightnessAct Status response");
 	}
 
 	return 0;
@@ -1205,7 +1255,7 @@ void light_lightness_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1366,7 +1416,7 @@ static int light_lightness_linear_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessLin Status response\n");
+		LOG(5,"Unable to send LightLightnessLin Status response");
 	}
 
 	return 0;
@@ -1393,7 +1443,7 @@ void light_lightness_linear_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1542,7 +1592,7 @@ static int light_lightness_last_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->light->last);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessLast Status response\n");
+		LOG(5,"Unable to send LightLightnessLast Status response");
 	}
 
 	return 0;
@@ -1559,7 +1609,7 @@ static int light_lightness_default_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->light->def);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessDef Status response\n");
+		LOG(5,"Unable to send LightLightnessDef Status response");
 	}
 
 	return 0;
@@ -1579,7 +1629,7 @@ static int light_lightness_range_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->light->range_max);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightLightnessRange Status response\n");
+		LOG(5,"Unable to send LightLightnessRange Status response");
 	}
 
 	return 0;
@@ -1602,7 +1652,7 @@ static void light_lightness_default_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1663,7 +1713,7 @@ static void light_lightness_range_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -1743,13 +1793,13 @@ static int light_lightness_status(struct bt_mesh_model *model,
 				  struct bt_mesh_msg_ctx *ctx,
 				  struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Actual)\n");
-	printk("Present Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Actual)");
+	LOG(5,"Present Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Lightness = %04x\n",
+		LOG(5,"Target Lightness = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -1759,13 +1809,13 @@ static int light_lightness_linear_status(struct bt_mesh_model *model,
 					 struct bt_mesh_msg_ctx *ctx,
 					 struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Linear)\n");
-	printk("Present Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Linear)");
+	LOG(5,"Present Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Lightness = %04x\n",
+		LOG(5,"Target Lightness = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -1775,8 +1825,8 @@ static int light_lightness_last_status(struct bt_mesh_model *model,
 				       struct bt_mesh_msg_ctx *ctx,
 				       struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Last)\n");
-	printk("Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Last)");
+	LOG(5,"Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -1785,8 +1835,8 @@ static int light_lightness_default_status(struct bt_mesh_model *model,
 					  struct bt_mesh_msg_ctx *ctx,
 					  struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Default)\n");
-	printk("Lightness = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Default)");
+	LOG(5,"Lightness = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -1795,10 +1845,10 @@ static int light_lightness_range_status(struct bt_mesh_model *model,
 					struct bt_mesh_msg_ctx *ctx,
 					struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_LIGHTNESS_SRV (Lightness Range)\n");
-	printk("Status Code = %02x\n", net_buf_simple_pull_u8(buf));
-	printk("Range Min = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Range Max = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_LIGHTNESS_SRV (Lightness Range)");
+	LOG(5,"Status Code = %02x", net_buf_simple_pull_u8(buf));
+	LOG(5,"Range Min = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Range Max = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -1828,7 +1878,7 @@ static int light_ctl_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Status response\n");
+		LOG(5,"Unable to send LightCTL Status response");
 	}
 
 	return 0;
@@ -1860,7 +1910,7 @@ void light_ctl_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2039,7 +2089,7 @@ static int light_ctl_temp_range_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->temp->range_max);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Temp Range Status response\n");
+		LOG(5,"Unable to send LightCTL Temp Range Status response");
 	}
 
 	return 0;
@@ -2057,7 +2107,7 @@ static int light_ctl_default_get(struct bt_mesh_model *model,
 	net_buf_simple_add_le16(msg, ctl->duv->def);
 
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Default Status response\n");
+		LOG(5,"Unable to send LightCTL Default Status response");
 	}
 
 	return 0;
@@ -2081,7 +2131,7 @@ static void light_ctl_default_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2166,7 +2216,7 @@ static void light_ctl_temp_range_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2250,17 +2300,17 @@ static int light_ctl_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_SRV\n");
-	printk("Present CTL Lightness = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Present CTL Temperature = %04x\n",
+	LOG(5,"Acknownledgement from LIGHT_CTL_SRV");
+	LOG(5,"Present CTL Lightness = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Present CTL Temperature = %04x",
 	       net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 5U) {
-		printk("Target CTL Lightness = %04x\n",
+		LOG(5,"Target CTL Lightness = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Target CTL Temperature = %04x\n",
+		LOG(5,"Target CTL Temperature = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -2270,10 +2320,10 @@ static int light_ctl_temp_range_status(struct bt_mesh_model *model,
 				       struct bt_mesh_msg_ctx *ctx,
 				       struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_SRV (Temperature Range)\n");
-	printk("Status Code = %02x\n", net_buf_simple_pull_u8(buf));
-	printk("Range Min = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Range Max = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_CTL_SRV (Temperature Range)");
+	LOG(5,"Status Code = %02x", net_buf_simple_pull_u8(buf));
+	LOG(5,"Range Min = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Range Max = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -2282,18 +2332,18 @@ static int light_ctl_temp_status(struct bt_mesh_model *model,
 				 struct bt_mesh_msg_ctx *ctx,
 				 struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_TEMP_SRV\n");
-	printk("Present CTL Temperature = %04x\n",
+	LOG(5,"Acknownledgement from LIGHT_CTL_TEMP_SRV");
+	LOG(5,"Present CTL Temperature = %04x",
 	       net_buf_simple_pull_le16(buf));
-	printk("Present CTL Delta UV = %04x\n",
+	LOG(5,"Present CTL Delta UV = %04x",
 	       net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 5U) {
-		printk("Target CTL Temperature = %04x\n",
+		LOG(5,"Target CTL Temperature = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Target CTL Delta UV = %04x\n",
+		LOG(5,"Target CTL Delta UV = %04x",
 		       net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -2303,10 +2353,10 @@ static int light_ctl_default_status(struct bt_mesh_model *model,
 				    struct bt_mesh_msg_ctx *ctx,
 				    struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from LIGHT_CTL_SRV (Default)\n");
-	printk("Lightness = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Temperature = %04x\n", net_buf_simple_pull_le16(buf));
-	printk("Delta UV = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from LIGHT_CTL_SRV (Default)");
+	LOG(5,"Lightness = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Temperature = %04x", net_buf_simple_pull_le16(buf));
+	LOG(5,"Delta UV = %04x", net_buf_simple_pull_le16(buf));
 
 	return 0;
 }
@@ -2336,7 +2386,7 @@ static int light_ctl_temp_get(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send LightCTL Temp. Status response\n");
+		LOG(5,"Unable to send LightCTL Temp. Status response");
 	}
 
 	return 0;
@@ -2364,7 +2414,7 @@ void light_ctl_temp_publish(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -2543,7 +2593,7 @@ static int gen_level_get_temp(struct bt_mesh_model *model,
 
 send:
 	if (bt_mesh_model_send(model, ctx, msg, NULL, NULL)) {
-		printk("Unable to send GEN_LEVEL_SRV Status response\n");
+		LOG(5,"Unable to send GEN_LEVEL_SRV Status response");
 	}
 
 	return 0;
@@ -2569,7 +2619,7 @@ void gen_level_publish_temp(struct bt_mesh_model *model)
 
 	err = bt_mesh_model_publish(model);
 	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
+		LOG(5,"bt_mesh_model_publish err %d", err);
 	}
 }
 
@@ -3033,12 +3083,12 @@ static int gen_level_status_temp(struct bt_mesh_model *model,
 				 struct bt_mesh_msg_ctx *ctx,
 				 struct net_buf_simple *buf)
 {
-	printk("Acknownledgement from GEN_LEVEL_SRV\n");
-	printk("Present Level = %04x\n", net_buf_simple_pull_le16(buf));
+	LOG(5,"Acknownledgement from GEN_LEVEL_SRV");
+	LOG(5,"Present Level = %04x", net_buf_simple_pull_le16(buf));
 
 	if (buf->len == 3U) {
-		printk("Target Level = %04x\n", net_buf_simple_pull_le16(buf));
-		printk("Remaining Time = %02x\n", net_buf_simple_pull_u8(buf));
+		LOG(5,"Target Level = %04x", net_buf_simple_pull_le16(buf));
+		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
 
 	return 0;
@@ -3298,3 +3348,44 @@ const struct bt_mesh_comp comp = {
 	.elem = elements,
 	.elem_count = ARRAY_SIZE(elements),
 };
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BL_DEVCOMP Interfaces
+//   SYS Interface:     [] = SYS(INIT)
+//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
+//
+//                            +-------------------+
+//                            |    BL_DEVCOMP     |
+//                            +-------------------+
+//                     INIT ->|       SYS:        |
+//                            +-------------------+
+//                     #STS ->|      GOOSRV:      |-> STS
+//                            +-------------------+
+// Input Messages:
+//   [SYS:INIT <cb>]              init module, store callback
+//   [GOOSRV:#STS @id,val,<data>] relay input for output of [GOOSRV:STS ...] msg
+//
+// Output Messages:
+//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+//
+//==============================================================================
+
+  int bl_devcomp(BL_ob *o, int val)
+  {
+    static BL_fct output = NULL;
+    switch (bl_id(o))                  // dispatch message ID
+    {
+      case BL_ID(_SYS,INIT_):
+        output = o->data;              // store output callback
+        return 0;                      // OK
+
+      case BL_ID(_GOOSRV,_STS_):
+        return bl_out(o,val,output);
+
+      default:
+        return -1;                     // bad args
+    }
+  }

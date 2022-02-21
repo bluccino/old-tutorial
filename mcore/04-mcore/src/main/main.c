@@ -3,7 +3,7 @@
 // main program for testing wearable's hwcore
 //
 // Created by Hugo Pristauz on 2022-Jan-04
-// Copyright © 2022 fuseAware. All rights reserved.
+// Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 
   #include "bluccino.h"

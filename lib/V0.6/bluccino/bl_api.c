@@ -144,13 +144,23 @@
 
 //==============================================================================
 // output a message from Bluccino API or in general
+// - usage: bl_out(o,val,output)
+// - any hashed opcode has to be de-hashed (clear hash bit of opcode)
 //==============================================================================
 
   __weak int bl_out(BL_ob *o, int val, BL_fct call)
   {
     if (call)                          // is an app callback provided?
-      return call(o,val);              // forward event message to app
+    {
+      if ( !BL_HASHED(o->op) )         // hash bit not set => easy!
+        return call(o,val);            // forward event message to subscriber
 
+        // hashed opcode! (hash bit set) => need to duplicate object with
+        // de-hashed opcode before forwarding
+
+      BL_ob oo = {o->cl,BL_CLEAR(o->op),o->id,o->data};
+      return call(&oo,val);            // forward with de-hashed opcode  
+    }
     return 0;
   }
 
@@ -182,10 +192,6 @@
         level = 5;
         break;
 
-case BL_ID(_BUTTON,STS_):
-LOGO(2,BL_R"bl_in:",o,val);
-  return 0;
-
       default:
         break;
     }
@@ -198,20 +204,20 @@ LOGO(2,BL_R"bl_in:",o,val);
 // dummy interface for core module public interface (default/__weak)
 //==============================================================================
 
-  __weak int bc_button(BL_ob *o, int val) { return -1; }
-  __weak int bc_led(BL_ob *o, int val)    { return -1; }
+  __weak int bl_hwbut(BL_ob *o, int val) { return -1; }
+  __weak int bl_hwled(BL_ob *o, int val)    { return -1; }
 
   __weak int bl_core(BL_ob *o, int val)
   {
     switch (o->cl)
     {
       case _SYS:
-        bc_button(o,val);
-        bc_led(o,val);
+        bl_hwbut(o,val);
+        bl_hwled(o,val);
         return 0;                      // OK
 
       case _LED:
-        return bc_led(o,val);
+        return bl_hwled(o,val);
 
       default:
         return -1;                     // not supported by default
@@ -231,20 +237,7 @@ LOGO(2,BL_R"bl_in:",o,val);
 //==============================================================================
 // message upward posting to API layer (default/__weak)
 //==============================================================================
-/*
-  static int bl_inn(BL_ob *o, int val)
-  {
-    switch (bl_id(o))                           // dispatch event
-    {
-      case BL_ID(_SWITCH,STS_):
-        LOGO(2,BL_R"bl_in:",o,val);
-        return bl_out(o,val,output);
 
-      default:
-        return -1;
-    }
-  }
-*/
   __weak int bl_up(BL_ob *o, int val)
   {
     bl_logo(3,"up",o,val);
@@ -270,17 +263,6 @@ LOGO(2,BL_R"bl_in:",o,val);
   int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val)
   {
     BL_ob oo = {_SYS,op,0,cb};
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// handle message addressed to module, characterized by opcode
-// - usage: bl_hdl(module,op,id,val)   // post [HDL:op @id,val] to module
-//==============================================================================
-
-  int bl_hdl(BL_fct module, BL_op op, int id, int val)
-  {
-    BL_ob oo = {_HDL,op,id,NULL};
     return module(&oo,val);            // post message to module interface
   }
 

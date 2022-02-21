@@ -11,17 +11,20 @@
 // SPDX-License-Identifier: Apache-2.0
 //==============================================================================
 
-#include <drivers/gpio.h>
+  #include <drivers/gpio.h>
 
-#include "bluccino.h"
-#include "bl_hw.h"
+  #include "bluccino.h"
+  #include "bl_hw.h"
 
-#include "ble_mesh.h"
-#include "device_composition.h"
-#include "no_transition_work_handler.h"
-#include "state_binding.h"
-#include "storage.h"
-#include "transition.h"
+  #include "ble_mesh.h"
+  #include "device_composition.h"
+  #include "no_transition_work_handler.h"
+  #include "state_binding.h"
+  #include "storage.h"
+  #include "transition.h"
+  #include "publisher.h"
+
+  #define _DUE_    BL_HASH(DUE_)       // hashed opcode for DUE
 
 //==============================================================================
 // CORE level logging shorthands
@@ -131,7 +134,7 @@ void update_led_gpio(void)
 		       (ctl->temp->range_max - ctl->temp->range_min));
 
   #if MIGRATION_STEP2
-	  LOG(3,BL_G "power-> %d, color-> %d", power, color);
+	  LOG(5,"power-> %d, color-> %d", power, color);
   #else
 	  printk("power-> %d, color-> %d\n", power, color);
   #endif
@@ -221,7 +224,8 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
   #endif
 
   #if MIGRATION_STEP5
-    bl_hdl(bl_core,DUE_,0,0);    // bl_core to handle [HDL:DUE] message
+    BL_ob oo = {_RESET,_DUE_,0,NULL};
+    bl_core(&oo,0);              // post [RESET:#DUE] to BL_CORE for output
   #endif
 }
 
@@ -322,16 +326,60 @@ void main(void)
   {
     LOGO(4,BL_B"init:",o,val);         // log trace
     bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
-    bl_init(bl_hw,bl_core);            // output of BC_HW goes to here!
+    bl_init(bl_devcomp,bl_core);       // output of BL_DEVCMP goes to here!
+    bl_init(bl_hw,bl_core);            // output of BL_HW goes to here!
     init_mcore();                      // init THIS module
     return 0;
   }
 
 //==============================================================================
-// public core interface
-// - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
-// - [RESET:PRV]   // unprovision node
-// - [RESET:INC]   // return incremented reset counter while <due> timer started
+// public module interface
+//==============================================================================
+//
+// BL_CORE Interfaces:
+//   [] = SYS(INIT,TICK,TOCK)
+//   [PRV,ATT] = SET(PRV,ATT)
+//   [DUE] = RESET(#DUE,INC,PRV)
+//   [] = BUTTON(INC,PRV)
+//   [] = SWITCH(STS)
+//                                +-------------+
+//                                |   BL_CORE   |
+//                                +-------------+
+//                         INIT ->|     SYS:    |
+//                         TICK ->|             |
+//                         TOCK ->|             |
+//                                +-------------+
+//                          PRV ->|     SET:    |-> PRV
+//                          ATT ->|             |-> ATT
+//                                +-------------+
+//                         #DUE ->|    RESET:   |-> DUE
+//                          INC ->|             |
+//                          PRV ->|             |
+//                                +-------------+
+//                                |   BUTTON:   |-> PRESS
+//                                |             |-> RELEASE
+//                                +-------------+
+//                                |   SWITCH:   |-> STS
+//                                +-------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]                init module
+//    - [SYS:TICK @id cnt]             tick the module
+//    - [SYS:TOCK @id cnt]             tock the module
+//    - [SET:PRV val]                  provision on/off
+//    - [SET:ATT val]                  attention on/off
+//    - [RESET:#DUE]                   reset timer is due
+//    - [RESET:INC <ms>]               inc reset counter & set due (<ms>) timer
+//    - [RESET:PRV]                    unprovision node
+//
+//  Output Messages:
+//    - [SET:PRV val]                  provision on/off
+//    - [SET:ATT val]                  attention on/off
+//    - [RESET:DUE]                    reset timer due notification
+//    - [BUTTON:PRESS @id 1]           button press @ channel @id
+//    - [BUTTON:RELEASE @id 1]         button release @ channel @id
+//    - [SWITCH:STS @id,onoff]         output switch status update
+//
 //==============================================================================
 
   int bl_core(BL_ob *o, int val)
@@ -366,11 +414,18 @@ void main(void)
       case BL_ID(_RESET,PRV_):       // [RESET:PRV]
         return unprovision(o,val);   // unprovision node
 
-      case BL_ID(_HDL,DUE_):         // [HDL:DUE] reset timer is due
-        return bl_emit(o,_RESET,DUE_,val,output); // emit [RESET:DUE] to output
+      case BL_ID(_RESET,_DUE_):      // [RESET:#DUE] reset timer is due
+        return bl_out(o,val,output); // output [RESET:DUE] (strip off hash bit)
+
+      case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
+      case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
+        return bl_pub(o,val);        // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+
+      case BL_ID(_GOOSRV,STS_):      // [GOOSRV:STS] post GOO status msg upward
+        return bl_out(o,val,output); // publish [GOOCLI:LET] or [GOOCLI:SET] msg
 
       default:
-        return -1;                     // bad input
+        return -1;                   // bad input
     }
   }
 

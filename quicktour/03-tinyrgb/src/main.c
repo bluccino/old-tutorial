@@ -19,6 +19,6 @@
 
   void main(void)
   {
-    bl_hello(4,"02-switch-rgb (click any button to toggle a LED");
+    bl_hello(4,"03-tinyrgb (click any button to activate another LED");
     bl_init(bluccino,when);            // init Bluccino - output goes to when()
   }
