@@ -1,28 +1,27 @@
 //==============================================================================
-// main.c
-// main program for testing wearable's hwcore
+// bl_basis.c
+// basis functions of a mesh node (startup, provision, attention)
 //
-// Created by Hugo Pristauz on 2022-Jan-04
+// Created by Hugo Pristauz on 2022-Feb-21
 // Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 
   #include "bluccino.h"
-
-  #define VERSION  CFG_APP_VERSION
-  #define VERBOSE  CFG_APP_VERBOSE     // verbose level for application
+  #include "bl_basis.h"
 
   #define T_TICK      10               // 10 ms ticks
   #define T_ATT      750               // 750 ms attention blink period
   #define T_PRV     2000               // 2000 ms provisioned blink period
   #define T_UNP      350               // 350 ms unprovisioned blink period
-  #define T_BLINK   1000               // 1000 ms RGB blink period
   #define T_STARTUP 5000               // 5000 ms startup reset interval
+
+  #define _INC_     BL_HASH(INC_)      // hashed INC_ opcode
 
 //==============================================================================
 // MAIN level logging shorthands
 //==============================================================================
 
-  #define LOG                     LOG_MAIN
+  #define LOG                     LOG_BASIS
   #define LOGO(lvl,col,o,val)     LOGO_MAIN(lvl,col"main:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_MAIN(lvl,col,o,val)
 
@@ -55,9 +54,8 @@
 //                   INIT ->|      SYS:       |
 //                   TICK ->|                 |
 //                          +-----------------+
-//                    INC ->|      HDL:       |
-//                          +-----------------+
-//                    INC ->|     RESET:      %-> INC (DOWN)
+//                   #INC ->|     RESET:      |
+//                    INC ->|                 %-> INC (DOWN)
 //                    DUE ->|                 %-> PRV (DOWN)
 //                          +-----------------+
 //                   BUSY ->|      GET:       |
@@ -90,21 +88,20 @@
     switch (bl_id(o))
     {
       case BL_ID(_SYS,INIT_):               // [SYS:INIT <cb>] init module
+      {
         output = o->data;                   // store output callback
 
           // increment reset counter, start TS = 7000 ms due timer
 
-        bl_hdl(startup,INC_,0,0);           // handle STARTUP[HDL:INC]
+        BL_ob oo = {_RESET,_INC_,0,NULL};
+        startup(&oo,0);                     // post [HDL:#INC] to startup ifc
 
         if (count <= 3)                     // <= 3 times resetted?
           return led(map[count],1);         // indicate by turn on LED @count+1
 
         LOG(1,BL_R"unprovision node");      // let us know
         return bl_msg(bl_down,_RESET,PRV_,0,NULL,0); // unprovision node
-
-      case BL_ID(_HDL,INC_):                // handle [HDL:INC] entry point
-        count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
-        return 0;                           // OK
+      }
 
       case BL_ID(_SYS,TICK_):               // receive [RESET<DUE] event
         if (count > 0)                      // if startup in progress
@@ -118,6 +115,10 @@
 
           old = onoff;                      // saveLED on/off state
         }
+        return 0;                           // OK
+
+      case BL_ID(_RESET,_INC_):             // [RESET:#INC] entry point
+        count = bl_fwd(bl_down,_RESET,o,T_STARTUP); // startup reset int'val
         return 0;                           // OK
 
       case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
@@ -137,7 +138,10 @@
         }
 
         if (count > 0)                      // if we are still in startup phase
-          bl_hdl(startup,INC_,0,0);         // handle STARTUP[HDL:INC]
+        {
+          BL_ob oo = {_RESET,_INC_,0,NULL}; // [RESET:#INC]
+          startup(&oo,0);                   // post [RESET:#INC] to STARTUP mod.
+        }
         return 0;                           // OK
 
       default:
@@ -189,7 +193,7 @@
         led(id,0);                          // turn current LED off
         return 0;
 
-      case BL_ID(_GET,ATT_):            // state = ATTENTION[GET:ATT]
+      case BL_ID(_GET,ATT_):                // state = ATTENTION[GET:ATT]
         return state;
 
       default:
@@ -199,16 +203,16 @@
 
 //==============================================================================
 //
-//                          +-----------------+
-//                          |    PROVISION    |
-//                          +-----------------+
-//                   INIT ->|      SYS:       |
-//                   TICK ->|                 |
-//                          +-----------------+
-//                    PRV ->|      SET:       |
-//                          +-----------------+
-//                    PRV ->|      GET:       |
-//                          +-----------------+
+//                      +-----------------+
+//                      |    PROVISION    |
+//                      +-----------------+
+//               INIT ->|      SYS:       |
+//               TICK ->|                 |
+//                      +-----------------+
+//                PRV ->|      SET:       |
+//                      +-----------------+
+//                PRV ->|      GET:       |
+//                      +-----------------+
 //
 //==============================================================================
 // module provision (handle provision state changes and perform blinking)
@@ -254,140 +258,82 @@
   }
 
 //==============================================================================
-// helper: attention blinker (let green status LED @0 attention blinking)
-// - @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
+// public module interface
+//==============================================================================
+//
+// BL_BASE Interfaces:
+//   SYS Interface:      [] = SYS(INIT,TICK)
+//   GET Interface:      [] = GET(PRV,ATT,BUSY)
+//   SET Interface:      [] = SET(PRV,ATT)
+//   HDL Interface:      [] = HDL(INC)
+//   BUTTON Interface:   [] = BUTTON(PRESS)
+//   LED Interface:      [LED] = HDL()
+//   RESET Interface:    [INC,PRV] = RESET(INC,DUE)
+//
+//                          +-----------------+
+//                          |     BL_BASE     |
+//                          +-----------------+
+//                   INIT ->|      SYS:       |
+//                   TICK ->|                 |
+//                          +-----------------+
+//                    PRV ->|      GET:       |
+//                    ATT ->|                 |
+//                   BUSY ->|                 |
+//                          +-----------------+
+//                    PRV ->|      SET:       |
+//                    ATT ->|                 |
+//                          +-----------------+
+//                  PRESS ->|     BUTTON:     |
+//                          +-----------------+
+//                          |       LED:      |-> LED
+//                          +-----------------+
+//                    INC ->|     RESET:      |-> INC
+//                    DUE ->|                 |-> PRV
+//                          +-----------------+
+//
 //==============================================================================
 
-  static int blink(BL_ob *o, int ticks)     // attention blinker to be ticked
+  int bl_basis(BL_ob *o, int val)
   {
-    static BL_ms due = 0;                   // need for periodic action
+    BL_fct output = NULL;              // to store output callback
 
-    if (id <= 1 || !bl_due(&due,T_BLINK))   // no blinking if @id:off or not due
-      return 0;                             // bye if LED off or not due
-
-    if ( bl_get(attention,ATT_) ||          // no blinking in attention mode
-         bl_get(startup,BUSY_))             // no blinking during startup
-      return 0;                             // bye if attention state
-
-    static bool toggle;
-    toggle = !toggle;
-
-    if (toggle)
-      return (led(id,1), led(2+id%3,0));    // flip LED pair
-    else
-      return (led(id,0), led(2+id%3,1));    // flip back LED pair
-  }
-
-//==============================================================================
-// when callback - implement simple test flow
-//==============================================================================
-
-  static int when(BL_ob *o, int val)
-  {
-    switch (bl_id(o))
+    switch (bl_id(o))                  // dispatch message ID
     {
-      case BL_ID(_SET,ATT_):            // [MESH:ATT state]
-        return attention(o,val);            // change attention state
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT state] - init system command
+        output = o->data;              // store output callback
+        startup(o,val);                // forward to startup() worker
+        provision(o,val);              // forward to provision() worker
+        attention(o,val);              // forward to attention() worker
+        return 0;                      // OK
 
-      case BL_ID(_SET,PRV_):            // [MESH:ATT state]
-        return provision(o,val);            // change provision state
+      case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt] - tick module
+        startup(o,val);                // forward to startup() worker
+        attention(o,val);              // forward to startup() worker
+        provision(o,val);              // forward to provision() worker
+        return 0;                      // OK
 
-      case BL_ID(_BUTTON,PRESS_):       // button press to cause LED on off
+      case BL_ID(_SET,ATT_):           // set attention blinking on/off
+        return attention(o,val);       // change attention state
+
+      case BL_ID(_SET,PRV_):           // [MESH:ATT state]
+        return provision(o,val);       // change provision state
+
+      case BL_ID(_GET,BUSY_):          // [MESH:ATT state]
+        return startup(o,val);         // change provision state
+
+      case BL_ID(_BUTTON,PRESS_):      // button press to cause LED on off
         LOGO(1,"@",o,val);
+        if ( !bl_get(provision,PRV_))  // if not provisioned
+        {
+          led(2,0); led(3,0); led(4,0);// turn off current LED
+          id = (id==0) ? 2 : (id+1)%5; // update THE LED id (=> 0 or 2,3,4)
+        }
+        return startup(o,val);         // fwd [BUTTON:PRESS] to startup
 
-        led(2,0); led(3,0); led(4,0);       // turn off current LED
-        id = (id==0) ? 2 : (id+1)%5;        // update THE LED id (=> 0 or 2,3,4)
-        return startup(o,val);              // fwd [BUTTON:PRESS] to startup
-
-      case BL_ID(_RESET,DUE_):              // [RESET:DUE] - reset counter due
-        return startup(o,val);              // forward to startup module
+      case BL_ID(_RESET,DUE_):         // [RESET:DUE] - reset counter due
+        return startup(o,val);         // forward to startup module
 
       default:
-        return -1;                          // bad args
-    }
-  }
-
-//==============================================================================
-// message downward posting to lower level / driver layer (default/__weak)
-//==============================================================================
-
-  int bl_down(BL_ob *o, int val)
-  {
-    if ( o->cl == _LED && !o->id)    // special logging of status LED messages
-      LOGO(5,"status:down:",o,val);
-    else
-      LOGO(3,BL_Y "down:",o,val);
-
-    return bl_core(o,val);
-  }
-
-//==============================================================================
-// tick function (sends tick messages to all modules which have to be ticked)
-//==============================================================================
-
-  static int tick(BL_ob *o, int ticks) // system ticker: ticks all subsystems
-  {
-    LOGO(5,BL_Y,o,ticks);              // log to see we are alife
-    blink(o,ticks);                    // tick blinker
-    attention(o,ticks);                // tick attention module
-    provision(o,ticks);                // tick provision module
-    startup(o,ticks);                  // tick startup module
-    return 0;                          // OK
-  }
-
-//==============================================================================
-// tock function (sends tock messages to all modules which have to be tocked)
-//==============================================================================
-
-  static int tock(BL_ob *o, int tocks) // system tocker: tocks all subsystems
-  {
-    if (tocks % 5 == 0)                // log every 5th tock
-      LOGO(3,"",o,tocks);              // log to see we are alife
-
-    return 0;                          // OK
-  }
-
-//==============================================================================
-// app init
-// - 1) init all modules of app (note: Bluccino init is done in main engine!)
-// - 2) setup connections: all outputs of SOS module have to go to LED module
-//==============================================================================
-
-  static int init(BL_ob *o, int val)   // init all modules
-  {
-    bl_init(attention,NULL);           // init atttention module
-    bl_init(provision,NULL);           // init provision module
-    bl_init(startup,NULL);             // init startup module
-    return 0;                          // OK
-  }
-
-//==============================================================================
-// main engine
-// - calling Bluccino init and app init() function
-// - periodic (10ms) tick() message emission
-// - periodic (2s)   tock() message emission
-//==============================================================================
-
-  void main(void)
-  {
-    bl_hello(VERBOSE,VERSION);
-
-    bl_init(bluccino,when);            // Bluccino init, subscribe with when()
-    bl_init(init,NULL);                // app init
-
-      // 10 ms tick loop
-
-    int tocks = 0;                     // tock counter
-    for(int ticks=0;;ticks++)          // loop generating (approx) 10ms ticks
-    {
-      bl_tick(tick,0,ticks);           // app ticking
-
-      if (ticks % 100 == 0)            // app tock is 100 times slower
-      {
-        bl_tock(tock,1,tocks);         // app tocking
-        tocks++;
-      }
-
-      bl_sleep(10);                    // sleep 10 ms
+        return -1;                     // bad args
     }
   }

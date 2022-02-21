@@ -157,27 +157,21 @@ void gen_level_publish_temp(struct bt_mesh_model *model);
 //
 // BL_DEVCOMP Interfaces
 //   SYS Interface:     [] = SYS(INIT)
-//   GOOSRV Interface:  [SET,LET,STS] = GOOSRV(SET,LET,STS)
+//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
 //
 //                            +-------------------+
 //                            |    BL_DEVCOMP     |
 //                            +-------------------+
 //                     INIT ->|       SYS:        |
 //                            +-------------------+
-//                      SET ->|      GOOSRV:      |-> SET (UP)
-//                      LET ->|                   |-> LET (UP)
-//                      STS ->|                   |-> STS (UP)
+//                     #STS ->|      GOOSRV:      |-> STS
 //                            +-------------------+
 // Input Messages:
-//   [SYS:INIT <cb>]             init module, store callback
-//   [GOSRV:SET @id,val,<data>]  relay input for output of [GOOSRV:SET ...] msg
-//   [GOSRV:LET @id,val,<data>]  relay input for output of [GOOSRV:LET ...] msg
-//   [GOSRV:STS @id,val,<data>]  relay input for output of [GOOSRV:STS ...] msg
+//   [SYS:INIT <cb>]              init module, store callback
+//   [GOOSRV:#STS @id,val,<data>] internal input for [GOOSRV:STS ...] output
 //
 // Output Messages:
-//   [GOSRV:SET @id,val,<data>]  output [GOOSRV:SET ...] message to subscriber
-//   [GOSRV:LET @id,val,<data>]  output [GOOSRV:LET ...] message to subscriber
-//   [GOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
 //
 //==============================================================================
 

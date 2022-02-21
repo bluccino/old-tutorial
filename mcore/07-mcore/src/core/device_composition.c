@@ -23,7 +23,9 @@
 // Bluccino migration ...
 //==============================================================================
 
-#include "bluccino.h"
+  #include "bluccino.h"
+
+  #define _STS_   BL_HASH(STS_)        // hashed STS opcode
 
 //==============================================================================
 // CORE level logging shorthands
@@ -396,7 +398,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
     #if MIGRATION_STEP6                  // post upward
       bool dummy = 0;
   SUBMIT:  dummy = 1;                    // need this in order to use label
-      BL_ob oo = {_GOOSRV,SET_,1,pay};
+      BL_ob oo = {_GOOSRV,_STS_,1,pay};
       LOG0(4,BL_R"goosrv:rcv:",&oo,pay->onoff);
       submit(&oo,pay->onoff);
     #endif
@@ -3353,27 +3355,21 @@ const struct bt_mesh_comp comp = {
 //
 // BL_DEVCOMP Interfaces
 //   SYS Interface:     [] = SYS(INIT)
-//   GOOSRV Interface:  [SET,LET,STS] = GOOSRV(SET,LET,STS)
+//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
 //
 //                            +-------------------+
 //                            |    BL_DEVCOMP     |
 //                            +-------------------+
 //                     INIT ->|       SYS:        |
 //                            +-------------------+
-//                      SET ->|      GOOSRV:      |-> SET (UP)
-//                      LET ->|                   |-> LET (UP)
-//                      STS ->|                   |-> STS (UP)
+//                     #STS ->|      GOOSRV:      |-> STS
 //                            +-------------------+
 // Input Messages:
-//   [SYS:INIT <cb>]             init module, store callback
-//   [GOSRV:SET @id,val,<data>]  relay input for output of [GOOSRV:SET ...] msg
-//   [GOSRV:LET @id,val,<data>]  relay input for output of [GOOSRV:LET ...] msg
-//   [GOSRV:STS @id,val,<data>]  relay input for output of [GOOSRV:STS ...] msg
+//   [SYS:INIT <cb>]              init module, store callback
+//   [GOOSRV:#STS @id,val,<data>] relay input for output of [GOOSRV:STS ...] msg
 //
 // Output Messages:
-//   [GOSRV:SET @id,val,<data>]  output [GOOSRV:SET ...] message to subscriber
-//   [GOSRV:LET @id,val,<data>]  output [GOOSRV:LET ...] message to subscriber
-//   [GOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
 //
 //==============================================================================
 
@@ -3386,9 +3382,7 @@ const struct bt_mesh_comp comp = {
         output = o->data;              // store output callback
         return 0;                      // OK
 
-      case BL_ID(_GOOSRV,SET_):
-      case BL_ID(_GOOSRV,LET_):
-      case BL_ID(_GOOSRV,STS_):
+      case BL_ID(_GOOSRV,_STS_):
         return bl_out(o,val,output);
 
       default:

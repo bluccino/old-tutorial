@@ -144,13 +144,23 @@
 
 //==============================================================================
 // output a message from Bluccino API or in general
+// - usage: bl_out(o,val,output)
+// - any hashed opcode has to be de-hashed (clear hash bit of opcode)
 //==============================================================================
 
   __weak int bl_out(BL_ob *o, int val, BL_fct call)
   {
     if (call)                          // is an app callback provided?
-      return call(o,val);              // forward event message to app
+    {
+      if ( !BL_HASHED(o->op) )         // hash bit not set => easy!
+        return call(o,val);            // forward event message to subscriber
 
+        // hashed opcode! (hash bit set) => need to duplicate object with
+        // de-hashed opcode before forwarding
+
+      BL_ob oo = {o->cl,BL_CLEAR(o->op),o->id,o->data};
+      return call(&oo,val);            // forward with de-hashed opcode  
+    }
     return 0;
   }
 
@@ -253,17 +263,6 @@
   int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val)
   {
     BL_ob oo = {_SYS,op,0,cb};
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
-// handle message addressed to module, characterized by opcode
-// - usage: bl_hdl(module,op,id,val)   // post [HDL:op @id,val] to module
-//==============================================================================
-
-  int bl_hdl(BL_fct module, BL_op op, int id, int val)
-  {
-    BL_ob oo = {_HDL,op,id,NULL};
     return module(&oo,val);            // post message to module interface
   }
 

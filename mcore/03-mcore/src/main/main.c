@@ -3,11 +3,11 @@
 // main program for testing wearable's hwcore
 //
 // Created by Hugo Pristauz on 2022-Jan-04
-// Copyright © 2022 fuseAware. All rights reserved.
+// Copyright © 2022 Bluenetics. All rights reserved.
 //==============================================================================
 
   #include "bluccino.h"
-  
+
   #define VERSION  CFG_APP_VERSION
   #define VERBOSE  CFG_APP_VERBOSE     // verbose level for application
 
@@ -63,12 +63,12 @@
 
     bl_init(bluccino,NULL);            // Bluccino init, subscribe with when()
     bl_init(init,NULL);                // app init
- 
+
     int tocks = 0;                     // tock counter
     for(int ticks=0;;ticks++)          // loop generating (approx) 10ms ticks
     {
       bl_tick(tick,0,ticks);           // app ticking
- 
+
       if (ticks % 500 == 0)            // app tock is 500 times slower
       {
         bl_tock(tock,1,tocks);         // app tocking

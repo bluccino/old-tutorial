@@ -4,52 +4,7 @@
 //
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
-//==============================================================================
-//
-// Interfaces:
-//   [PRV,ATT]=MCORE.SYS(PRV,ATT);
-//       [CNT]=MCORE.RESET(PRV);
-//       [SET]=MCORE.BUTTON(SET);
-//
-//                                +-------------+
-//                                |    MCORE    |
-//                                +-------------+
-//                         INIT ->|             |
-//                         TICK ->|   ==SYS==   |
-//                         TOCK ->|             |
-//                                +-------------+
-//                          PRV ->|             |-> PRV
-//                                |   ==SET==   |
-//                          ATT ->|             |-> ATT
-//                                +-------------+
-//                          INC ->|             |
-//                                |  ==RESET==  |-> DUE
-//                          PRV ->|             |
-//                                +-------------+
-//                        PRESS ->|             |-> PRESS
-//                                |  ==BUTTON== |
-//                      RELEASE ->|             |-> RELEASE
-//                                +-------------+
-//
-//  Input Messages:
-//    - [SYS:<INIT <cb>]          init module
-//    - [SYS:<TICK @id cnt]       tick the module
-//    - [SYS:<TOCK @id cnt]       tock the module
-//    - [RESET:<INC <ms>]         inc reset counter and set due (<ms>) timer
-//    - [RESET:<PRV]              unprovision node
-//    - [SET:$PRV val]            provision on/off
-//    - [SET:$ATT val]            attention on/off
-//    - [BUTTON:<PRESS @id 1]     button press @ channel @id
-//    - [BUTTON:<RELEASE @id 1]   button release @ channel @id
-//
-//  Output Messages:
-//    - [SET:>PRV val]            provision on/off
-//    - [SET:>ATT val]            attention on/off
-//    - [RESET:>DUE]              reset timer due notification
-//    - [BUTTON:>PRESS @id 1]     button press @ channel @id
-//    - [BUTTON:>RELEASE @id 1]   button release @ channel @id
-//
-//==============================================================================
+
 //  Reset system
 //  - after system init the app calls [RESET:INC <timeout>] which increments
 //    the reset counter (non-volatile memory), while a timer with <timeout>
@@ -59,26 +14,6 @@
 //    on this value the application may give an indication to the user (e.g.
 //    different kinf of LED pattern depending on the value, or may invoke a
 //    mesh node reset [RESET:PRV] to unprovision the node
-//==============================================================================
-//
-//     INIT TICK TOCK       PRV   ATT     DUE INC PRV     SET    SET TOGGLE
-//       |    |    |         ^     ^       ^   |   |       ^      |     |
-//       v    v    v         |     |       |   v   v       |      v     v
-//   +--------------------------------------------------------------------+
-//   |  =====SYS=====        ==SET==      ===RESET===  ==BUTTON== ==LED== |
-//   |                                                                    |
-//   |  =====SYS=====        ======HDL======  =RESET=  ==BUTTON== ==LED== |
-//   +-------------------------------------o---------------o---------o----+
-//                           ^     ^       ^   |   |       ^         |
-//                           |     |       |  INC PRV      |        LED:
-//                          PRV   ATT     DUE  |   |      SET        |
-//                           |     |       |   v   v       |         v
-//                       +-------------+ +-----------+ +------------------+
-//                       |   ==SET==   | | ==RESET== | |=BUTTON=  ==LED== |
-//                       |             | |           | |                  |
-//                       |   BLEMESH   | |   MCORE   | |      MGPIO       |
-//                       +-------------+ +-----------+ +------------------+
-//
 //==============================================================================
 // mcore derived from:
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
@@ -113,5 +48,57 @@
   #ifndef MIGRATION_STEP6
     #define MIGRATION_STEP6         0
   #endif
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BL_CORE Interfaces:
+//   [] = SYS(INIT,TICK,TOCK)
+//   [PRV,ATT] = SET(PRV,ATT)
+//   [DUE] = RESET(#DUE,INC,PRV)
+//   [] = BUTTON(INC,PRV)
+//   [] = SWITCH(STS)
+//                                +-------------+
+//                                |   BL_CORE   |
+//                                +-------------+
+//                         INIT ->|     SYS:    |
+//                         TICK ->|             |
+//                         TOCK ->|             |
+//                                +-------------+
+//                          PRV ->|     SET:    |-> PRV
+//                          ATT ->|             |-> ATT
+//                                +-------------+
+//                         #DUE ->|    RESET:   |-> DUE
+//                          INC ->|             |
+//                          PRV ->|             |
+//                                +-------------+
+//                                |   BUTTON:   |-> PRESS
+//                                |             |-> RELEASE
+//                                +-------------+
+//                                |   SWITCH:   |-> STS
+//                                +-------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]                init module
+//    - [SYS:TICK @id cnt]             tick the module
+//    - [SYS:TOCK @id cnt]             tock the module
+//    - [SET:PRV val]                  provision on/off
+//    - [SET:ATT val]                  attention on/off
+//    - [RESET:#DUE]                   reset timer is due
+//    - [RESET:INC <ms>]               inc reset counter & set due (<ms>) timer
+//    - [RESET:PRV]                    unprovision node
+//
+//  Output Messages:
+//    - [SET:PRV val]                  provision on/off
+//    - [SET:ATT val]                  attention on/off
+//    - [RESET:DUE]                    reset timer due notification
+//    - [BUTTON:PRESS @id 1]           button press @ channel @id
+//    - [BUTTON:RELEASE @id 1]         button release @ channel @id
+//    - [SWITCH:STS @id,onoff]         output switch status update
+//
+//==============================================================================
+
+  int bl_core(BL_ob *o, int val);      // public module interface
 
 #endif // __MCORE_H__

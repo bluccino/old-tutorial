@@ -14,6 +14,20 @@
   #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))         // array length
   #define BL_LEN(a)         (sizeof(a)/sizeof(a[0]))         // array length
 
+    // we use the concept of "hashed opcodes", a kind of internal opcodes
+    // which have the second most significant bit ("hash bit") set. Functions
+    // like bl_out will always clear the hash bit before posting
+
+  #define BL_HASHBIT        0x40000000      // or mask to set hash bit
+  #define BL_HASHCLR        0xBFFFFFFF      // and mask to clear hash bit
+
+     // macro BL_HASH() sets opcode's hashbit, macro BL_CLEAR() clears opcode's
+     // hashbit, BL_HASHED() checks if opcode's hash bit is set
+
+  #define BL_HASH(op)       (BL_op)((uint32_t)(op)|BL_HASHBIT)
+  #define BL_CLEAR(op)      (BL_op)((uint32_t)(op)&BL_HASHCLR)
+  #define BL_HASHED(op)     (((op) & BL_HASHBIT) != 0)
+
     // useful macros for min(), max() and abs()
 
   #define BL_MAX(x,y) (((x) > (y)) ? (x) : (y))

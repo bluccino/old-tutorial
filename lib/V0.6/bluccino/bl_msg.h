@@ -11,7 +11,7 @@
 
   #ifndef BL_CL_TEXT
 
-    #define BL_CL_TEXT {"VOID","SYS","HDL","RESET","TIMER","TEST","TIC","SET",\
+    #define BL_CL_TEXT {"VOID","SYS","OUT","RESET","TIMER","TEST","TIC","SET",\
                         "GET","MESH","BLE","NGMN","CFGSRV","CFGCLI",\
                         "HEASRV","HEACLI","GOOCLI","GOOSRV","GLVCLI","GLVSRV",\
                         "BUTTON", "SWITCH", "LED",           \
@@ -21,7 +21,7 @@
             {
               _VOID,                   // invalid
               _SYS,                    // system
-              _HDL,                    // handle a message
+              _OUT,                    // output a message
               _RESET,                  // reset
               _TIMER,                  // timer module
               _TEST,                   // test class

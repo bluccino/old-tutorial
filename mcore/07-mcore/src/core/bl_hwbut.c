@@ -10,6 +10,10 @@
   #include "bl_hwbut.h"
   #include "bl_gpio.h"
 
+  #define _PRESS_       BL_HASH(PRESS_)      // hashed PRESS_ opcode
+  #define _RELEASE_     BL_HASH(RELEASE_)    // hashed RELEASE_ opcode
+  #define _STS_         BL_HASH(STS_)        // hashed STS_ opcode
+
 //==============================================================================
 // CORE level logging shorthands
 //==============================================================================
@@ -68,7 +72,7 @@
 
     if (1)
     {
-      BL_ob oo = {_BUTTON, val?PRESS_:RELEASE_, id,NULL};
+      BL_ob oo = {_BUTTON, val?_PRESS_:_RELEASE_, id,NULL};
 
       LOGO(4,BL_Y,&oo,val);
       bl_hwbut(&oo,val);              // post to module interface for output
@@ -78,7 +82,7 @@
 
     if (val)                           // if button pressed
     {
-      BL_ob oo = {_SWITCH,STS_, id,NULL};
+      BL_ob oo = {_SWITCH,_STS_, id,NULL};
       val = toggle[idx] = !toggle[idx];
 
       LOGO(4,BL_Y,&oo,val);
@@ -210,11 +214,9 @@
         output = o->data;                 // store output callback
       	return init(o,val);               // delegate to init() worker
 
-      case BL_ID(_BUTTON,PRESS_):         // [BUTTON:PRESS @id]
-      case BL_ID(_BUTTON,RELEASE_):       // [BUTTON:RELEASE @id]
-	      return bl_out(o,val,output);      // output message
-
-      case BL_ID(_SWITCH,STS_):           // [SWITCH:STS @id,onoff]
+      case BL_ID(_BUTTON,_PRESS_):        // [BUTTON:#PRESS @id]
+      case BL_ID(_BUTTON,_RELEASE_):      // [BUTTON:#RELEASE @id]
+      case BL_ID(_SWITCH,_STS_):          // [SWITCH:#STS @id,onoff]
 	      return bl_out(o,val,output);      // output switch status message
 
       default:
