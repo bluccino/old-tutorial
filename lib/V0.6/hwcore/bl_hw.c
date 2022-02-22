@@ -64,7 +64,10 @@
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <cb>]
       {
+        LOG(3,BL_C "initialising HW core ...");
         output = o->data;              // store output callback
+
+
         BL_ob oo = {_SYS,INIT_,o->id,bl_hw};
 
           // for BC_BUTTON and BC_LED output needs to go to BC_HW

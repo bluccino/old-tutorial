@@ -4,13 +4,9 @@
 
   #include "bluccino.h"
 
-  static int app(BL_ob *o, int val)
-  {
-    return bl_is(o,_SYS,TOCK_) ? bl_led(1,-1) : 0;    // toggle LED status
-  }
-
   void main(void)
   {
-    bl_hello(5,"02-bink (tiny blink program)");
-    bl_run(app,10,1000,NULL);
+    bl_init(bluccino,NULL);            // init Bluccino, no interest in output
+    for(;;bl_sleep(1000))              // forever (sleep 1000ms in between)
+      bl_led(1,-1);                    // toggle LED @1 status
   }

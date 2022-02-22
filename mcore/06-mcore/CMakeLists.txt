@@ -9,7 +9,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(05-mcore)
+  project(06-mcore)
 
   set (LIB ../../lib/V0.5)
   set (BLU ${LIB}/bluccino)

@@ -13,11 +13,12 @@
 
   set (LIB ../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
-  set (HWC ${LIB}/hwcore)
-  set (LMO ${LIB}/module)
+  set (HWC ${LIB}/hwcore)              # hardware core
+  set (WLC ${LIB}/mcore)               # wireless core
+  set (LMO ${LIB}/module)              # library modules
   set (SRC src)
 
-  set (MAIN ${SRC}/main)
+  set (MAIN ${SRC})
   set (CORE ${SRC}/core)
 
   include_directories(${SRC} ${BLU} ${HWC} ${LMO} ${MAIN} ${CORE})
@@ -31,25 +32,15 @@
 
 target_sources(app PRIVATE
 	       ${MAIN}/main.c
-
 				 ${BLU}/bluccino.c
-				 ${BLU}/bl_mesh.c
-	       ${HWC}/bl_hw.c
-	       ${LMO}/bl_basis.c
-
-	       ${CORE}/bl_core.c
-	       ${CORE}/storage.c
-	       ${CORE}/ble_mesh.c
-	       ${CORE}/device_composition.c
-	       ${CORE}/no_transition_work_handler.c
-	       ${CORE}/publisher.c
-	       ${CORE}/state_binding.c
-	       ${CORE}/transition.c
+				 ${HWC}/bl_hw.c
+				 ${WLC}/mcore.c
+				 ${LMO}/bl_basis.c
 	       )
 
 #target_sources_ifdef(CONFIG_MCUMGR app PRIVATE ${CORE}/smp_svr.c)
 
-zephyr_include_directories(
-	src/
-	src/mesh
-)
+#zephyr_include_directories(
+#	src/
+#	src/mesh
+#)

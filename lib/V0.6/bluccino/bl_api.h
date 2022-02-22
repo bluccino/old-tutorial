@@ -125,17 +125,6 @@
   int bl_sys(BL_fct module, BL_op op, BL_fct cb, int val);
 
 //==============================================================================
-// syntactic sugar: send message with hashed opcode to module interface
-// - usage: bl_hash(module,o,val)   // post [cl:BL_HASH(op) @id,val] to module
-//==============================================================================
-
-  static inline int bl_hash(BL_fct module, BL_ob *o, int val)
-  {
-    BL_ob oo = {o->cl,BL_HASH(o->op),o->id,o->data};
-    return module(&oo,val);            // post message to module interface
-  }
-
-//==============================================================================
 // emit message to be handeled to output subscriber
 // - usage: bl_emit(o,cl,op,val,output)  // post [cl:op o->id,val] to output
 //==============================================================================

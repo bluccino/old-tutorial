@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c for 03-ledtoggle (tiny LED toggle control by buttons)
+// main.c for 04-ledtoggle (tiny LED toggle control by buttons)
 //==============================================================================
 
   #include "bluccino.h"

@@ -1,5 +1,5 @@
 //==============================================================================
-// mcore.h
+// bl_core.h
 // multi model mesh demo based mesh core
 //
 // Created by Hugo Pristauz on 2022-Jan-02
@@ -21,8 +21,8 @@
 // SPDX-License-Identifier: Apache-2.0
 //==============================================================================
 
-#ifndef __MCORE_H__
-#define __MCORE_H__
+#ifndef __BL_CORE_H__
+#define __BL_CORE_H__
 
   #include "bluccino.h"
 
@@ -101,4 +101,4 @@
 
   int bl_core(BL_ob *o, int val);      // public module interface
 
-#endif // __MCORE_H__
+#endif // __BL_CORE_H__

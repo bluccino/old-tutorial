@@ -94,7 +94,7 @@
 
   static inline bool bl_press(BL_ob *o)
   {
-    return  (bl_id(o) == BL_ID(_BUTTON,PRESS_));
+    return  bl_is(o,_BUTTON,PRESS_);
   }
 
 //==============================================================================
@@ -104,7 +104,7 @@
 
   static inline bool bl_release(BL_ob *o)
   {
-    return  (bl_id(o) == BL_ID(_BUTTON,RELEASE_));
+    return  bl_is(o,_BUTTON,RELEASE_);
   }
 
 //==============================================================================
@@ -114,7 +114,7 @@
 
   static inline bool bl_switch(BL_ob *o)
   {
-    return  (bl_id(o) == BL_ID(_SWITCH,STS_));
+    return  bl_is(o,_SWITCH,STS_);
   }
 
 #endif // __BL_HW_H__
