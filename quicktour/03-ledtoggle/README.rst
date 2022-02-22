@@ -1,5 +1,5 @@
 //==============================================================================
-// 02-tinyled - tiny LED sample, where buttons control LEDs accordingly
+// 03-ledtoggle - tiny LED sample, where buttons toogle related LEDs
 //==============================================================================
 //
 // - this sample demonstrates how to use the Bluccino HW core for simple LED

@@ -8,18 +8,14 @@
 # project definition and path setup
 #===============================================================================
 
-  project(01-hello)
+  project(02-blink)
 
   set (LIB ../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
-  set (HWCORE ${LIB}/hwcore)
+  set (HWC ${LIB}/hwcore)
   set (SRC src)
 
-  include_directories(${SRC} ${BLU} ${HWCORE})
-
-# add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
-# add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
-# add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
+  include_directories(${SRC} ${BLU} ${HWC})
 
 #===============================================================================
 # source files
@@ -28,5 +24,5 @@
   target_sources(app PRIVATE
                  ${SRC}/main.c
                  ${BLU}/bluccino.c
-                 ${HWCORE}/bl_hw.c
+                 ${HWC}/bl_hw.c
                 )

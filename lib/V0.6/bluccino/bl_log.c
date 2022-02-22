@@ -1,5 +1,5 @@
 //==============================================================================
-//  bllog.c
+//  bl_log.c
 //  bluccino debug logging
 //
 //  Created by Hugo Pristauz on 2021-11-19

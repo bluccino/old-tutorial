@@ -1,9 +1,13 @@
 //==============================================================================
-// bl_msg.h - Bluccino message definitions
+//  bl_symb.h
+//  Bluccino message symbol definitions
+//
+//  Created by Hugo Pristauz on 2022-02-22
+//  Copyright © 2022 Bluenetics GmbH. All rights reserved.
 //==============================================================================
 
-#ifndef __BL_MSG_H__
-#define __BL_MSG_H__
+#ifndef __BL_SYMB_H__
+#define __BL_SYMB_H__
 
 //==============================================================================
 // message class definitions
@@ -63,10 +67,10 @@
   #ifndef BL_OP_TEXT
 
     #define BL_OP_TEXT {"VOID","INIT","WHEN","USE","TOC","READY","BUSY", \
-                        "PRV","ATT","DUE","SET","LET",   \
+                        "PRV","ATT","DUE","SET","LET", \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
-                        "ONOFF","COUNT","TOGGLE","INC","DEC", \
-                        "PAY", "ADV","BEACON","SEND","PRESS","RELEASE"}
+                        "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
+                        "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS"}
 
     typedef enum BL_op
             {
@@ -108,6 +112,9 @@
 
               PRESS_,                  // button press
               RELEASE_,                // button release
+              CLICK_,                  // button click
+              HOLD_,                   // button hold
+              MS_,                     // millisecond (grace time)
             } BL_op;
 
   #endif // BL_OP_TEXT
@@ -126,4 +133,4 @@
 
   typedef int (*BL_fct)(BL_ob *o, int value);
 
-#endif // __BL_MSG_H__
+#endif // __BL_SYMB_H__

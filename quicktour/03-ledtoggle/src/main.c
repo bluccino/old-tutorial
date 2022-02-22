@@ -1,5 +1,5 @@
 //==============================================================================
-// main.c for 02-tinyled (tiny LED toggle control by buttons)
+// main.c for 03-ledtoggle (tiny LED toggle control by buttons)
 //==============================================================================
 
   #include "bluccino.h"
@@ -13,6 +13,6 @@
 
   void main(void)
   {
-    bl_hello(5,"02-tinyled (click button to toggle related LED");
-    bl_init(bluccino,when);            // init Bluccino - output goes to when()
+    bl_hello(5,"03-ledtoggle (click button to toggle related LED");
+    bl_run(NULL,10,1000,when);         // run Bluccino engine, output => <when>
   }

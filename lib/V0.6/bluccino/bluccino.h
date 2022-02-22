@@ -19,7 +19,7 @@
       #include "config.h"
     #endif
 
-    #include "bl_msg.h"
+    #include "bl_symb.h"
 
     #ifdef BL_LOGGING
       #include "logging.h"
@@ -30,5 +30,31 @@
     #include "bl_hw.h"
 
   #endif
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BLUCCINO Interfaces:
+//   SYS Interface: [] = SYS(INIT,TICK,TOCK,WHEN)
+//
+//                         +----------------------+
+//                         |       BLUCCINO       |
+//                         +----------------------+
+//                  INIT ->|         SYS:         |
+//                  TICK ->|                      |
+//                  TOCK ->|                      |
+//                  WHEN ->|                      |
+//                         +----------------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]                // init module, provide output callback
+//    - [SYS:TICK @id,cnt]             // tick module
+//    - [SYS:TOCK @id,cnt]             // tock module
+//    - [SYS:WHEN <cb>]                // provide output callback
+//
+//==============================================================================
+
+  int bluccino(BL_ob *o, int val);
 
 #endif // __BLUCCINO_H__

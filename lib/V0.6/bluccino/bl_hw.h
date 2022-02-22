@@ -29,14 +29,14 @@
 // public module interface
 //==============================================================================
 //
-// BL_HW Interfaces:
+// BC_HW Interfaces:
 //   SYS Interface:     [] = SYS(INIT)
-//   LED Interface:     [] = LED(SET)
+//   LED Interface:     [] = LED(SET,TOGGLE)
 //   BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
 //   SWITCH Interface:  [STS] = SWITCH(STS)
 //
 //                             +-------------+
-//                             |    BL_HW    |
+//                             |    BC_HW    |
 //                             +-------------+
 //                      INIT ->|    SYS:     |
 //                             +-------------+
@@ -49,17 +49,18 @@
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+
 //  Input Messages:
-//    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [LED:SET @id onoff]            // set LED @id on/off (id=0..4)
-//    - [LED:TOGGLE @id]               // toggle LED(@id), (id: 0..4)
-//    - [BUTTON:PRESS @id,active]      // forward button press event to output
-//    - [BUTTON:RELEASE @id,active]    // forward button release event to output
-//    - [SWITCH:STS @id,onoff]         // forward switch status update to output
+//    - [SYS:INIT <cb>]              init module, provide output callback
+//    - [LED:SET @id onoff]          set LED @id on/off (id=0..4)
+//    - [LED:TOGGLE @id]             toggle LED(@id), (id: 0..4)
+//    - [BUTTON:PRESS @id,0]         forward button press event to output
+//    - [BUTTON:RELEASE @id,time]    forward button release event to output
+//                                   note: time is PRESS->RELEASE elapsed time
+//    - [SWITCH:STS @id,onoff]       forward switch status update to output
 //
 //  Output Messages:
-//    - [BUTTON:PRESS @id,1]           // output a button press event
-//    - [BUTTON:RELEASE @id,0]         // output a button release event
-//    - [SWITCH:STS @id,onoff]         // output switch status update
+//    - [BUTTON:PRESS @id,1]         output button press event
+//    - [BUTTON:RELEASE @id,0]       output button release event
+//    - [SWITCH:STS @id,onoff]       output switch status update
 //
 //==============================================================================
 
@@ -76,14 +77,14 @@
   }
 
 //==============================================================================
-// syntactic sugar: set LED @id on off (@id: 0..4)
-// - usage: bl_led(id,onoff)
+// syntactic sugar: set LED @id on/off or togggle LED @id (@id: 0..4)
+// - usage: bl_led(id,val)   // val 0:off, 1:on, -1:toggle
 //==============================================================================
 
-  static inline int bl_led(int id, bool onoff)
+  static inline int bl_led(int id, int val)
   {
-    BL_ob oo = {_LED,SET_,id,NULL};
-    return bl_hw(&oo,onoff);
+    BL_ob oo = {_LED,val<0?TOGGLE_:SET_,id,NULL};
+    return bl_hw(&oo,val<0?0:val);
   }
 
 //==============================================================================
@@ -93,7 +94,17 @@
 
   static inline bool bl_press(BL_ob *o)
   {
-    return  (bl_id(o) == BL_ID(_SWITCH,STS_));
+    return  (bl_id(o) == BL_ID(_BUTTON,PRESS_));
+  }
+
+//==============================================================================
+// syntactic sugar: check if message is a button release msg ([BUTTON:RELEASE])
+// - usage: released = bl_released(o)
+//==============================================================================
+
+  static inline bool bl_release(BL_ob *o)
+  {
+    return  (bl_id(o) == BL_ID(_BUTTON,RELEASE_));
   }
 
 //==============================================================================
@@ -103,7 +114,7 @@
 
   static inline bool bl_switch(BL_ob *o)
   {
-    return  (bl_id(o) == BL_ID(_BUTTON,PRESS_));
+    return  (bl_id(o) == BL_ID(_SWITCH,STS_));
   }
 
 #endif // __BL_HW_H__
