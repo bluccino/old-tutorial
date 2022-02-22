@@ -107,7 +107,7 @@
         return 0;                           // OK
 
       case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
-        LOG(2,BL_M"clear reset counter");   // let us know
+        LOG(2,BL_B"clear reset counter");   // let us know
         bl_led(map[count],0);               // turn off LED @count+1
         count = 0;                          // deactivate startup.busy state
         return 0;                           // OK
