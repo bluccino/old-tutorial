@@ -8,7 +8,7 @@
 # project definition and path setup
 #===============================================================================
 
-  project(03-tinyrgb)
+  project(04-rgbcycle)
 
   set (LIB ../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
@@ -16,10 +16,6 @@
   set (SRC src)
 
   include_directories(${SRC} ${BLU} ${HWCORE})
-
-# add_definitions(-DCFG_PRETTY_LOGGING=1)   # push define down to C level
-# add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
-# add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
 
 #===============================================================================
 # source files

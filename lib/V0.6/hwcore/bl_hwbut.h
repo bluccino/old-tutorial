@@ -27,27 +27,34 @@
 //   SYS Interface:     [] = SYS(INIT)
 //   BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
 //   SWITCH Interface:  [STS] = SWITCH(STS)
+//   SET Interface:     [] = SET(MS)
 //
 //                             +-------------+
 //                             |  BL_HWBUT   |
 //                             +-------------+
 //                      INIT ->|    SYS:     |
+//                      TICK ->|             |
 //                             +-------------+
 //                     PRESS ->|   BUTTON:   |-> PRESS
 //                   RELEASE ->|             |-> RELEASE
 //                             +-------------+
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+
+//                        MS ->|    SET:     |
+//                             +-------------+
 //  Input Messages:
-//    - [SYS:INIT <cb>]                // init module, provide output callback
-//    - [BUTTON:PRESS @id,active]      // forward button press event to output
-//    - [BUTTON:RELEASE @id,active]    // forward button release event to output
-//    - [SWITCH:STS @id,onoff]         // forward switch status update to output
+//   - [SYS:INIT <cb>]              init module, provide output callback
+//   - [SYS:TICK @id,cnt]           tick module (for click/long detection)
+//   - [BUTTON:PRESS @id,active]    forward button press event to output
+//   - [BUTTON:RELEASE @id,active]  forward button release event to output
+//   - [SWITCH:STS @id,onoff]       forward switch status update to output
+//   - [SET:MS ms]                  set click grace time (default: 350 ms)
 //
 //  Output Messages:
-//    - [BUTTON:PRESS @id 1]           // output a button press event
-//    - [BUTTON:RELEASE @id 0]         // output a button release event
-//    - [SWITCH:STS @id,onoff]         // output switch status update
+//   - [BUTTON:PRESS @id 1]         output a button press event
+//   - [BUTTON:RELEASE @id,time]    button release event received from driver
+//                                  note: time is PRESS->RELEASE elapsed time
+//   - [SWITCH:STS @id,onoff]       output switch status update
 //
 //==============================================================================
 
@@ -83,6 +90,16 @@
   {
     BL_ob oo = {_BUTTON,RELEASE_,id,NULL};
     return bl_hwbut(&oo,0);                // pass 0 to indicate 'inactive'
+  }
+
+//==============================================================================
+// syntactic sugar: set click grace time (ms), default: 350 ms
+// - usage: bl_hwbut_ms(ms)   // ms discriminates between :CLICK and :HOLD event
+//==============================================================================
+
+  static inline int bl_hwbut_ms(int ms)
+  {
+    return bl_set(bl_hwbut,MS_,ms);        // set click grace time
   }
 
 #endif // __BL_HWBUT_H__

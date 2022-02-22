@@ -7,7 +7,7 @@
 
 #include "bl_log.h"
 #include "bl_type.h"
-#include "bl_msg.h"
+#include "bl_symb.h"
 
   extern bool bl_attention;            // attention mode
   extern bool bl_provisioned;          // provisioned mode
@@ -26,6 +26,16 @@
   static inline int bl_id(BL_ob *o)
   {
     return BL_ID(o->cl,o->op);
+  }
+
+//==============================================================================
+// syntactic sugar: is event of given <class,opcode>?
+// - usage: bl_is(o,_SYS,TOCK_)
+//==============================================================================
+
+  static inline bool bl_is(BL_ob *o, BL_cl cl, BL_op op)
+  {
+    return ( bl_id(o) == BL_ID(cl,op) );
   }
 
 //==============================================================================
@@ -208,6 +218,13 @@
 //==============================================================================
 
   int bl_init(BL_fct module,BL_fct cb);
+
+//==============================================================================
+// run app with given tick/tock periods and provided when-callback
+// - usage: bl_run(app,10,100,when)   // run app with 10/1000 tick/tock periods
+//==============================================================================
+
+  void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when);
 
 //==============================================================================
 // public module interface: supporting [SYS:INIT|WHEN|TICK|TOCK]

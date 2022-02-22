@@ -69,15 +69,15 @@
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_fct output = NULL;      // notification callback
+  static BL_fct output = NULL;         // notification callback
 
 //==============================================================================
 // us/ms clock
 //==============================================================================
 
-  static BL_us offset = 0;                  // offset for us clock
+  static BL_us offset = 0;             // offset for us clock
 
-  static BL_us now_us()                     // system clock in us
+  static BL_us now_us()                // system clock in us
   {
     #if __ZEPHYR__
       uint64_t cyc = k_uptime_ticks();
@@ -88,22 +88,30 @@
     #endif
   }
 
-  BL_us bl_zero(void)                       // reset clock
+  BL_us bl_zero(void)                  // reset clock
   {
     return offset = now_us();
   }
 
-  BL_us bl_us(void)                         // get current clock time in us
+//==============================================================================
+// get us clock time
+//==============================================================================
+
+  BL_us bl_us(void)                    // get current clock time in us
   {
     BL_us us = now_us();
 
-    if (offset == 0)                        // first call always returns 0
-      us = bl_zero();                       // reset clock
+    if (offset == 0)                   // first call always returns 0
+      us = bl_zero();                  // reset clock
 
     return us  - offset;
   }
 
-  BL_ms bl_ms(void)                         // get current clock time in ms
+//==============================================================================
+// get ms clock time
+//==============================================================================
+
+  BL_ms bl_ms(void)                    // get current clock time in ms
   {
     BL_us us = bl_us();
     return us/1000;
@@ -159,7 +167,7 @@
         // de-hashed opcode before forwarding
 
       BL_ob oo = {o->cl,BL_CLEAR(o->op),o->id,o->data};
-      return call(&oo,val);            // forward with de-hashed opcode  
+      return call(&oo,val);            // forward with de-hashed opcode
     }
     return 0;
   }
@@ -364,7 +372,71 @@
   }
 
 //==============================================================================
-// public module interface: supporting [SYS:INIT|WHEN|TICK|TOCK]
+// run app with given tick/tock periods and provided when-callback
+// - usage: bl_run(app,10,100,when)   // run app with 10/1000 tick/tock periods
+//==============================================================================
+
+  void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when)
+  {
+    int multiple = tock_ms / tick_ms;
+
+    if (tock_ms % tick_ms != 0)
+      bl_error(-1,"bl_engine: tock period no multiple of tick period");
+
+      // init Bluccino library module and app init
+
+    bl_init(bluccino,when);
+    if (app)
+      bl_init(app,when);
+
+      // post periodic ticks and tocks ...
+
+    for (int ticks=0;;ticks++)
+    {
+      static int tocks = 0;
+
+        // post [SYS:TICK @id,cnt] events
+
+      bl_tick(bluccino,0,ticks);
+      if (app)
+        bl_tick(app,0,ticks);
+
+        // post [SYS:TOCK @id,cnt] events
+
+      if (ticks % multiple == 0)
+      {
+        bl_tock(bluccino,1,tocks);
+        if (app)
+          bl_tock(app,1,tocks);
+        tocks++;
+      }
+
+      bl_sleep(tick_ms);
+    }
+  }
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BLUCCINO Interfaces:
+//   SYS Interface: [] = SYS(INIT,TICK,TOCK,WHEN)
+//
+//                         +----------------------+
+//                         |       BLUCCINO       |
+//                         +----------------------+
+//                  INIT ->|         SYS:         |
+//                  TICK ->|                      |
+//                  TOCK ->|                      |
+//                  WHEN ->|                      |
+//                         +----------------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]                // init module, provide output callback
+//    - [SYS:TICK @id,cnt]             // tick module
+//    - [SYS:TOCK @id,cnt]             // tock module
+//    - [SYS:WHEN <cb>]                // provide output callback
+//
 //==============================================================================
 
   int bluccino(BL_ob *o, int val)
@@ -376,13 +448,13 @@
         bl_init(bl_core,bl_up);        // init core, subscribe with bl_up()
         return 0;
 
+      case BL_ID(_SYS,TICK_):
+      case BL_ID(_SYS,TOCK_):
+        return bl_core(o,val);         // forward to BL_CORE module
+
       case BL_ID(_SYS,WHEN_):
         output = o->data;
         return 0;
-
-      case BL_ID(_SYS,TICK_):
-      case BL_ID(_SYS,TOCK_):
-        return 0;                      // nothing to tick/tock
 
       default:
         return -1;                     // bad command

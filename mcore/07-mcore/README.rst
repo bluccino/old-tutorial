@@ -10,6 +10,8 @@
 - derived from 06-mcore, and thus
   derived from zephyr/samples/boards/nrf/mesh/onoff_level_lighting_vnd_app
 - replace app_gpio.c/.h by bc_hw.c/.h (new hardware core supporting also switch)
+- move hwcore stuff to Bluccino/lib/hwcore
+- change CMakeLists.txt to deal with hwcore
 
 #===============================================================================
 # 06-mcore (Bluccino mesh core for 1 button and 4 LEDs, app cannot accesses mesh)

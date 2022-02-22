@@ -1,5 +1,5 @@
 //==============================================================================
-// 03-tinyrgb - tiny sample where any of 4 buttons controls RGB LEDs
+// 04-rgbcycle - tiny sample where any of 4 buttons cycles RGB LEDs
 //==============================================================================
 //
 // - this sample demonstrates how to use the Bluccino HW core for simple RGB LED
@@ -9,5 +9,5 @@
 //
 //==============================================================================
 
-- migrate from 02-tinyled
-- change project name to 03-tinyrgb (in CMakeLists.txt)
+- migrate from 03-ledtoggle
+- change project name to 04-rgbcycle (in CMakeLists.txt)

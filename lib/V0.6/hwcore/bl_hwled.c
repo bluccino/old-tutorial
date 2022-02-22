@@ -98,7 +98,7 @@
     val = (led_onoff[o->id-1] == 0);   // new LED value
     int ok = led_set(o,val);           // toggle LED state
 
-    LOGO(4,BL_Y,o,val);                // log changed LED level
+    LOGO(4,"@",o,val);                // log changed LED level
     return ok;
   }
 
@@ -110,7 +110,7 @@
   {
   	  // LEDs configuration & setting
 
-    LOG(2,BL_B "init %d LED%s",NLEDS, NLEDS==1?"":"s");
+    LOG(4,BL_B "init %d LED%s",NLEDS, NLEDS==1?"":"s");
 
     #if (NLEDS >= 1)
     	led_device[0] = device_get_binding(DT_GPIO_LABEL(LED0_NODE, gpios));
@@ -180,6 +180,10 @@
       {
         BL_ob oo ={o->cl,o->op,1,NULL};// change @id=0 -> @id=1
         o = o->id ? o : &oo;           // if (o->id==0) re-map o to &oo
+        if (o->id)
+        {
+          LOGO(4,"@",o,val);
+        }
 	      return led_set(o,val != 0);    // delegate to led_set();
       }
 
