@@ -1,5 +1,5 @@
 //==============================================================================
-// 04-rgbcycle - tiny sample where any of 4 buttons cycles RGB LEDs
+// 05-rgbcycle - tiny sample where any of 4 buttons cycles RGB LEDs
 //==============================================================================
 //
 // - this sample demonstrates how to use the Bluccino HW core for simple RGB LED

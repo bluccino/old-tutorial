@@ -238,6 +238,7 @@
 
   __weak int bl_down(BL_ob *o, int val)
   {
+    if ( !(bl_is(o,_LED,SET_) && o->id == 0))    // no status LED loggings
     bl_logo(3,"down",o,val);
     return bl_core(o,val);
   }
@@ -321,7 +322,7 @@
 //==============================================================================
 // check wheter module can be used
 //==============================================================================
-
+/*
   int bl_use(BL_fct module, BL_txt msg)
   {
     bool use = false;                       // cannot used by default
@@ -339,7 +340,7 @@
 
     return use;
   }
-
+*/
 //==============================================================================
 // Blucino init                             // init Blucino system
 // usage:  bl_init(NULL,when,verbose)       // init Bluccino

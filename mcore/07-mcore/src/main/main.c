@@ -29,21 +29,6 @@
   static volatile int id = 0;               // THE LED id
 
 //==============================================================================
-// helper: LED control   // set or toggle on/off status of LED @id
-// - usage: led(id,val)  // val=-1: toggle, val=0: off, val=1: on
-// -        @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
-//==============================================================================
-
-  static int led(int id, int val)           // control LED
-  {
-    BL_op op = val<0 ? TOGGLE_:SET_;    // SET or TOGGLE?
-    BL_ob oo = {_LED,op,id,NULL};
-    if (id)                                 // don't log status LED @0 logs
-      LOGO(1,"@",&oo,val);                  // see what LEDs will do
-    return bl_down(&oo,val);                // post [LED:op @id,val] to core
-  }
-
-//==============================================================================
 // helper: attention blinker (let green status LED @0 attention blinking)
 // - @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
 //==============================================================================
@@ -63,16 +48,16 @@
     toggle = !toggle;
 
     if (toggle)
-      return (led(id,1), led(2+id%3,0));    // flip LED pair
+      return (bl_led(id,1), bl_led(2+id%3,0));    // flip LED pair
     else
-      return (led(id,0), led(2+id%3,1));    // flip back LED pair
+      return (bl_led(id,0), bl_led(2+id%3,1));    // flip back LED pair
   }
 
 //==============================================================================
 // when callback - implement simple test flow
 // - [SWITCH:STS @id,val] events are forwarded to [GOOCLI:SET @1,val] calls
 // - [GOOSRV:STS @id,val] events are forwarded to [LED:SET @2,val] calls
-// - led() is a helper routine 
+// - bl_led() is a helper routine
 //==============================================================================
 
   static int when(BL_ob *o, int val)
@@ -90,7 +75,7 @@
 
       case BL_ID(_GOOSRV,STS_):        // [GOOSRV:STS] status update
         LOGO(1,BL_R,o,val);
-        led(2,val);                    // switch LED @2
+        bl_led(2,val);                    // switch LED @2
         return 0;                      // OK
 
       default:

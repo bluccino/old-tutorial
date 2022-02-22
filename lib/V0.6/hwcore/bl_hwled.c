@@ -98,7 +98,7 @@
     val = (led_onoff[o->id-1] == 0);   // new LED value
     int ok = led_set(o,val);           // toggle LED state
 
-    LOGO(4,"@",o,val);                // log changed LED level
+    LOGO(4,"@",o,val);                 // log changed LED level
     return ok;
   }
 
@@ -179,11 +179,10 @@
       case BL_ID(_LED,SET_):           // [LED:set]
       {
         BL_ob oo ={o->cl,o->op,1,NULL};// change @id=0 -> @id=1
-        o = o->id ? o : &oo;           // if (o->id==0) re-map o to &oo
         if (o->id)
-        {
           LOGO(4,"@",o,val);
-        }
+
+        o = o->id ? o : &oo;           // if (o->id==0) re-map o to &oo
 	      return led_set(o,val != 0);    // delegate to led_set();
       }
 

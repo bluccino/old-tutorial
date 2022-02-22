@@ -1,25 +1,32 @@
 //==============================================================================
-// mcore.h
+// ble_mesh.h
 // multi model mesh demo based mesh core
 //
 // Adopted to Bluccino by Hugo Pristauz on 2022-Jan-07
 // Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
-// SYS interface: [PRV,ATT] = SYS()
 //
+// BLEMESH Interfaces:
+//   SYS interface: [] = SYS(INIT,READY)
+//   SET interface: [PRV,ATT] = SET(#PRV,#ATT)
+//
+//                          +---------------+
+//                          |    BLEMESH    |
 //                          +---------------+
 //                   INIT ->|               |
 //                          |      SYS      |
 //                  READY ->|               |
 //                          +---------------+
-//                    PRV ->o               |-> PRV
+//                   #PRV ->|               |-> PRV
 //                          |      SET      |
-//                    ATT ->o               |-> ATT
+//                   #ATT ->|               |-> ATT
 //                          +---------------+
-//                               BLEMESH
+//
 //  Input Messages:
 //    - [SYS:INIT <cb>]     init module
 //    - [SYS:READY]         init BLE/Mesh when Bluetooth is ready
+//    - [SET:#PRV val]      post provisioning on/off to output
+//    - [SET:#ATT val]      post attentioning on/off to output
 //
 //  Output Messages:
 //    - [SET:PRV val]       provisioning on/off
@@ -41,7 +48,7 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/mesh.h>
 
-#include "mcore.h"          // MIGRATION_STEP5
+#include "bl_core.h"          // MIGRATION_STEP5
 
 /* Model Operation Codes */
 #define	BT_MESH_MODEL_OP_GEN_ONOFF_GET          BT_MESH_MODEL_OP_2(0x82, 0x01)

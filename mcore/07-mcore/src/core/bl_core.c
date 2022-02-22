@@ -1,5 +1,5 @@
 //==============================================================================
-// mcore.c
+// bl_core.c
 // multi model mesh demo based mesh core
 //
 // Created by Hugo Pristauz on 2022-Jan-02
@@ -14,6 +14,7 @@
   #include <drivers/gpio.h>
 
   #include "bluccino.h"
+  #include "bl_core.h"
   #include "bl_hw.h"
 
   #include "ble_mesh.h"
@@ -31,7 +32,7 @@
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mcore:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_core:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
@@ -272,7 +273,7 @@ void main(void)
 	#endif
 
   #if MIGRATION_STEP2
-	  LOG(2,BL_B "initializing...");
+	  LOG(3,BL_C "init BLE/Mesh ...");
   #else
 	  printk("Initializing...\n");
   #endif
@@ -319,12 +320,13 @@ void main(void)
 
 #if MIGRATION_STEP1
 //==============================================================================
-// init mcore modules
+// init bl_core modules
 //==============================================================================
 
   static int init(BL_ob *o, int val)
   {
-    LOGO(4,BL_B"init:",o,val);         // log trace
+    LOG(2,BL_B"init Bluccino core");
+
     bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
     bl_init(bl_devcomp,bl_core);       // output of BL_DEVCMP goes to here!
     bl_init(bl_hw,bl_core);            // output of BL_HW goes to here!

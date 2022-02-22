@@ -8,14 +8,14 @@
 # project definition and path setup
 #===============================================================================
 
-  project(04-rgbcycle)
+  project(03-blinky)
 
   set (LIB ../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
-  set (HWCORE ${LIB}/hwcore)
+  set (HWC ${LIB}/hwcore)
   set (SRC src)
 
-  include_directories(${SRC} ${BLU} ${HWCORE})
+  include_directories(${SRC} ${BLU} ${HWC})
 
 #===============================================================================
 # source files
@@ -24,5 +24,5 @@
   target_sources(app PRIVATE
                  ${SRC}/main.c
                  ${BLU}/bluccino.c
-                 ${HWCORE}/bl_hw.c
+                 ${HWC}/bl_hw.c
                 )

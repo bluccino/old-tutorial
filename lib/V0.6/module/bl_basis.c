@@ -32,21 +32,6 @@
   static volatile int id = 0;               // THE LED id
 
 //==============================================================================
-// helper: LED control   // set or toggle on/off status of LED @id
-// - usage: led(id,val)  // val=-1: toggle, val=0: off, val=1: on
-// -        @id=0: dark, @id=1: status, @id=2: red, @id=3: green, @id=4: blue
-//==============================================================================
-
-  static int led(int id, int val)           // control LED
-  {
-    BL_op op = val<0 ? TOGGLE_:SET_;        // SET or TOGGLE?
-    BL_ob oo = {_LED,op,id,NULL};
-    if (id)                                 // don't log status LED @0 logs
-      LOGO(1,"@",&oo,val);                  // see what LEDs will do
-    return bl_down(&oo,val);                // post [LED:op @id,val] to core
-  }
-
-//==============================================================================
 //
 //                          +-----------------+
 //                          |     STARTUP     |
@@ -97,7 +82,7 @@
         startup(&oo,0);                     // post [HDL:#INC] to startup ifc
 
         if (count <= 3)                     // <= 3 times resetted?
-          return led(map[count],1);         // indicate by turn on LED @count+1
+          return bl_led(map[count],1);      // indicate by turn on LED @count+1
 
         LOG(1,BL_R"unprovision node");      // let us know
         return bl_msg(bl_down,_RESET,PRV_,0,NULL,0); // unprovision node
@@ -111,7 +96,7 @@
           bool onoff = rem < (900/T_TICK);  // 90% of time on
 
           if (onoff != old)                 // LED on/odd state changed?
-            led(map[count],onoff);          // turn off LED @count+1
+            bl_led(map[count],onoff);          // turn off LED @count+1
 
           old = onoff;                      // saveLED on/off state
         }
@@ -123,7 +108,7 @@
 
       case BL_ID(_RESET,DUE_):              // receive [RESET:DUE] event
         LOG(2,BL_M"clear reset counter");   // let us know
-        led(map[count],0);                  // turn off LED @count+1
+        bl_led(map[count],0);               // turn off LED @count+1
         count = 0;                          // deactivate startup.busy state
         return 0;                           // OK
 
@@ -185,12 +170,12 @@
       case BL_ID(_SYS,TICK_):
         if (!state || !bl_due(&due,T_ATT))  // attention state? due?
           return 0;                         // neither attention state nor due
-        return led(0,-1);                   // toggle status LED @1
+        return bl_led(0,-1);                   // toggle status LED @1
 
       case BL_ID(_SET,ATT_):
         state = val;                        // store attention state
-        led(0,0);                           // turn status LED off
-        led(id,0);                          // turn current LED off
+        bl_led(0,0);                        // turn status LED off
+        bl_led(id,0);                       // turn current LED off
         return 0;
 
       case BL_ID(_GET,ATT_):                // state = ATTENTION[GET:ATT]
@@ -237,16 +222,17 @@
       {
         int ms = (state ? T_PRV:T_UNP);     // 2000 ms versus 350 ms period
         int rem = val % (ms/T_TICK);        // remainder modulo (ticks/period)
+
         if (rem > 1 || bl_get(attention,ATT_) || bl_get(startup,BUSY_))
           return 0;                         // no provision blinking during att!
         else
-          return led(0,rem == 0);           // update status LED @1
+          return bl_led(0,rem == 0);        // update status LED @1
       }
 
       case BL_ID(_SET,PRV_):                // [SET:PRV val] change prov state
         state = val;                        // store attention state
-        led(0,0);                           // turn status LED @1 off
-        led(id,0);                          // turn current LED @id off
+        bl_led(0,0);                        // turn status LED @1 off
+        bl_led(id,0);                       // turn current LED @id off
         return 0;
 
       case BL_ID(_GET,PRV_):                // state = ATTENTION[GET:ATT]
@@ -325,7 +311,7 @@
         LOGO(1,"@",o,val);
         if ( !bl_get(provision,PRV_))  // if not provisioned
         {
-          led(2,0); led(3,0); led(4,0);// turn off current LED
+          bl_led(2,0); bl_led(3,0); bl_led(4,0);// turn off current LED
           id = (id==0) ? 2 : (id+1)%5; // update THE LED id (=> 0 or 2,3,4)
         }
         return startup(o,val);         // fwd [BUTTON:PRESS] to startup

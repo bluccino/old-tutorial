@@ -1,9 +1,14 @@
-/* Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
- *
- * Copyright (c) 2018 Vikrant More
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//==============================================================================
+// ble_mesh.h
+// multi model mesh demo based mesh core
+//
+// Adopted to Bluccino by Hugo Pristauz on 2022-Jan-07
+// Copyright © 2022 Bluccino. All rights reserved.
+//==============================================================================
+// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
+// Copyright (c) 2018 Vikrant More
+// SPDX-License-Identifier: Apache-2.0
+//==============================================================================
 
 #include "ble_mesh.h"
 #include "device_composition.h"
@@ -128,7 +133,7 @@ void bt_ready(void)
 	struct bt_le_oob oob;
 
   #if MIGRATION_STEP2
-  	LOG(2,BL_B "Bluetooth initialized");
+  	LOG(4,BL_B "Bluetooth initialized");
 	#else
   	printk("Bluetooth initialized\n");
   #endif
@@ -163,7 +168,7 @@ void bt_ready(void)
 	bt_mesh_prov_enable(BT_MESH_PROV_GATT | BT_MESH_PROV_ADV);
 
 	#if MIGRATION_STEP2
-    LOG(2,BL_B"Mesh initialized");
+    LOG(4,BL_B"Mesh initialized");
 	#else
     printk("Mesh initialized\n");
 	#endif
@@ -171,6 +176,34 @@ void bt_ready(void)
 
 //==============================================================================
 // public module interface
+//==============================================================================
+//
+// BLEMESH Interfaces:
+//   SYS interface: [] = SYS(INIT,READY)
+//   SET interface: [PRV,ATT] = SET(#PRV,#ATT)
+//
+//                          +---------------+
+//                          |    BLEMESH    |
+//                          +---------------+
+//                   INIT ->|               |
+//                          |      SYS      |
+//                  READY ->|               |
+//                          +---------------+
+//                   #PRV ->|               |-> PRV
+//                          |      SET      |
+//                   #ATT ->|               |-> ATT
+//                          +---------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]     init module
+//    - [SYS:READY]         init BLE/Mesh when Bluetooth is ready
+//    - [SET:#PRV val]      post provisioning on/off to output
+//    - [SET:#ATT val]      post attentioning on/off to output
+//
+//  Output Messages:
+//    - [SET:PRV val]       provisioning on/off
+//    - [SET:ATT val]       attentioning on/off
+//
 //==============================================================================
 
   int blemesh(BL_ob *o, int val)
