@@ -6,6 +6,7 @@
  */
 
 #include <drivers/gpio.h>
+#include <bluetooth/mesh.h>
 
 #include "app_gpio.h"
 #include "publisher.h"
@@ -19,6 +20,39 @@ static void button_pressed(const struct device *dev,
 			   struct gpio_callback *cb, uint32_t pins)
 {
 	k_work_submit(&button_work);
+}
+
+static bool mesh_enabled = true;
+void toggle_mesh(struct k_work *work)
+{
+	int err;
+	if (mesh_enabled)
+	{
+		printk("Going to suspend MESH\n");
+		err = bt_mesh_suspend();
+		if (err && err != -EALREADY) {
+			printk("failed to suspend mesh (err %d)\n", err);
+		}
+		mesh_enabled = false;
+	}
+	else
+	{
+		printk("Going to resume MESH\n");
+		err = bt_mesh_resume();
+		if (err && err != -EALREADY) {
+			printk("failed to resume mesh (err %d)\n", err);
+		}
+		mesh_enabled = true;
+	}
+	
+}
+
+K_WORK_DEFINE(mesh_toogle_work, toggle_mesh);
+static void button_3_pressed(const struct device *dev,
+			   struct gpio_callback *cb, uint32_t pins)
+{
+	printk("Button pressed\n");
+	k_work_submit(&mesh_toogle_work);
 }
 
 #define LED0_NODE DT_ALIAS(led0)
@@ -61,6 +95,7 @@ void app_gpio_init(void)
 	/* Buttons configuration & setting */
 
 	k_work_init(&button_work, publish);
+	k_work_init(&mesh_toogle_work, toggle_mesh);
 
 	button_device[0] = device_get_binding(DT_GPIO_LABEL(SW0_NODE, gpios));
 	gpio_pin_configure(button_device[0], DT_GPIO_PIN(SW0_NODE, gpios),
@@ -103,8 +138,10 @@ void app_gpio_init(void)
 	gpio_pin_interrupt_configure(button_device[3],
 				     DT_GPIO_PIN(SW3_NODE, gpios),
 				     GPIO_INT_EDGE_TO_ACTIVE);
-	gpio_init_callback(&button_cb[3], button_pressed,
-			   BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
+	// gpio_init_callback(&button_cb[3], button_pressed,
+			//    BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
+	gpio_init_callback(&button_cb[3], button_3_pressed,
+			    BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
 	gpio_add_callback(button_device[3], &button_cb[3]);
 #endif
 }
