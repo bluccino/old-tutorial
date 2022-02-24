@@ -6,6 +6,7 @@
  */
 
 #include <drivers/gpio.h>
+#include <bluetooth/bluetooth.h>
 
 #include "app_gpio.h"
 #include "ble_mesh.h"
@@ -152,6 +153,55 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 
 K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
+#define DEVICE_NAME CONFIG_BT_DEVICE_NAME
+#define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
+
+
+static struct bt_le_ext_adv *adv;
+/*
+ * Set Advertisement data. Based on the Eddystone specification:
+ * https://github.com/google/eddystone/blob/master/protocol-specification.md
+ * https://github.com/google/eddystone/tree/master/eddystone-url
+ */
+static const struct bt_data ad[] = {
+	BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
+	BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
+};
+
+static void start_advertising(void)
+{
+	int err;
+	struct bt_le_adv_param param =
+		BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_CONNECTABLE |
+				     BT_LE_ADV_OPT_EXT_ADV,
+				     BT_GAP_ADV_FAST_INT_MIN_2,
+				     BT_GAP_ADV_FAST_INT_MAX_2,
+				     NULL);
+
+	printk("Starting BLE advertisements\n");
+
+	err = bt_le_ext_adv_create(&param, NULL, &adv);
+	if (err) {
+		printk("Failed to create advertiser set (%d)\n", err);
+		return;
+	}
+
+	printk("Created adv: %p\n", adv);
+
+	err = bt_le_ext_adv_set_data(adv, ad, ARRAY_SIZE(ad), NULL, 0);
+	if (err) {
+		printk("Failed to set advertising data (%d)\n", err);
+	}
+
+	err = bt_le_ext_adv_start(adv, NULL);
+	if (err) {
+		printk("Failed to start advertising set (%d)\n", err);
+		return;
+	}
+
+	printk("Advertiser %p set started\n", adv);
+}
+
 void main(void)
 {
 	int err;
@@ -190,4 +240,5 @@ void main(void)
 
 	k_timer_start(&smp_svr_timer, K_NO_WAIT, K_MSEC(1000));
 #endif
+	start_advertising();
 }
