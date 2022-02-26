@@ -139,16 +139,6 @@
   int bl_when(BL_fct module, BL_fct cb);
 
 //==============================================================================
-// invoke a test message (sends to upward gear, where it needs to be forwarded)
-//==============================================================================
-
-  static inline int bl_test(int op, int id, int mode)
-  {
-    BL_ob oo = {_TEST,op,id,NULL};
-    return bl_up(&oo,mode);            // post to test module via upward gear
-  }
-
-//==============================================================================
 // get module property
 // - usage: val = bl_get(module,op)    // use opcodes for property names
 //==============================================================================
@@ -200,6 +190,13 @@
   {
     return (void*)o->data;
   }
+
+//==============================================================================
+// setup a initializing, ticking and tocking for a test module
+// - usage: bl_test(module)            // controlled by bl_run()
+//==============================================================================
+
+  int bl_test(BL_fct module);
 
 //==============================================================================
 // bl_init (syntactic sugar to initialize a given module)

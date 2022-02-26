@@ -9,8 +9,7 @@
   #include <stdbool.h>
   #include <stdlib.h>
 
-  #define BL_ID(cl,op)      (((cl)<<16)|((op)<0?-(op):(op))) // message ID
-  #define BL_PAIR(cl,op)    BL_ID(cl,op)                     // message ID
+  #define BL_ID(cl,op)      (((uint32_t)(cl)<<16)|(op))      // message ID
   #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))         // array length
   #define BL_LEN(a)         (sizeof(a)/sizeof(a[0]))         // array length
 
@@ -25,8 +24,8 @@
      // macro BL_HASH() sets opcode's hashbit, macro BL_CLEAR() clears opcode's
      // hashbit, BL_HASHED() checks if opcode's hash bit is set
 
-  #define BL_HASH(op)       (BL_op)((uint32_t)(op)|BL_HASHBIT)
-  #define BL_CLEAR(op)      (BL_op)((uint32_t)(op)&BL_HASHCLR)
+  #define BL_HASH(op)       ((BL_op)((uint32_t)(op)|BL_HASHBIT))
+  #define BL_CLEAR(op)      ((BL_op)((uint32_t)(op)&BL_HASHCLR))
   #define BL_HASHED(op)     (((op) & BL_HASHBIT) != 0)
 
     // useful macros for min(), max() and abs()
@@ -34,13 +33,6 @@
   #define BL_MAX(x,y) (((x) > (y)) ? (x) : (y))
   #define BL_MIN(x,y) (((x) < (y)) ? (x) : (y))
   #define BL_ABS(x)   ((x) < 0    ? -(x) : (x))
-
-     // create from given object o either OUT type init aggregate (op > 0)
-     // or IN type init aggregate (op < 0)
-
-  #define BL_OP(o)          (o->op >= 0 ? o->op : -(o->op))  // always positive
-  #define BL_OUT(o)         {o->cl,+BL_OP(o),o->id,o->data}  // opcode > 0
-  #define BL_IN(o)          {o->cl,-BL_OP(o),o->id,o->data}  // opcode < 0
 
 //==============================================================================
 // typedefs

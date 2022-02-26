@@ -69,7 +69,8 @@
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_fct output = NULL;         // notification callback
+  static BL_fct output = NULL;         // output callback
+  static BL_fct test = NULL;           // test callback
 
 //==============================================================================
 // us/ms clock
@@ -320,27 +321,16 @@
   }
 
 //==============================================================================
-// check wheter module can be used
+// setup a initializing, ticking and tocking for a test module
+// - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
-/*
-  int bl_use(BL_fct module, BL_txt msg)
+
+  int bl_test(BL_fct module)
   {
-    bool use = false;                       // cannot used by default
-    BL_ob oo = {_SYS,USE_,0,NULL};
-
-    if (module)
-      use = module(&oo,0);
-
-    if (!use && bl_dbg(0))
-    {
-      printk(BL_R "error: %s not ready for use (looping ...)\n"BL_0, msg);
-      for (;;)
-        bl_sleep(10);
-    }
-
-    return use;
+    test = module;
+    return 0;                          // OK
   }
-*/
+
 //==============================================================================
 // Blucino init                             // init Blucino system
 // usage:  bl_init(NULL,when,verbose)       // init Bluccino
@@ -389,6 +379,8 @@
     bl_init(bluccino,when);
     if (app)
       bl_init(app,when);
+    if (test)
+      bl_init(test,when);
 
       // post periodic ticks and tocks ...
 
@@ -401,6 +393,8 @@
       bl_tick(bluccino,0,ticks);
       if (app)
         bl_tick(app,0,ticks);
+      if (test)
+        bl_tick(test,0,ticks);
 
         // post [SYS:TOCK @id,cnt] events
 
@@ -409,6 +403,8 @@
         bl_tock(bluccino,1,tocks);
         if (app)
           bl_tock(app,1,tocks);
+        if (test)
+          bl_tock(test,1,tocks);
         tocks++;
       }
 
