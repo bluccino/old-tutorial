@@ -12,6 +12,6 @@
    LIB=$BLU/lib/V0.4
 
    cd $GITROOT
-   atom $BLU/docs $BLU/nbasic $BLU/nsamples $BLU/rapid $LIB
+   atom $BLU
 
 # eof

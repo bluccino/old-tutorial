@@ -59,10 +59,10 @@
   #define LOG0(lvl,col,o,val)     LOGO_API(lvl,col,o,val)
 
 //==============================================================================
-// provisioned & attention state
+// provision & attention state
 //==============================================================================
 
-  static bool provisioned = 0;
+  static bool provision = 0;
   static bool attention = 0;
 
 //==============================================================================
@@ -183,15 +183,15 @@
 
     switch (bl_id(o))                           // dispatch event
     {
-      case BL_ID(_SET,PRV_):            // provisioned state changed
-        provisioned = val;
-        bl_log_color(attention,provisioned);
-        LOG(2,BL_M"node %sprovisioned",val?"":"un");
+      case BL_ID(_SET,PRV_):            // provision state changed
+        provision = val;
+        bl_log_color(attention,provision);
+        LOG(2,BL_M"node %sprovision",val?"":"un");
         return bl_out(o,val,output);
 
       case BL_ID(_SET,ATT_):          // attention state changed
         attention = val;
-        bl_log_color(attention,provisioned);
+        bl_log_color(attention,provision);
         LOG(2,BL_G"attention %s",val?"on":"off");
         return bl_out(o,val,output);
 
@@ -235,17 +235,25 @@
 
 //==============================================================================
 // message downward posting to lower level / driver layer (default/__weak)
+// - bl_down() is defined as weak and can be overloaded
+// - by default all messages posted to BL_DOWN are forwarded to BL_CORE
 //==============================================================================
 
   __weak int bl_down(BL_ob *o, int val)
   {
-    if ( !(bl_is(o,_LED,SET_) && o->id == 0))    // no status LED loggings
-    bl_logo(3,"down",o,val);
-    return bl_core(o,val);
+    bool nolog = bl_is(o,_LED,SET_) && o->id == 0;
+    nolog = nolog || (o->cl == _SYS);
+
+    if ( !nolog )
+      bl_logo(3,"down",o,val);         // not suppressed messages are logged
+
+    return bl_core(o,val);             // forward down to BL_CORE module
   }
 
 //==============================================================================
 // message upward posting to API layer (default/__weak)
+// - bl_up() is defined as weak and can be overloaded
+// - by default all messages posted to BL_UP are forwarded to BL_IN
 //==============================================================================
 
   __weak int bl_up(BL_ob *o, int val)
@@ -376,7 +384,7 @@
 
       // init Bluccino library module and app init
 
-    bl_init(bluccino,when);
+    bl_init(bluccino,when);            // always use upward gear for core output
     if (app)
       bl_init(app,when);
     if (test)
@@ -442,7 +450,12 @@
     {
       case BL_ID(_SYS,INIT_):
         output = o->data;
-        return bl_down(o,val);         // forward to downward gear
+
+          // we need to initialize everything what is downstairs (on driver
+          // level). All stuff downstairs has to send messages through the
+          // upward gear
+
+        return bl_init(bl_down,bl_up); // forward to BL_DOWN gear, output=>BL_UP
 
       case BL_ID(_SYS,TICK_):
       case BL_ID(_SYS,TOCK_):

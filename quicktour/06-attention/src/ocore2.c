@@ -57,10 +57,15 @@
 #include "bluccino.h"
 
 #ifndef MIGRATION_STEP1
-  #define MIGRATION_STEP1         0    // introduce bl_core()
+  #define MIGRATION_STEP1         1    // introduce bl_core()
 #endif
 #ifndef MIGRATION_STEP2
-  #define MIGRATION_STEP2         0    // emit provisioned/attention messages
+  #define MIGRATION_STEP2         1    // emit provisioned/attention messages
+#endif
+
+#if MIGRATION_STEP1
+  #define _ATT_      BL_HASH(ATT_)     // hashed symbol #ATT
+  #define _PRV_      BL_HASH(PRV_)     // hashed symbol #PRV
 #endif
 
 //==============================================================================
@@ -403,8 +408,8 @@ static void prov_complete(uint16_t net_idx, uint16_t addr)
 	primary_net_idx = net_idx;
 
   #if MIGRATION_STEP2
-	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
-	  bl_in(&o,1);
+	  BL_ob o = {_SET,_PRV_,0,NULL};
+	  bl_core(&o,1);                      // output [SET,#PRV 1]
   #endif // MIGRATION_STEP2
 }
 
@@ -413,8 +418,8 @@ static void prov_reset(void)
 	bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
 
   #if MIGRATION_STEP2
-	  BL_ob o = {CL_MESH,OP_PRV,0,NULL};
-	  bl_in(&o,0);
+	  BL_ob o = {_SET,_PRV_,0,NULL};
+	  bl_core(&o,0);                      // output [SET,#PRV 0]
   #endif // MIGRATION_STEP2
 }
 
@@ -552,14 +557,14 @@ static void button_pressed_worker(struct k_work *work)
 
 static void link_open(bt_mesh_prov_bearer_t bearer)
 {
-	BL_ob o = {CL_MESH, OP_ATT, 1, NULL};
-	bl_in(&o,1);
+	BL_ob o = {_SET,_ATT_, 1, NULL};
+	bl_core(&o,1);                        // output [SET,#ATT 1]
 }
 
 static void link_close(bt_mesh_prov_bearer_t bearer)
 {
-	BL_ob o = {CL_MESH, OP_ATT, 0, NULL};
-	bl_in(&o,0);
+	BL_ob o = {_SET,_ATT_, 0, NULL};
+	bl_core(&o,0);                        // output [SET,#ATT 0]
 }
 
 //==============================================================================
@@ -707,21 +712,53 @@ void main(void)
 
 #if MIGRATION_STEP1
 //==============================================================================
-// THE core interface
+// public module interface (message dispatcher)
+//==============================================================================
+//
+// BL_CORE Interfaces:
+//   SYS Interface: [] = SYS(INIT,TICK,TOCK)
+//   SET Interface: [PRV,ATT] = SET(#PRV,#ATT)
+//
+//                             +-----------------+
+//                             |     BL_CORE     |
+//                             +-----------------+
+//                      INIT ->|      SYS:       |
+//                             +-----------------+
+//                      #PRV ->|      SET:       |-> PRV
+//                      #ATT ->|                 |-> ATT
+//                             +-----------------+
+//
+// Input messages:
+//   [SYS:INIT <cb>]       initialize PPG module
+//   [SET:#PRV val]        output provision on/off
+//   [SET:#ATT val]        output attention on/off
+//
+// Output messages:
+//   [SET:PRV val]         provision on/off
+//   [SET:ATT val]         attention on/off
+//
 //==============================================================================
 
-  int bl_core(BL_ob *o, int val)
-	{
-    switch (BL_PAIR(o->cl,o->op))
-    {
-      case BL_PAIR(CL_SYS,OP_INIT):
-        bl_logo(4,BL_R"core",o,val);     // log trace
-        init();
-        break;
+  int bl_core(BL_ob *o, int val)         // public interface
+  {
+    static BL_fct output = NULL;
 
-      case BL_PAIR(CL_SYS,OP_LOOP):
-        break;
+    switch (bl_id(o))
+    {
+      case BL_ID(_SYS,INIT_):
+        bl_logo(4,BL_R"bl_core:",o,val); // init log
+        output = o->data;
+        init();
+        return 0;
+
+      case BL_ID(_SET,_ATT_):            // [SET:#ATT onoff] attention on/off
+      case BL_ID(_SET,_PRV_):            // [SET:#PRV onoff] provisioned on/off
+        bl_logo(4,BL_R"bl_core:",o,val); // output log
+        return bl_out(o,val,output);     // output message to subscriber
+
+      default:
+    	  return 0;                        // OK
     }
-		return 0;
-	}
+  }
+
 #endif // MIGRATION_STEP1
