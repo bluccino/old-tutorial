@@ -329,7 +329,7 @@
   }
 
 //==============================================================================
-// setup a initializing, ticking and tocking for a test module
+// setup initializing, ticking and tocking for a test module
 // - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
 
