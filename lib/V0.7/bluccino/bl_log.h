@@ -214,8 +214,8 @@
 
   static inline void bl_error(int err, BL_txt msg)
   {
-    if (bl_dbg(1))                          // errors come @ verbose level 1
-      bl_prt(BL_R "error %d: %s",err,msg);  // in RED text!
+    if (bl_dbg(1))                            // errors come @ verbose level 1
+      bl_prt(BL_R "error %d: %s\n",err,msg);  // in RED text!
   }
 
 #endif // __BL_LOG_H__
