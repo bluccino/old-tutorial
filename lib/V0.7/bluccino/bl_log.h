@@ -40,7 +40,7 @@
             }                                    \
          } while(0)
 
-    #define bl_log BL_LOG              // log alias
+    #define bl_log(l,f,...)  BL_LOG(l,f,##__VA_ARGS__)  // always enabled
 
 //==============================================================================
 // API Logging

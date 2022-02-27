@@ -86,7 +86,7 @@
   static inline int bl_led(int id, int val)
   {
     BL_ob oo = {_LED,val<0?TOGGLE_:SET_,id,NULL};
-    return bl_hw(&oo,val<0?0:val);
+    return bl_down(&oo,val<0?0:val);
   }
 
 //==============================================================================
