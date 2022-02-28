@@ -11,7 +11,7 @@
 
   project(07-mcore)
 
-  set (LIB ../../lib/V0.6)
+  set (LIB ../../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
   set (HWC ${LIB}/hwcore)
   set (LMO ${LIB}/module)
