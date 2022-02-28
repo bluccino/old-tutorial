@@ -22,6 +22,7 @@ static void button_pressed(const struct device *dev,
 	k_work_submit(&button_work);
 }
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 static bool mesh_enabled = true;
 void toggle_mesh(struct k_work *work)
 {
@@ -44,7 +45,7 @@ void toggle_mesh(struct k_work *work)
 		}
 		mesh_enabled = true;
 	}
-	
+
 }
 
 K_WORK_DEFINE(mesh_toogle_work, toggle_mesh);
@@ -54,6 +55,7 @@ static void button_3_pressed(const struct device *dev,
 	printk("Button pressed\n");
 	k_work_submit(&mesh_toogle_work);
 }
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 #define LED0_NODE DT_ALIAS(led0)
 #define LED1_NODE DT_ALIAS(led1)
@@ -138,10 +140,12 @@ void app_gpio_init(void)
 	gpio_pin_interrupt_configure(button_device[3],
 				     DT_GPIO_PIN(SW3_NODE, gpios),
 				     GPIO_INT_EDGE_TO_ACTIVE);
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	// gpio_init_callback(&button_cb[3], button_pressed,
 			//    BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
 	gpio_init_callback(&button_cb[3], button_3_pressed,
 			    BIT(DT_GPIO_PIN(SW3_NODE, gpios)));
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<      
 	gpio_add_callback(button_device[3], &button_cb[3]);
 #endif
 }
