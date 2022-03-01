@@ -240,12 +240,20 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx,
 			       struct net_buf_simple *buf)
 {
+  #if MIGRATION_STEP6
+    uint32_t oc = BL_OC_GONOFF_SET;
+    static long bl_log_gonoff_set_rx = 0;
+    long cnt = ++bl_log_gonoff_set_rx;
+    BL_gonoff_set *pay = &post.pay.gooset;
+  #endif
+
 	uint8_t tid, onoff, tt, delay;
 	int64_t now;
 
-	onoff = net_buf_simple_pull_u8(buf);
-	tid = net_buf_simple_pull_u8(buf);
-LOG(4,BL_R"rcv [GOOSRV:LET @id,val]");
+	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
+	pay->tid = tid = net_buf_simple_pull_u8(buf);
+
+  LOG(4,BL_R"rcv [GOOSRV:LET @id,%d]",pay->onoff);
 
 	if (onoff > STATE_ON) {
 		return 0;
@@ -259,22 +267,30 @@ LOG(4,BL_R"rcv [GOOSRV:LET @id,val]");
 		return 0;
 	}
 
-	switch (buf->len) {
-	case 0x00:      /* No optional fields are available */
-		tt = ctl->tt;
-		delay = 0U;
-		break;
-	case 0x02:      /* Optional fields are available */
-		tt = net_buf_simple_pull_u8(buf);
-		if ((tt & 0x3F) == 0x3F) {
-			return 0;
-		}
+	switch (buf->len)
+  {
+  	case 0x00:      /* No optional fields are available */
+  		pay->tt = tt = ctl->tt;
+  		pay->delay = delay = 0U;
+  		break;
 
-		delay = net_buf_simple_pull_u8(buf);
-		break;
-	default:
-		return 0;
+    case 0x02:      /* Optional fields are available */
+  		pay->tt = tt = net_buf_simple_pull_u8(buf);
+  		if ((tt & 0x3F) == 0x3F)
+      {
+  			return 0;
+  		}
+
+  		pay->delay = delay = net_buf_simple_pull_u8(buf);
+  		break;
+
+  	default:
+  		return 0;
 	}
+
+  #if MIGRATION_STEP6
+    log_rx(5,BL_C "rx_goolet", oc, model, ctx, pay, cnt);
+  #endif
 
 	ctl->transition->counter = 0U;
 	k_timer_stop(&ctl->transition->timer);
@@ -291,6 +307,7 @@ LOG(4,BL_R"rcv [GOOSRV:LET @id,val]");
 	if (ctl->light->target != ctl->light->current) {
 		set_transition_values(ONOFF);
 	} else {
+    goto SUBMIT;
 		return 0;
 	}
 
@@ -302,6 +319,14 @@ LOG(4,BL_R"rcv [GOOSRV:LET @id,val]");
 	ctl->transition->just_started = true;
 	gen_onoff_publish(model);
 	onoff_handler();
+
+  #if MIGRATION_STEP6                  // post upward
+    bool dummy = 0;
+SUBMIT:  dummy = 1;                    // need this in order to use label
+    BL_ob oo = {_GOOSRV,_STS_,1,pay};
+    LOG0(5,BL_R"goosrv:let:",&oo,pay->onoff);
+    submit(&oo,pay->onoff);
+  #endif
 
 	return 0;
 }
@@ -323,19 +348,23 @@ LOG(4,BL_R"rcv [GOOSRV:LET @id,val]");
 
     uint8_t tid, onoff, tt, delay;
   	int64_t now;
-LOG(4,BL_R "rcv [GOOSRV:SET @id,val]");
 
     pay->onoff = onoff = net_buf_simple_pull_u8(buf);
     pay->tid = tid = net_buf_simple_pull_u8(buf);
 
+    LOG(4,BL_R"rcv [GOOSRV:LET @id,%d]",pay->onoff);
+
   	if (onoff > STATE_ON)
+    {
   		return 0;
+    }
 
   	now = k_uptime_get();
   	if (ctl->last_tid == tid &&
   	    ctl->last_src_addr == ctx->addr &&
   	    ctl->last_dst_addr == ctx->recv_dst &&
-  	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
+  	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC)))
+    {
   		(void)gen_onoff_get(model, ctx, buf);
   		return 0;
   	}
@@ -402,8 +431,12 @@ LOG(4,BL_R "rcv [GOOSRV:SET @id,val]");
     #if MIGRATION_STEP6                  // post upward
       bool dummy = 0;
   SUBMIT:  dummy = 1;                    // need this in order to use label
+
+
+
+
       BL_ob oo = {_GOOSRV,_STS_,1,pay};
-      LOG0(4,BL_R"goosrv:rcv:",&oo,pay->onoff);
+      LOG0(5,"goosrv:set:",&oo,pay->onoff);
       submit(&oo,pay->onoff);
     #endif
     return 0;
@@ -3370,7 +3403,7 @@ const struct bt_mesh_comp comp = {
 //                     #STS ->|      GOOSRV:      |-> STS ->(BL_CORE)
 //                            +-------------------+
 // Input Messages:
-//   [SYS:INIT <cb>]              init module, store callback
+//   [SYS:INIT <cout>]            init module, store callback
 //   [GOOSRV:#STS @id,val,<data>] relay input for output of [GOOSRV:STS ...] msg
 //
 // Output Messages:
@@ -3380,7 +3413,8 @@ const struct bt_mesh_comp comp = {
 
   int bl_devcomp(BL_ob *o, int val)
   {
-    static BL_fct out = NULL;
+    static BL_fct out = NULL;          // store <out> callback
+
     switch (bl_id(o))                  // dispatch message ID
     {
       case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]

@@ -323,6 +323,8 @@ void main(void)
 //                                +-------------+
 //                                |   SWITCH:   |-> STS
 //                                +-------------+
+//                                |   GOOSRV:   |-> STS
+//                                +-------------+
 //
 //  Input Messages:
 //    - [SYS:INIT <cb>]                init module
@@ -341,6 +343,7 @@ void main(void)
 //    - [BUTTON:PRESS @id 1]           button press @ channel @id
 //    - [BUTTON:RELEASE @id 1]         button release @ channel @id
 //    - [SWITCH:STS @id,onoff]         output switch status update
+//    - [GOOSRV:STS @id,<goosrv>,val]  output sGOOSRV status
 //
 //==============================================================================
 
