@@ -43,5 +43,9 @@
 
   #define MIGRATION_STEP1         1
   #define MIGRATION_STEP2         1
+  #define MIGRATION_STEP3         1
+  #define MIGRATION_STEP4         1
+  #define MIGRATION_STEP5         1
+  #define MIGRATION_STEP6         1
 
 #endif // __CONFIG_H__

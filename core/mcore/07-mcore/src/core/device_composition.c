@@ -1,9 +1,14 @@
-/* Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
- *
- * Copyright (c) 2018 Vikrant More
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+//==============================================================================
+// device_composition.c
+// multi model mesh demo based mesh core
+//
+// Created by Hugo Pristauz on 2022-Jan-02
+// Copyright © 2022 Bluccino. All rights reserved.
+//==============================================================================
+// Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
+// Copyright (c) 2018 Vikrant More
+// SPDX-License-Identifier: Apache-2.0
+//==============================================================================
 
 #include <drivers/gpio.h>
 
@@ -19,14 +24,97 @@
 //==============================================================================
 
   #include "bluccino.h"
+  #include "bl_mesh.h"
+  #include "bl_gonoff.h"
+
+  #define _STS_   BL_HASH(STS_)        // hashed STS opcode
 
 //==============================================================================
 // CORE level logging shorthands
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"core:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"devcomp:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+
+//==============================================================================
+// migration defaults
+//==============================================================================
+
+#ifndef MIGRATION_STEP1
+  #define MIGRATION_STEP1         0    // introduce bl_core()
+#endif
+#ifndef MIGRATION_STEP2
+  #define MIGRATION_STEP2         0    // emit provisioned/attention messages
+#endif
+#ifndef MIGRATION_STEP3
+  #define MIGRATION_STEP3         0    // set onoff state
+#endif
+#ifndef MIGRATION_STEP6
+  #define MIGRATION_STEP6         0    // receive mesh messages
+#endif
+
+//==============================================================================
+// some additional includes
+//==============================================================================
+
+  #if MIGRATION_STEP6
+    #include "bl_mesh.h"
+    #include "bl_gonoff.h"
+  #endif
+
+//==============================================================================
+// workhorse which post messages through the upward gear to the application
+//==============================================================================
+#if MIGRATION_STEP6                  // data structures for notification
+
+  typedef struct TP_post
+          {
+            BL_ob oo;                // message object
+            int val;                 // value to be posted
+
+            union pay
+            {
+              BL_gonoff_set gooset;
+            } pay;
+          } TP_post;
+
+  static TP_post post;
+
+#endif
+//==============================================================================
+// workhorse which post messages through the upward gear to the application
+//==============================================================================
+#if MIGRATION_STEP6                    // data structures for notification
+
+  static void workhorse(struct k_work *work)
+  {
+    bl_devcomp(&post.oo,post.val);     // post to module interface for output
+  }
+
+  static K_WORK_DEFINE(work,workhorse);// assign work with workhorse
+
+  static void submit(BL_ob *o, int val)
+  {
+    memcpy(&post.oo,o,sizeof(BL_ob));
+    post.val = val;                    // copy val to note
+    k_work_submit(&work);              // invoke workhorse() to post note
+  }
+
+#endif
+//==============================================================================
+// receive logging
+//==============================================================================
+
+  static void log_rx(int lvl, BL_txt ptxt, uint16_t oc,
+      BL_model *pmod, BL_ctx *ctx, BL_gonoff_set *ppay, long cnt)
+  {
+    LOG(lvl,
+      "%s($%d:%d:%d, <%04x.%04x>, [%04x]->[%04x], %s,#%d,/%dms,&%dms) #%ld#",
+      ptxt, bl_iid(pmod), pmod->elem_idx, pmod->mod_idx, BL_SIG_CID, oc,
+      bl_src(ctx), bl_dst(ctx), ppay->onoff ? "ON" : "OFF",
+      ppay->tid, bl_mesh2ms(ppay->tt), bl_tick2ms(ppay->delay), cnt);
+  }
 
 //==============================================================================
 // let's go
@@ -85,7 +173,10 @@ static struct bt_mesh_elem elements[];
 
 /* message handlers (Start) */
 
-/* Generic OnOff Server message handlers */
+//==============================================================================
+// GOOGET server message handler
+//==============================================================================
+
 static int gen_onoff_get(struct bt_mesh_model *model,
 			 struct bt_mesh_msg_ctx *ctx,
 			 struct net_buf_simple *buf)
@@ -113,6 +204,10 @@ send:
 	return 0;
 }
 
+//==============================================================================
+// GOOPUB server helper
+//==============================================================================
+
 void gen_onoff_publish(struct bt_mesh_model *model)
 {
 	int err;
@@ -137,6 +232,10 @@ void gen_onoff_publish(struct bt_mesh_model *model)
 	}
 }
 
+//==============================================================================
+// GOOLET server message handler
+//==============================================================================
+
 static int gen_onoff_set_unack(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx,
 			       struct net_buf_simple *buf)
@@ -146,6 +245,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 
 	onoff = net_buf_simple_pull_u8(buf);
 	tid = net_buf_simple_pull_u8(buf);
+LOG(4,BL_R"rcv [GOOSRV:LET @id,val]");
 
 	if (onoff > STATE_ON) {
 		return 0;
@@ -206,79 +306,113 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	return 0;
 }
 
-static int gen_onoff_set(struct bt_mesh_model *model,
-			 struct bt_mesh_msg_ctx *ctx,
-			 struct net_buf_simple *buf)
-{
-	uint8_t tid, onoff, tt, delay;
-	int64_t now;
+//==============================================================================
+// GOOSET server message handler
+//==============================================================================
 
-	onoff = net_buf_simple_pull_u8(buf);
-	tid = net_buf_simple_pull_u8(buf);
+  static int gen_onoff_set(struct bt_mesh_model *model,
+  			 struct bt_mesh_msg_ctx *ctx,
+  			 struct net_buf_simple *buf)
+  {
+    #if MIGRATION_STEP6
+      uint32_t oc = BL_OC_GONOFF_SET;
+      static long bl_log_gonoff_set_rx = 0;
+      long cnt = ++bl_log_gonoff_set_rx;
+      BL_gonoff_set *pay = &post.pay.gooset;
+    #endif
 
-	if (onoff > STATE_ON) {
-		return 0;
-	}
+    uint8_t tid, onoff, tt, delay;
+  	int64_t now;
+LOG(4,BL_R "rcv [GOOSRV:SET @id,val]");
 
-	now = k_uptime_get();
-	if (ctl->last_tid == tid &&
-	    ctl->last_src_addr == ctx->addr &&
-	    ctl->last_dst_addr == ctx->recv_dst &&
-	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
-		(void)gen_onoff_get(model, ctx, buf);
-		return 0;
-	}
+    pay->onoff = onoff = net_buf_simple_pull_u8(buf);
+    pay->tid = tid = net_buf_simple_pull_u8(buf);
 
-	switch (buf->len) {
-	case 0x00:      /* No optional fields are available */
-		tt = ctl->tt;
-		delay = 0U;
-		break;
-	case 0x02:      /* Optional fields are available */
-		tt = net_buf_simple_pull_u8(buf);
-		if ((tt & 0x3F) == 0x3F) {
-			return 0;
-		}
+  	if (onoff > STATE_ON)
+  		return 0;
 
-		delay = net_buf_simple_pull_u8(buf);
-		break;
-	default:
-		return 0;
-	}
+  	now = k_uptime_get();
+  	if (ctl->last_tid == tid &&
+  	    ctl->last_src_addr == ctx->addr &&
+  	    ctl->last_dst_addr == ctx->recv_dst &&
+  	    (now - ctl->last_msg_timestamp <= (6 * MSEC_PER_SEC))) {
+  		(void)gen_onoff_get(model, ctx, buf);
+  		return 0;
+  	}
 
-	ctl->transition->counter = 0U;
-	k_timer_stop(&ctl->transition->timer);
+  	switch (buf->len)
+    {
+      case 0x00:      /* No optional fields are available */
+        pay->tt = tt = ctl->tt;
+        pay->delay = delay = 0U;
+        break;
+      case 0x02:      /* Optional fields are available */
+        pay->tt = tt = net_buf_simple_pull_u8(buf);
+        if ((tt & 0x3F) == 0x3F)
+        {
+          goto SUBMIT;
+    			return 0;
+    		}
 
-	ctl->last_tid = tid;
-	ctl->last_src_addr = ctx->addr;
-	ctl->last_dst_addr = ctx->recv_dst;
-	ctl->last_msg_timestamp = now;
-	ctl->transition->tt = tt;
-	ctl->transition->delay = delay;
-	ctl->transition->type = NON_MOVE;
-	set_target(ONOFF, &onoff);
+    		pay->delay = delay = net_buf_simple_pull_u8(buf);
+    		break;
+    	default:
+        goto SUBMIT;
+    		return 0;
+  	}
 
-	if (ctl->light->target != ctl->light->current) {
-		set_transition_values(ONOFF);
-	} else {
-		(void)gen_onoff_get(model, ctx, buf);
-		return 0;
-	}
+    #if MIGRATION_STEP6
+      log_rx(5,BL_C "rx_gooset", oc, model, ctx, pay, cnt);
+    #endif
 
-	/* For Instantaneous Transition */
-	if (ctl->transition->counter == 0U) {
-		ctl->light->current = ctl->light->target;
-	}
+  	ctl->transition->counter = 0U;
+  	k_timer_stop(&ctl->transition->timer);
 
-	ctl->transition->just_started = true;
-	(void)gen_onoff_get(model, ctx, buf);
-	gen_onoff_publish(model);
-	onoff_handler();
+  	ctl->last_tid = tid;
+  	ctl->last_src_addr = ctx->addr;
+  	ctl->last_dst_addr = ctx->recv_dst;
+  	ctl->last_msg_timestamp = now;
+  	ctl->transition->tt = tt;
+  	ctl->transition->delay = delay;
+  	ctl->transition->type = NON_MOVE;
+  	set_target(ONOFF, &onoff);
 
-	return 0;
-}
+  	if (ctl->light->target != ctl->light->current)
+    {
+  		set_transition_values(ONOFF);
+  	}
+    else
+    {
+  		(void)gen_onoff_get(model, ctx, buf);
+  		//return 0;
+      goto SUBMIT;
+  	}
 
-/* Generic OnOff Client message handlers */
+  	/* For Instantaneous Transition */
+  	if (ctl->transition->counter == 0U)
+    {
+  		ctl->light->current = ctl->light->target;
+  	}
+
+  	ctl->transition->just_started = true;
+  	(void)gen_onoff_get(model, ctx, buf);
+  	gen_onoff_publish(model);
+  	onoff_handler();
+
+    #if MIGRATION_STEP6                  // post upward
+      bool dummy = 0;
+  SUBMIT:  dummy = 1;                    // need this in order to use label
+      BL_ob oo = {_GOOSRV,_STS_,1,pay};
+      LOG0(4,BL_R"goosrv:rcv:",&oo,pay->onoff);
+      submit(&oo,pay->onoff);
+    #endif
+    return 0;
+  }
+
+//==============================================================================
+// Generic OnOff Client message handlers
+//==============================================================================
+
 static int gen_onoff_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
@@ -3219,3 +3353,44 @@ const struct bt_mesh_comp comp = {
 	.elem = elements,
 	.elem_count = ARRAY_SIZE(elements),
 };
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BL_DEVCOMP Interfaces
+//   SYS Interface:     [] = SYS(INIT)
+//   GOOSRV Interface:  [SET] = GOOSRV(#STS)
+//
+//                            +-------------------+
+//                            |    BL_DEVCOMP     |
+//                            +-------------------+
+//                     INIT ->|       SYS:        |
+//                            +-------------------+
+//                     #STS ->|      GOOSRV:      |-> STS ->(BL_CORE)
+//                            +-------------------+
+// Input Messages:
+//   [SYS:INIT <cb>]              init module, store callback
+//   [GOOSRV:#STS @id,val,<data>] relay input for output of [GOOSRV:STS ...] msg
+//
+// Output Messages:
+//   [GOOSRV:STS @id,val,<data>]  output [GOOSRV:STS ...] message to subscriber
+//
+//==============================================================================
+
+  int bl_devcomp(BL_ob *o, int val)
+  {
+    static BL_fct out = NULL;
+    switch (bl_id(o))                  // dispatch message ID
+    {
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
+        out = o->data;                 // store <out> callback
+        return 0;                      // OK
+
+      case BL_ID(_GOOSRV,_STS_):
+        return bl_out(o,val,out);
+
+      default:
+        return -1;                     // bad args
+    }
+  }

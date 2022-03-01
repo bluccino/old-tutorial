@@ -12,6 +12,20 @@
 #include "device_composition.h"
 #include "publisher.h"
 
+#include "bluccino.h"
+
+//==============================================================================
+// CORE level logging shorthands
+//==============================================================================
+
+  #define LOG                     LOG_CORE
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"devcomp:",o,val)
+  #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
+
+//==============================================================================
+// Let's go
+//==============================================================================
+
 #define ONOFF
 #define GENERIC_LEVEL
 
@@ -20,8 +34,11 @@ static uint8_t tid;
 void publish(struct k_work *work)
 {
 	int err = 0;
-
+LOG(4,"publish ...");
 #ifndef ONE_LED_ONE_BUTTON_BOARD
+
+    // SW0 event
+
 	if (gpio_pin_get(button_device[0],
 			 DT_GPIO_PIN(DT_ALIAS(sw0), gpios)) == 1) {
 #if defined(ONOFF)
@@ -29,6 +46,7 @@ void publish(struct k_work *work)
 				       BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK);
 		net_buf_simple_add_u8(root_models[3].pub->msg, 0x01);
 		net_buf_simple_add_u8(root_models[3].pub->msg, tid++);
+LOG(4,BL_R"snd [GOOCLI:LET @1,1]");
 		err = bt_mesh_model_publish(&root_models[3]);
 #elif defined(ONOFF_TT)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
@@ -45,13 +63,19 @@ void publish(struct k_work *work)
 		net_buf_simple_add_u8(vnd_models[0].pub->msg, tid++);
 		err = bt_mesh_model_publish(&vnd_models[0]);
 #endif
-	} else if (gpio_pin_get(button_device[1],
-				DT_GPIO_PIN(DT_ALIAS(sw1), gpios)) == 1) {
+	}
+
+    // SW1 event
+
+  else if (gpio_pin_get(button_device[1],
+				DT_GPIO_PIN(DT_ALIAS(sw1), gpios)) == 1)
+  {
 #if defined(ONOFF)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,
 				       BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK);
 		net_buf_simple_add_u8(root_models[3].pub->msg, 0x00);
 		net_buf_simple_add_u8(root_models[3].pub->msg, tid++);
+LOG(4,BL_R"snd [GOOCLI:LET @1,0]");
 		err = bt_mesh_model_publish(&root_models[3]);
 #elif defined(ONOFF_TT)
 		bt_mesh_model_msg_init(root_models[3].pub->msg,

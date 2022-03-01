@@ -386,12 +386,12 @@ void main(void)
 
   int bl_core(BL_ob *o, int val)
   {
-    static BL_fct output = NULL;
+    static BL_fct out = NULL;
 
     switch (BL_ID(o->cl,o->op))
     {
-      case BL_ID(_SYS,INIT_):        // [SYS:INIT]
-        output = o->data;            // store output callback
+      case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
+        out = o->data;               // store output callback
         return init(o,val);          // forward to init()
 
       case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]

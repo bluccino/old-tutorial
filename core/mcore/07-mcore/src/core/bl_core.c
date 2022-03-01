@@ -1,36 +1,9 @@
 //==============================================================================
-// blcore.c
-// Bluccino core
+// bl_core.c
+// multi model mesh demo based mesh core
 //
 // Created by Hugo Pristauz on 2022-Jan-02
-// Copyright © 2022 fuseAware. All rights reserved.
-//==============================================================================
-//
-//                                  INIT  TICK TOCK
-//                                    |    |    |
-//                                    v    v    v
-//                                  +-------------+
-//                                  |     SYS     |
-//                                  +-------------+
-//                            PRV ->|             |-> PRV
-//                                  |     MESH    |
-//                            ATT ->|             |-> ATT
-//                                  +-------------+
-//                            ADV ->|             |
-//                                  |      :      |-> SCAN
-//                          EVENT ->|             |
-//                                  +-------------+
-//
-//  Input Messages:
-//    - [SYS:INIT <cb>]     init module
-//    - [SYS:TICK @id cnt]  tick the module
-//    - [SYS:TOCK @id cnt]  tock the module
-//    - [:ADV <adv>]        receive ADV event
-//    - [:EVENT <lll>]      receive LLL event
-//  Output Messages:
-//    - [MESH:PRV val]      provisioning on/off => post to upward gear
-//    - [MESH:ATT val]      attentioning on/off => post to upward gear
-//
+// Copyright © 2022 Bluccino. All rights reserved.
 //==============================================================================
 // mcore derived from:
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
@@ -38,22 +11,29 @@
 // SPDX-License-Identifier: Apache-2.0
 //==============================================================================
 
-#include <drivers/gpio.h>
+  #include <drivers/gpio.h>
 
-#include "app_gpio.h"
-#include "ble_mesh.h"
-#include "device_composition.h"
-#include "no_transition_work_handler.h"
-#include "state_binding.h"
-#include "storage.h"
-#include "transition.h"
+  #include "bluccino.h"
+  //#include "bl_core.h"
+  #include "bl_hw.h"
+
+  #include "ble_mesh.h"
+  #include "device_composition.h"
+  #include "no_transition_work_handler.h"
+  #include "state_binding.h"
+  #include "storage.h"
+  #include "transition.h"
+  #include "publisher.h"
+  #include "app_gpio.h"
+
+  #define _DUE_    BL_HASH(DUE_)       // hashed opcode for DUE
 
 //==============================================================================
 // CORE level logging shorthands
 //==============================================================================
 
   #define LOG                     LOG_CORE
-  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"mcore:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_CORE(lvl,col"bl_core:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
@@ -69,8 +49,6 @@
 #ifndef MIGRATION_STEP2
   #define MIGRATION_STEP2         0    // TODO introduce bl_core()
 #endif
-
-  static BL_fct notify = NULL;
 
 //==============================================================================
 // let's go ...
@@ -155,13 +133,16 @@ static void light_default_status_init(void)
 void update_vnd_led_gpio(void)
 {
 #ifndef ONE_LED_ONE_BUTTON_BOARD
+/*
 	gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
 		     vnd_user_data.current == STATE_ON);
+*/
 #endif
 }
 
 void update_led_gpio(void)
 {
+/*
 	uint8_t power, color;
 
 	power = 100 * ((float) ctl->light->current / 65535);
@@ -182,6 +163,7 @@ void update_led_gpio(void)
 	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
 		     color < 50);
 #endif
+*/
 }
 
 void update_light_state(void)
@@ -237,10 +219,8 @@ K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 //==============================================================================
 
 #if MIGRATION_STEP1
-static int init(BL_ob *o, int val)
+static int init_mcore(BL_ob *o, int val)
 {
-  LOGO(5,BL_B,o,val);                // log trace
-  notify = o->data;                  // store notify callback
 #else
 void main(void)
 {
@@ -249,14 +229,16 @@ void main(void)
 
 	light_default_var_init();
 
-	app_gpio_init();
+#if !MIGRATION_STEP5
+    app_gpio_init();
+#endif
 
 	#if defined(CONFIG_MCUMGR)
 		smp_svr_init();
 	#endif
 
   #if MIGRATION_STEP2
-	  LOG(2,BL_B "initializing...");
+	  LOG(3,BL_B "init BLE/Mesh...");
   #else
 	  printk("Initializing...\n");
   #endif
@@ -295,30 +277,118 @@ void main(void)
 	#endif
 }
 
-//==============================================================================
-// THE core interface
-// - [MESH:PRV val] and [MESH:ATT val] are posted from ble_mesh.c to here
-//==============================================================================
 #if MIGRATION_STEP1
+//==============================================================================
+// init bl_core modules
+//==============================================================================
+
+  static int init(BL_ob *o, int val)
+  {
+    LOG(2,BL_B"init Bluccino core");
+
+//  bl_init(blemesh,bl_core);          // output of BLEMESH goes to here!
+    bl_init(bl_devcomp,bl_core);       // output of BL_DEVCMP goes to here!
+    app_gpio_init();
+//  bl_init(bl_hw,bl_core);            // output of BL_HW goes to here!
+    init_mcore(o,val);                 // init THIS module
+    return 0;
+  }
+
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BL_CORE Interfaces:
+//   [] = SYS(INIT,TICK,TOCK)
+//   [PRV,ATT] = SET(PRV,ATT)
+//   [DUE] = RESET(#DUE,INC,PRV)
+//   [] = BUTTON(INC,PRV)
+//   [] = SWITCH(STS)
+//                                +-------------+
+//                                |   BL_CORE   |
+//                                +-------------+
+//                         INIT ->|     SYS:    |
+//                         TICK ->|             |
+//                         TOCK ->|             |
+//                                +-------------+
+//                          PRV ->|     SET:    |-> PRV
+//                          ATT ->|             |-> ATT
+//                                +-------------+
+//                         #DUE ->|    RESET:   |-> DUE
+//                          INC ->|             |
+//                          PRV ->|             |
+//                                +-------------+
+//                                |   BUTTON:   |-> PRESS
+//                                |             |-> RELEASE
+//                                +-------------+
+//                                |   SWITCH:   |-> STS
+//                                +-------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]                init module
+//    - [SYS:TICK @id cnt]             tick the module
+//    - [SYS:TOCK @id cnt]             tock the module
+//    - [SET:PRV val]                  provision on/off
+//    - [SET:ATT val]                  attention on/off
+//    - [RESET:#DUE]                   reset timer is due
+//    - [RESET:INC <ms>]               inc reset counter & set due (<ms>) timer
+//    - [RESET:PRV]                    unprovision node
+//
+//  Output Messages:
+//    - [SET:PRV val]                  provision on/off
+//    - [SET:ATT val]                  attention on/off
+//    - [RESET:DUE]                    reset timer due notification
+//    - [BUTTON:PRESS @id 1]           button press @ channel @id
+//    - [BUTTON:RELEASE @id 1]         button release @ channel @id
+//    - [SWITCH:STS @id,onoff]         output switch status update
+//
+//==============================================================================
 
   int bl_core(BL_ob *o, int val)
-	{
+  {
+    static BL_fct out = NULL;
+
     switch (BL_ID(o->cl,o->op))
     {
-      case BL_ID(_SYS,INIT_):        // [SYS:INIT]
-        return init(o,val);                // forward to init()
+      case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
+        out = o->data;               // store output callback
+        return init(o,val);          // forward to init()
 
       case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
       case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
-				return 0;                          // OK - nothing to tick/tock
+        return 0;                    // OK - nothing to tick/tock
+/*
+      case BL_ID(_SET,PRV_):         // [SET:PRV val]  (provision)
+      case BL_ID(_SET,ATT_):         // [SET:ATT val]  (attention)
+      case BL_ID(_BUTTON,PRESS_):    // [BUTTON:PRESS @id] (button pressed)
+      case BL_ID(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
+      case BL_ID(_SWITCH,STS_):      // [BUTTON:RELEASE @id] (button release)
+        LOGO(3,"",o,val);
+        return bl_out(o,val,out);    // output to subscriber
 
-      case BL_ID(_MESH,PRV_):        // [MESH:PRV val]  (provision)
-      case BL_ID(_MESH,ATT_):        // [MESH:ATT val]  (attention)
-				return bl_out(o,val,notify);       // output message to subscriber
+      case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
+      case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
+        return bl_hw(o,val);         // delegate to MGPIO submodule
+
+      case BL_ID(_RESET,INC_):       // cnt = [RESET:INC <ms>]
+        return increment(o,val);     // delegate to increment()
+
+      case BL_ID(_RESET,PRV_):       // [RESET:PRV]
+        return unprovision(o,val);   // unprovision node
+
+      case BL_ID(_RESET,_DUE_):      // [RESET:#DUE] reset timer is due
+        return bl_out(o,val,out);    // output [RESET:DUE] (strip off hash bit)
+
+      case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
+      case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
+        return bl_pub(o,val);        // publish [GOOCLI:LET] or [GOOCLI:SET] msg
+*/
+      case BL_ID(_GOOSRV,STS_):      // [GOOSRV:STS] post GOO status msg upward
+        return bl_out(o,val,out);    // publish [GOOCLI:LET] or [GOOCLI:SET] msg
 
       default:
-    		return -1;                         // bad input
+        return -1;                   // bad input
     }
-	}
+  }
 
 #endif // MIGRATION_STEP1

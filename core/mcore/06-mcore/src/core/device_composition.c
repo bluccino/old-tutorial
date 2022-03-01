@@ -24,6 +24,8 @@
 //==============================================================================
 
   #include "bluccino.h"
+  #include "bl_mesh.h"
+  #include "bl_gonoff.h"
 
   #define _STS_   BL_HASH(STS_)        // hashed STS opcode
 
@@ -311,18 +313,18 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
   			 struct bt_mesh_msg_ctx *ctx,
   			 struct net_buf_simple *buf)
   {
-          #if MIGRATION_STEP6
-            uint32_t oc = BL_OC_GONOFF_SET;
-            static long bl_log_gonoff_set_rx = 0;
-            long cnt = ++bl_log_gonoff_set_rx;
-            BL_gonoff_set *pay = &post.pay.gooset;
-          #endif
+    #if MIGRATION_STEP6
+      uint32_t oc = BL_OC_GONOFF_SET;
+      static long bl_log_gonoff_set_rx = 0;
+      long cnt = ++bl_log_gonoff_set_rx;
+      BL_gonoff_set *pay = &post.pay.gooset;
+    #endif
 
-  	uint8_t tid, onoff, tt, delay;
+    uint8_t tid, onoff, tt, delay;
   	int64_t now;
 
-  	pay->onoff = onoff = net_buf_simple_pull_u8(buf);
-  	pay->tid = tid = net_buf_simple_pull_u8(buf);
+    pay->onoff = onoff = net_buf_simple_pull_u8(buf);
+    pay->tid = tid = net_buf_simple_pull_u8(buf);
 
   	if (onoff > STATE_ON)
   		return 0;
@@ -338,13 +340,13 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 
   	switch (buf->len)
     {
-    	case 0x00:      /* No optional fields are available */
-    		pay->tt = tt = ctl->tt;
-    		pay->delay = delay = 0U;
-    		break;
-    	case 0x02:      /* Optional fields are available */
-    		pay->tt = tt = net_buf_simple_pull_u8(buf);
-    		if ((tt & 0x3F) == 0x3F)
+      case 0x00:      /* No optional fields are available */
+        pay->tt = tt = ctl->tt;
+        pay->delay = delay = 0U;
+        break;
+      case 0x02:      /* Optional fields are available */
+        pay->tt = tt = net_buf_simple_pull_u8(buf);
+        if ((tt & 0x3F) == 0x3F)
         {
           goto SUBMIT;
     			return 0;
@@ -416,7 +418,8 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 	LOG(5,"Acknownledgement from GEN_ONOFF_SRV");
 	LOG(5,"Present OnOff = %02x", net_buf_simple_pull_u8(buf));
 
-	if (buf->len == 2U) {
+	if (buf->len == 2U)
+  {
 		LOG(5,"Target OnOff = %02x", net_buf_simple_pull_u8(buf));
 		LOG(5,"Remaining Time = %02x", net_buf_simple_pull_u8(buf));
 	}
@@ -3362,7 +3365,7 @@ const struct bt_mesh_comp comp = {
 //                            +-------------------+
 //                     INIT ->|       SYS:        |
 //                            +-------------------+
-//                     #STS ->|      GOOSRV:      |-> STS
+//                     #STS ->|      GOOSRV:      |-> STS ->(BL_CORE)
 //                            +-------------------+
 // Input Messages:
 //   [SYS:INIT <cb>]              init module, store callback
@@ -3375,11 +3378,11 @@ const struct bt_mesh_comp comp = {
 
   int bl_devcomp(BL_ob *o, int val)
   {
-    static BL_fct output = NULL;
+    static BL_fct out = NULL;
     switch (bl_id(o))                  // dispatch message ID
     {
-      case BL_ID(_SYS,INIT_):
-        output = o->data;              // store output callback
+      case BL_ID(_SYS,INIT_):          // [SYS:INIT <out>]
+        out = o->data;                 // store <out> callback
         return 0;                      // OK
 
       case BL_ID(_GOOSRV,_STS_):

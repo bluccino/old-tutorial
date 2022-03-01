@@ -13,12 +13,14 @@
 
   set (LIB ../../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
+  set (HWC ${LIB}/hwcore)
+  set (LMO ${LIB}/module)
   set (SRC src)
 
   set (MAIN ${SRC}/main)
   set (CORE ${SRC}/core)
 
-  include_directories(${SRC} ${BLU} ${MAIN} ${CORE})
+  include_directories(${SRC} ${BLU} ${MAIN} ${CORE} ${LMO} ${HWC})
 
   add_definitions(-DBL_CONFIG="config.h")   # push define down to C level
   add_definitions(-DBL_LOGGING="logging.h") # push define down to C level
@@ -30,7 +32,11 @@
 target_sources(app PRIVATE
 	       ${MAIN}/main.c
 				 ${BLU}/bluccino.c
-	       ${CORE}/blcore.c
+				 ${BLU}/bl_mesh.c
+	       ${HWC}/bl_hw.c
+	       ${LMO}/bl_basis.c
+
+	       ${CORE}/bl_core.c
 	       ${CORE}/app_gpio.c
 	       ${CORE}/storage.c
 	       ${CORE}/ble_mesh.c

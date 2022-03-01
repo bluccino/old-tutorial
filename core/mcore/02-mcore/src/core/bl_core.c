@@ -1,9 +1,36 @@
 //==============================================================================
-// blcore.c
-// multi model mesh demo based mesh core
+// bl_core.c
+// Bluccino core
 //
 // Created by Hugo Pristauz on 2022-Jan-02
 // Copyright © 2022 Bluccino. All rights reserved.
+//==============================================================================
+//
+//                                  INIT  TICK TOCK
+//                                    |    |    |
+//                                    v    v    v
+//                                  +-------------+
+//                                  |     SYS     |
+//                                  +-------------+
+//                            PRV ->|             |-> PRV
+//                                  |     MESH    |
+//                            ATT ->|             |-> ATT
+//                                  +-------------+
+//                            ADV ->|             |
+//                                  |      :      |-> SCAN
+//                          EVENT ->|             |
+//                                  +-------------+
+//
+//  Input Messages:
+//    - [SYS:INIT <cb>]     init module
+//    - [SYS:TICK @id cnt]  tick the module
+//    - [SYS:TOCK @id cnt]  tock the module
+//    - [:ADV <adv>]        receive ADV event
+//    - [:EVENT <lll>]      receive LLL event
+//  Output Messages:
+//    - [MESH:PRV val]      provisioning on/off => post to upward gear
+//    - [MESH:ATT val]      attentioning on/off => post to upward gear
+//
 //==============================================================================
 // mcore derived from:
 // Bluetooth: Mesh Generic OnOff, Generic Level, Lighting & Vendor Models
@@ -30,6 +57,19 @@
   #define LOG0(lvl,col,o,val)     LOGO_CORE(lvl,col,o,val)
   #define ERR 1,BL_R
 
+//==============================================================================
+// overview code migration from original onoff_app sample to a bluccino core
+//==============================================================================
+
+#include "bluccino.h"
+
+#ifndef MIGRATION_STEP1
+  #define MIGRATION_STEP1         0    // TODO introduce bl_core()
+#endif
+#ifndef MIGRATION_STEP2
+  #define MIGRATION_STEP2         0    // TODO introduce bl_core()
+#endif
+
   static BL_fct notify = NULL;
 
 //==============================================================================
@@ -37,8 +77,8 @@
 //==============================================================================
 
 #if defined(CONFIG_MCUMGR)
-  #include <mgmt/mcumgr/smp_bt.h>
-  #include "smp_svr.h"
+#include <mgmt/mcumgr/smp_bt.h>
+#include "smp_svr.h"
 #endif
 
 static bool reset;
@@ -115,10 +155,8 @@ static void light_default_status_init(void)
 void update_vnd_led_gpio(void)
 {
 #ifndef ONE_LED_ONE_BUTTON_BOARD
-  #if !MIGRATION_STEP4
-	  gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
+	gpio_pin_set(led_device[1], DT_GPIO_PIN(DT_ALIAS(led1), gpios),
 		     vnd_user_data.current == STATE_ON);
-  #endif
 #endif
 }
 
@@ -136,21 +174,13 @@ void update_led_gpio(void)
 	  printk("power-> %d, color-> %d\n", power, color);
   #endif
 
-  #if !MIGRATION_STEP4
-  	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
+	gpio_pin_set(led_device[0], DT_GPIO_PIN(DT_ALIAS(led0), gpios),
 		     ctl->light->current);
-  #endif
-
 #ifndef ONE_LED_ONE_BUTTON_BOARD
-  #if !MIGRATION_STEP4
-  	gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),
+	gpio_pin_set(led_device[2], DT_GPIO_PIN(DT_ALIAS(led2), gpios),
 		     power < 50);
-  #endif
-
-  #if !MIGRATION_STEP4
-  	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
+	gpio_pin_set(led_device[3], DT_GPIO_PIN(DT_ALIAS(led3), gpios),
 		     color < 50);
-  #endif
 #endif
 }
 
@@ -179,7 +209,7 @@ static void short_time_multireset_bt_mesh_unprovisioning(void)
   else
   {
     #if MIGRATION_STEP2
-  		LOG(3,BL_M "reset counter -> %d", reset_counter);
+  		LOG(1,BL_M "reset counter -> %d", reset_counter);
     #else
 		  printk("Reset Counter -> %d\n", reset_counter);
     #endif
@@ -284,12 +314,7 @@ void main(void)
 
       case BL_ID(_MESH,PRV_):        // [MESH:PRV val]  (provision)
       case BL_ID(_MESH,ATT_):        // [MESH:ATT val]  (attention)
-      case BL_ID(_BUTTON,PRESS_):    // [BUTTON:PRESS @id](button pressed)
 				return bl_out(o,val,notify);       // output message to subscriber
-
-      case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
-      case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
-				return gpio(o,val);                // delegate to GPIO submodule
 
       default:
     		return -1;                         // bad input
