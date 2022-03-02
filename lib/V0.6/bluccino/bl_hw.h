@@ -46,6 +46,48 @@
 //                             +-------------+
 //                     PRESS ->|   BUTTON:   |-> PRESS
 //                   RELEASE ->|             |-> RELEASE
+//==============================================================================
+// public module interface
+//==============================================================================
+//
+// BC_HW Interfaces:
+//   SYS Interface:     [] = SYS(INIT)
+//   LED Interface:     [] = LED(SET,TOGGLE)
+//   BUTTON Interface:  [PRESS,RELEASE] = BUTTON(PRESS,RELEASE)
+//   SWITCH Interface:  [STS] = SWITCH(STS)
+//
+//                             +-------------+
+//                             |    BL_HW    |
+//                             +-------------+
+//                      INIT ->|    SYS:     |
+//                      TICK ->|             |
+//                             +-------------+
+//                       SET ->|    LED:     |
+//                    TOGGLE ->|             |
+//                             +-------------+
+//                     PRESS ->|   BUTTON:   |-> PRESS
+//                   RELEASE ->|             |-> RELEASE
+//                     CLICK ->|             |-> CLICK
+//                      HOLD ->|             |-> HOLD
+//                             +-------------+
+//                       STS ->|   SWITCH:   |-> STS
+//                             +-------------+
+//  Input Messages:
+//    - [SYS:INIT <cb>]              init module, provide output callback
+//    - [SYS:TICK @id,cnt]           tick module
+//    - [LED:SET @id onoff]          set LED @id on/off (id=0..4)
+//    - [LED:TOGGLE @id]             toggle LED(@id), (id: 0..4)
+//    - [BUTTON:PRESS @id,0]         forward button press event to output
+//    - [BUTTON:RELEASE @id,time]    forward button release event to output
+//                                   note: time is PRESS->RELEASE elapsed time
+//    - [SWITCH:STS @id,onoff]       forward switch status update to output
+//
+//  Output Messages:
+//    - [BUTTON:PRESS @id,1]         output button press event
+//    - [BUTTON:RELEASE @id,0]       output button release event
+//    - [SWITCH:STS @id,onoff]       output switch status update
+//
+//==============================================================================
 //                             +-------------+
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+

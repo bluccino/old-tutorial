@@ -38,6 +38,8 @@
 //                             +-------------+
 //                     PRESS ->|   BUTTON:   |-> PRESS
 //                   RELEASE ->|             |-> RELEASE
+//                     CLICK ->|             |-> CLICK
+//                      HOLD ->|             |-> HOLD
 //                             +-------------+
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+
@@ -87,6 +89,8 @@
 
       case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,val]
       case BL_ID(_BUTTON,RELEASE_):    // [BUTTON:RELEASE @id,val]
+      case BL_ID(_BUTTON,CLICK_):      // [BUTTON:CLICK @id,edge]
+      case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id]
 	      return bl_out(o,val,output);   // output message
 
