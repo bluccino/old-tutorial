@@ -161,6 +161,29 @@
   }
 
 //==============================================================================
+// syntactic sugar: ping a module
+// - usage: bl_ping(module,"hello!")
+//==============================================================================
+
+  static inline BL_txt bl_ping(BL_fct module, BL_txt msg)
+  {
+    BL_ob oo = {_SYS,PING_,0,msg};     // note that receiver will modify oo
+    module(&oo,0);                     // send [SYS:PING <msg>] to MODULE
+    return (BL_txt)oo.data;
+  }
+
+//==============================================================================
+// syntactic sugar: ping a module
+// - usage: bl_pong(o,name)            // bl_pong() should return the module name
+//==============================================================================
+
+  static inline int bl_pong(BL_ob *o, BL_txt name)
+  {
+    o->data = name;
+    return 0;
+  }
+
+//==============================================================================
 // ticking/tocking a module (syntactic sugar: id = 0, val = 0)
 // - usage: bl_tick(module,id,cnt)     // post [SYS:TICK @id,cnt] to a module
 // -        bl_tock(module,id,cnt)     // post [SYS:TOCK @id,cnt] to a module
