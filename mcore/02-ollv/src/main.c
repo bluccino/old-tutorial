@@ -21,6 +21,10 @@
 #include "smp_svr.h"
 #endif
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#include <random/rand32.h>
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 static bool reset;
 
 static void light_default_var_init(void)
@@ -212,6 +216,61 @@ static void stop_advertising(void)
 {
 	bt_le_ext_adv_stop(adv);
 }
+
+#define STACKSIZE 1024
+#define PRIORITY 7
+
+void threadMesh(void *dummy1, void *dummy2, void *dummy3)
+{
+	ARG_UNUSED(dummy1);
+	ARG_UNUSED(dummy2);
+	ARG_UNUSED(dummy3);
+
+	int err;
+
+	while(1) 
+	{
+		printk("going to suspend mesh\n");
+		err = bt_mesh_suspend();
+		if (err && err != -EALREADY) {
+			printk("failed to suspend mesh (err %d)\n", err);
+		}
+		k_sleep(K_MSEC(sys_rand32_get() % 500));
+
+		printk("going to resume mesh\n");
+		err = bt_mesh_resume();
+		if (err && err != -EALREADY) {
+			printk("failed to resume mesh (err %d)\n", err);
+		}
+		k_sleep(K_MSEC(sys_rand32_get() % 500));
+	}
+}
+
+void threadAdv(void *dummy1, void *dummy2, void *dummy3)
+{
+	ARG_UNUSED(dummy1);
+	ARG_UNUSED(dummy2);
+	ARG_UNUSED(dummy3);
+
+	create_advertising_set();
+
+	while(1) 
+	{
+		printk("starting advertising\n");
+		start_advertising();
+		k_sleep(K_MSEC(sys_rand32_get() % 500));
+
+		printk("stopping advertising\n");
+		stop_advertising();
+		k_sleep(K_MSEC(sys_rand32_get() % 500));
+	}
+}
+
+K_THREAD_STACK_DEFINE(threadMesh_stack_area, STACKSIZE);
+static struct k_thread threadMesh_data;
+
+K_THREAD_STACK_DEFINE(threadAdv_stack_area, STACKSIZE);
+static struct k_thread threadAdv_data;
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
@@ -254,7 +313,17 @@ void main(void)
 	k_timer_start(&smp_svr_timer, K_NO_WAIT, K_MSEC(1000));
 #endif
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	create_advertising_set();
-	start_advertising();
+	k_thread_create(&threadMesh_data, threadMesh_stack_area,
+			K_THREAD_STACK_SIZEOF(threadMesh_stack_area),
+			threadMesh, NULL, NULL, NULL,
+			PRIORITY, 0, K_FOREVER);
+
+	k_thread_create(&threadAdv_data, threadAdv_stack_area,
+			K_THREAD_STACK_SIZEOF(threadAdv_stack_area),
+			threadAdv, NULL, NULL, NULL,
+			PRIORITY, 0, K_FOREVER);
+
+	k_thread_start(&threadMesh_data);
+	k_thread_start(&threadAdv_data);
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
