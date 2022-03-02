@@ -153,6 +153,7 @@ static void reset_counter_timer_handler(struct k_timer *dummy)
 
 K_TIMER_DEFINE(reset_counter_timer, reset_counter_timer_handler, NULL);
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN (sizeof(DEVICE_NAME) - 1)
 
@@ -167,8 +168,8 @@ static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
 	BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 };
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-static void start_advertising(void)
+
+static void create_advertising_set(void)
 {
 	int err;
 	struct bt_le_adv_param param =
@@ -193,13 +194,23 @@ static void start_advertising(void)
 		printk("Failed to set advertising data (%d)\n", err);
 	}
 
-	err = bt_le_ext_adv_start(adv, NULL);
+}
+
+static void start_advertising(void)
+{
+	int err;
+	err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
 	if (err) {
 		printk("Failed to start advertising set (%d)\n", err);
 		return;
 	}
 
 	printk("Advertiser %p set started\n", adv);
+}
+
+static void stop_advertising(void)
+{
+	bt_le_ext_adv_stop(adv);
 }
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -243,6 +254,7 @@ void main(void)
 	k_timer_start(&smp_svr_timer, K_NO_WAIT, K_MSEC(1000));
 #endif
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	create_advertising_set();
 	start_advertising();
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
