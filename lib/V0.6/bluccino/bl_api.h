@@ -47,6 +47,13 @@
   BL_ms bl_ms(void);                   // get current clock time in ms
 
 //==============================================================================
+// periode detection
+// - usage: ok = bl_period(o,ms)        // is tick/tock time meeting a period?
+//==============================================================================
+
+  bool bl_period(BL_ob *o, BL_ms ms);
+
+//==============================================================================
 // timing & sleep, system halt
 //==============================================================================
 
@@ -167,19 +174,19 @@
 
   static inline BL_txt bl_ping(BL_fct module, BL_txt msg)
   {
-    BL_ob oo = {_SYS,PING_,0,msg};     // note that receiver will modify oo
+    BL_ob oo = {_SYS,PING_,0,msg};
     module(&oo,0);                     // send [SYS:PING <msg>] to MODULE
     return (BL_txt)oo.data;
   }
 
 //==============================================================================
 // syntactic sugar: ping a module
-// - usage: bl_pong(o,name)            // bl_pong() should return the module name
+// - usage: bl_pong(o,msg)
 //==============================================================================
 
-  static inline int bl_pong(BL_ob *o, BL_txt name)
+  static inline int bl_pong(BL_ob *o, BL_txt msg)
   {
-    o->data = name;
+    o->data = msg;
     return 0;
   }
 

@@ -119,6 +119,17 @@
   }
 
 //==============================================================================
+// periode detection
+// - usage: ok = bl_period(o,ms)        // is tick/tock time meeting a period?
+//==============================================================================
+
+  bool bl_period(BL_ob *o, BL_ms ms)
+  {
+    BL_pace *p = bl_data(o);
+    return p ? ((p->time % ms) == 0) : 0;
+  }
+
+//==============================================================================
 // timing & sleep
 //==============================================================================
 
@@ -377,6 +388,12 @@
 
   void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when)
   {
+    BL_pace tick_pace = {tick_ms,0};
+    BL_pace tock_pace = {tock_ms,0};
+
+    BL_ob oo_tick = {_SYS,TICK_,0,&tick_pace};
+    BL_ob oo_tock = {_SYS,TOCK_,1,&tock_pace};
+
     int multiple = tock_ms / tick_ms;
 
     if (tock_ms % tick_ms != 0)
@@ -398,25 +415,27 @@
 
         // post [SYS:TICK @id,cnt] events
 
-      bl_tick(bluccino,0,ticks);
+      bluccino(&oo_tick,ticks);        // tick BLUCCINO module
       if (app)
-        bl_tick(app,0,ticks);
+        app(&oo_tick,ticks);           // tick APP module
       if (test)
-        bl_tick(test,0,ticks);
+        test(&oo_tick,ticks);          // tick TEST module
 
         // post [SYS:TOCK @id,cnt] events
 
-      if (ticks % multiple == 0)
+      if (ticks % multiple == 0)       // time for tocking?
       {
-        bl_tock(bluccino,1,tocks);
+        bluccino(&oo_tock,tocks);      // tock BLUCCINO module
         if (app)
-          bl_tock(app,1,tocks);
+          app(&oo_tock,tocks);         // tock APP module
         if (test)
-          bl_tock(test,1,tocks);
+          test(&oo_tock,tocks);        // tock TEST module
         tocks++;
+        tock_pace.time += tock_ms;     // increase tock time
       }
 
-      bl_sleep(tick_ms);
+      bl_sleep(tick_ms);               // sleep for one tick period
+      tick_pace.time += tick_ms;
     }
   }
 

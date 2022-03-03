@@ -69,13 +69,19 @@
       BL_ERR_FAILED  = 1300,           // operation failed
       BL_ERR_MEMORY  = 1400,           // out of memory
   } BL_err;
-
+/*
   typedef struct BL_pace               // tick/tock pace control
           {
             BL_ms start;               // start time frame for pace maker
             BL_ms clock;               // pace clock
             BL_ms period;              // tick period
             int divider;               // tock divider
+          } BL_pace;                   // tick/tock pace control
+*/
+  typedef struct BL_pace               // tick/tock pace control
+          {
+            BL_ms period;              // tick/tock period
+            BL_ms time;                // tick/tock time
           } BL_pace;                   // tick/tock pace control
 
 #endif // __BL_TYPE_H__
