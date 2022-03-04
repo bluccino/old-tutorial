@@ -84,7 +84,8 @@
             BL_ms time;                // tick/tock time
           } BL_pace;                   // tick/tock pace control
 
-  #define BL_LO(x)           ((BL_byte) ((x) & 0xff))
-  #define BL_HI(x)           ((BL_byte) (((x) >> 8) & 0xff))
+  #define BL_LO(x)           ((BL_byte)  ((x) & 0xff))
+  #define BL_HI(x)           ((BL_byte)  (((x) >> 8) & 0xff))
+  #define BL_HILO(hi,lo)     ((uint16_t) ((((uint16_t)(hi)) << 8) | (lo)))
 
 #endif // __BL_TYPE_H__
