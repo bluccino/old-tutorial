@@ -7,7 +7,7 @@
 #include "bl_hook.h"
 
 
-   typedef struct net_buf_simple BL_nbs;
+   typedef struct net_buf_simple FL_nbs;
 
 //==============================================================================
 // pull & trace payload
@@ -36,7 +36,7 @@
     return seq;             // return sequence counter
   }
 
-  static uint32_t pull_payload(uint8_t *pay, BL_nbs *buf, int len)
+  static uint32_t pull_payload(uint8_t *pay, FL_nbs *buf, int len)
   {
     pay[0] = len-1;
 
@@ -63,7 +63,7 @@
   #define SEQ  0xee181502  // sequence count of iBeacon which we are seeking for
 
   static void scan_ibeacon_cb(uint8_t typ, const bt_addr_le_t *addr,
-                              int8_t rssi, BL_nbs *buf)
+                              int8_t rssi, FL_nbs *buf)
   {
 //  const BL_u8 *paddr = addr->a.val;  // pointer to Bluetooth address
 //printk(" => hook\n");

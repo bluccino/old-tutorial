@@ -82,6 +82,21 @@
   }
 
 //==============================================================================
+// error message: error printing only for err != 0
+// - usage: err = bl_err(err,msg)
+//==============================================================================
+
+  int bl_err(int err, BL_txt msg)
+  {
+    if (err)
+    {
+      if (bl_dbg(1))                            // errors come @ verbose level 1
+        bl_prt(BL_R "error %d: %s\n",err,msg);  // in RED text!
+    }
+    return err;
+  }
+
+//==============================================================================
 // get clock time as minutes, seconds, milliseconds
 //==============================================================================
 

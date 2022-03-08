@@ -260,7 +260,7 @@
         if ( 0 <= ele_idx && ele_idx < pcomp->elem_count)
             return pcomp->elem + ele_idx;
 
-        bl_error(BL_ERR_BADARG, "bl_element_pointer(): bad element index");
+        bl_err(BL_ERR_BADARG, "bl_element_pointer(): bad element index");
         return NULL;
     }
 
@@ -278,7 +278,7 @@
         if ( 0 <= mod_idx && mod_idx < pel->model_count)
             return pel->models + mod_idx;
 
-        bl_error(BL_ERR_BADARG, "bl_sig_model_pointer(): bad model index");
+        bl_err(BL_ERR_BADARG, "bl_sig_model_pointer(): bad model index");
         return NULL;
     }
 
@@ -292,7 +292,7 @@
         if ( 0 <= mod_idx && mod_idx < pel->vnd_model_count)
             return pel->vnd_models + mod_idx;
 
-        bl_error(BL_ERR_BADARG, "bl_vnd_model_pointer(): bad model index");
+        bl_err(BL_ERR_BADARG, "bl_vnd_model_pointer(): bad model index");
         return NULL;
     }
 
@@ -359,7 +359,7 @@
             }
         }
 
-        bl_error(BL_ERR_BADARG, "bl_model(): bad model index");
+        bl_err(BL_ERR_BADARG, "bl_model(): bad model index");
         return NULL;
     }
 
@@ -396,7 +396,7 @@
             }
         }
 
-        bl_error(BL_ERR_BADARG, "bl_iid(): bad model pointer");
+        bl_err(BL_ERR_BADARG, "bl_iid(): bad model pointer");
         return 0xFFFF;
     }
 
@@ -480,12 +480,12 @@
 // source and destination address of mesh message
 //==============================================================================
 
-    BL_addr bl_src(BL_ctx *ctx)         // source address of mesh message
+    FL_addr bl_src(BL_ctx *ctx)         // source address of mesh message
     {
         return ctx->addr;               // source address
     }
 
-    BL_addr bl_dst(BL_ctx *ctx)         // destination address of mesh message
+    FL_addr bl_dst(BL_ctx *ctx)         // destination address of mesh message
     {
         return ctx->recv_dst;           // destination address
     }
@@ -494,7 +494,7 @@
 // element address of model
 //==============================================================================
 
-    BL_addr bl_me(BL_model *pmod)
+    FL_addr bl_me(BL_model *pmod)
     {
         BL_element *pel = bl_element_pointer(pmod->elem_idx);
         return pel->addr;
@@ -632,7 +632,7 @@
 
 		    if (err)
         {
-            bl_error(err, "Bluetooth initializing failed!");
+            bl_err(err, "Bluetooth initializing failed!");
 			      return;
         }
 
@@ -645,7 +645,7 @@
 		    err = bt_mesh_init(&prov, m_pcomp);
         if (err)
         {
-            bl_error(err, "mesh initializing failed!");
+            bl_err(err, "mesh initializing failed!");
             return;
         }
 
@@ -661,7 +661,7 @@
             // use identity address as device UUID
 
         if (bt_le_oob_get_local(BT_ID_DEFAULT, &oob))
-            bl_error(BL_ERR_FAILED, "OOB: identity address unavailable!");
+            bl_err(BL_ERR_FAILED, "OOB: identity address unavailable!");
         else
             memcpy(dev_uuid, oob.addr.a.val, 6);
 
@@ -695,7 +695,7 @@
 
         int err = bt_enable(bl_bt_ready);
         if (err)
-            bl_error(err, "Bluetooth/mesh init failed!");
+            bl_err(err, "Bluetooth/mesh init failed!");
 
             // now make sure that all setings are restored by waiting 200ms
             // longer than the last setting restore

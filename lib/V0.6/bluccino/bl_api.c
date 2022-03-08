@@ -397,7 +397,7 @@
     int multiple = tock_ms / tick_ms;
 
     if (tock_ms % tick_ms != 0)
-      bl_error(-1,"bl_engine: tock period no multiple of tick period");
+      bl_err(-1,"bl_engine: tock period no multiple of tick period");
 
       // init Bluccino library module and app init
 
