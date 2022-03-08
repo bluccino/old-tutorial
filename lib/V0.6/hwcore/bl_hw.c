@@ -28,20 +28,24 @@
 //   SWITCH Interface:  [STS] = SWITCH(STS)
 //
 //                             +-------------+
-//                             |    BC_HW    |
+//                             |    BL_HW    |
 //                             +-------------+
 //                      INIT ->|    SYS:     |
+//                      TICK ->|             |
 //                             +-------------+
 //                       SET ->|    LED:     |
 //                    TOGGLE ->|             |
 //                             +-------------+
 //                     PRESS ->|   BUTTON:   |-> PRESS
 //                   RELEASE ->|             |-> RELEASE
+//                     CLICK ->|             |-> CLICK
+//                      HOLD ->|             |-> HOLD
 //                             +-------------+
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+
 //  Input Messages:
 //    - [SYS:INIT <cb>]              init module, provide output callback
+//    - [SYS:TICK @id,cnt]           tick module
 //    - [LED:SET @id onoff]          set LED @id on/off (id=0..4)
 //    - [LED:TOGGLE @id]             toggle LED(@id), (id: 0..4)
 //    - [BUTTON:PRESS @id,0]         forward button press event to output
@@ -67,15 +71,17 @@
         LOG(3,BL_C "initialising HW core ...");
         output = o->data;              // store output callback
 
+          // for BC_BUTTON and BC_LED output needs to go to BC_HW
 
         BL_ob oo = {_SYS,INIT_,o->id,bl_hw};
-
-          // for BC_BUTTON and BC_LED output needs to go to BC_HW
 
         bl_hwbut(&oo,val);             // init BUTTON module
         bl_hwled(&oo,val);               // init LED module
       	return 0;                      // OK
       }
+
+      case BL_ID(_SYS,TICK_):          // [SYS:TICK @id,cnt]
+        return bl_hwbut(o,val);        // tick BL_HWBUT module
 
       case BL_ID(_LED,SET_):           // [LED:set @id,val]
       case BL_ID(_LED,TOGGLE_):        // [LED:toggle @id]
@@ -83,6 +89,8 @@
 
       case BL_ID(_BUTTON,PRESS_):      // [BUTTON:PRESS @id,val]
       case BL_ID(_BUTTON,RELEASE_):    // [BUTTON:RELEASE @id,val]
+      case BL_ID(_BUTTON,CLICK_):      // [BUTTON:CLICK @id,edge]
+      case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id]
 	      return bl_out(o,val,output);   // output message
 

@@ -35,8 +35,10 @@
 //                      INIT ->|    SYS:     |
 //                      TICK ->|             |
 //                             +-------------+
-//                     PRESS ->|   BUTTON:   |-> PRESS
-//                   RELEASE ->|             |-> RELEASE
+//                    #PRESS ->|   BUTTON:   |-> PRESS
+//                  #RELEASE ->|             |-> RELEASE
+//                    #CLICK ->|             |-> CLICK
+//                     #HOLD ->|             |-> HOLD
 //                             +-------------+
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+

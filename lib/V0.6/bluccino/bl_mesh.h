@@ -44,7 +44,7 @@
     typedef uint16_t BL_level;        // 0 .. 10000
     typedef int16_t BL_signed;       // 0x8000 .. 0 .. 0x7ffff
     typedef uint16_t BL_val;          // 0 .. 0xffff
-    typedef uint16_t BL_addr;         // 0 .. 0xffff (mesh element address)
+    typedef uint16_t FL_addr;         // 0 .. 0xffff (mesh element address)
 //  typedef const char *BL_txt;    // const char *  (e.g. text)
     typedef const uint8_t *BL_pay;    // const byte *  (e.g. payloads)
 
@@ -101,7 +101,7 @@
     typedef struct bt_mesh_model_pub BL_pub;          // publisher
     typedef struct bt_mesh_model     BL_model;        // mesh model
     typedef struct bt_mesh_msg_ctx   BL_ctx;          // context
-    typedef struct net_buf_simple    BL_nbs;          // simple net buffer
+    typedef struct net_buf_simple    FL_nbs;          // simple net buffer
     typedef struct bt_mesh_model_op  BL_ocmap;        // opcode map
     typedef struct bt_mesh_elem      BL_element;      // mesh element
     typedef struct bt_mesh_comp      BL_comp;         // device composition
@@ -127,7 +127,7 @@
     typedef struct BL_msg  // message data structure, containing data buffer, net-buffer & publisher
     {
         uint8_t data[BL_DNP_DATA_LENGTH];  // payload data buffer
-        BL_nbs nbs;                        // simple netbuf
+        FL_nbs nbs;                        // simple netbuf
         BL_pub pub;                        // publishing data structure
     } BL_msg;
 
@@ -222,9 +222,9 @@
 // source and destination address of mesh message
 //==============================================================================
 
-    BL_addr bl_src(BL_ctx *ctx);        // source address of mesh message
-    BL_addr bl_dst(BL_ctx *ctx);        // destination address of mesh message
-    BL_addr bl_me(BL_model *pmod);      // model's element address
+    FL_addr bl_src(BL_ctx *ctx);        // source address of mesh message
+    FL_addr bl_dst(BL_ctx *ctx);        // destination address of mesh message
+    FL_addr bl_me(BL_model *pmod);      // model's element address
 
 //==============================================================================
 // mesh init

@@ -22,7 +22,7 @@
 //==============================================================================
 
   #define LOG                     LOG_BASIS
-  #define LOGO(lvl,col,o,val)     LOGO_MAIN(lvl,col"main:",o,val)
+  #define LOGO(lvl,col,o,val)     LOGO_MAIN(lvl,col"bl_basis:",o,val)
   #define LOG0(lvl,col,o,val)     LOGO_MAIN(lvl,col,o,val)
 
 //==============================================================================
@@ -40,14 +40,14 @@
 //                   TICK ->|                 |
 //                          +-----------------+
 //                   #INC ->|     RESET:      |
-//                    INC ->|                 %-> INC (DOWN)
-//                    DUE ->|                 %-> PRV (DOWN)
+//                    INC ->|                 |-> INC ->(BL_DOWN)
+//                    DUE ->|                 |-> PRV ->(BL_DOWN)
 //                          +-----------------+
 //                   BUSY ->|      GET:       |
 //                          +-----------------+
 //                  PRESS ->|     BUTTON:     |
 //                          +-----------------+
-//                          |       LED:      %-> LED (DOWN)
+//                          |       LED:      |->(v) LED (DOWN)
 //                          +-----------------+
 //
 //==============================================================================
@@ -96,7 +96,7 @@
           bool onoff = rem < (900/T_TICK);  // 90% of time on
 
           if (onoff != old)                 // LED on/odd state changed?
-            bl_led(map[count],onoff);          // turn off LED @count+1
+            bl_led(map[count],onoff);       // turn off LED @count+1
 
           old = onoff;                      // saveLED on/off state
         }
@@ -170,7 +170,7 @@
       case BL_ID(_SYS,TICK_):
         if (!state || !bl_due(&due,T_ATT))  // attention state? due?
           return 0;                         // neither attention state nor due
-        return bl_led(0,-1);                   // toggle status LED @1
+        return bl_led(0,-1);                // toggle status LED @0
 
       case BL_ID(_SET,ATT_):
         state = val;                        // store attention state

@@ -307,8 +307,10 @@
 //                      INIT ->|    SYS:     |
 //                      TICK ->|             |
 //                             +-------------+
-//                     PRESS ->|   BUTTON:   |-> PRESS
-//                   RELEASE ->|             |-> RELEASE
+//                    #PRESS ->|   BUTTON:   |-> PRESS
+//                  #RELEASE ->|             |-> RELEASE
+//                    #CLICK ->|             |-> CLICK
+//                     #HOLD ->|             |-> HOLD
 //                             +-------------+
 //                       STS ->|   SWITCH:   |-> STS
 //                             +-------------+
@@ -344,7 +346,7 @@
 
       case BL_ID(_BUTTON,_PRESS_):        // [BUTTON:#PRESS @id]
       case BL_ID(_BUTTON,_RELEASE_):      // [BUTTON:#RELEASE @id]
-        click(o,val);               // forward to CLICK module
+        click(o,val);                     // forward to CLICK module
         return bl_out(o,val,output);      // post to output subscriber
 
       case BL_ID(_BUTTON,_CLICK_):        // [BUTTON:#CLICK @id,n]

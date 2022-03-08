@@ -48,3 +48,17 @@ API layer. The high level app behavior is changed as follows:
         ||      +----------------------------------------------+      ||
         ||============================================================||
         ||                                                            ||
+
+
+#===============================================================================
+# Exercices
+#===============================================================================
+
+Exercise 1:
+- in main() there is a log statement
+    bl_log(1,"%s",provision?msg1:msg2);
+- try to replace this statement by the simpler one
+    bl_log(1,provision?msg1:msg2)
+  and try to interprete the compiler's moaning!
+- what is the reason why such simplification does not work, and what might
+  be the motivation for the specific implementation of bl_log()?

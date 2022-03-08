@@ -40,6 +40,10 @@
 // let's go ...
 //==============================================================================
 
+#ifndef CFG_BT_ENABLE                  // define in config.h
+  #define CFG_BT_ENABLE   1            // by default bluetooth will be enabled
+#endif
+
 #if defined(CONFIG_MCUMGR)
   #include <mgmt/mcumgr/smp_bt.h>
   #include "smp_svr.h"
@@ -260,7 +264,7 @@ static int init_mcore(void)
 void main(void)
 {
 #endif
-	int err;
+	//int err;
 
 	light_default_var_init();
 
@@ -280,17 +284,20 @@ void main(void)
 
 	ps_settings_init();
 
-	/* Initialize the Bluetooth Subsystem */
-	err = bt_enable(NULL);
-	if (err)
-        {
-    #if MIGRATION_STEP2
-		  LOG(ERR "Bluetooth init failed (err %d)", err);
-    #else
-		  printk("Bluetooth init failed (err %d)\n", err);
-    #endif
-		return err;
-	}
+	  // Initialize the Bluetooth Subsystem */
+
+  #if (CFG_BT_ENABLE)
+  	int err = bt_enable(NULL);
+  	if (err)
+          {
+      #if MIGRATION_STEP2
+  		  LOG(ERR "Bluetooth init failed (err %d)", err);
+      #else
+  		  printk("Bluetooth init failed (err %d)\n", err);
+      #endif
+  		return err;
+  	}
+  #endif
 
   #if MIGRATION_STEP5
     blemesh_ready();
@@ -302,10 +309,10 @@ void main(void)
 
 	update_light_state();
 
-        #if !MIGRATION_STEP5
+  #if !MIGRATION_STEP5
 	  short_time_multireset_bt_mesh_unprovisioning();
 	  k_timer_start(&reset_counter_timer, K_MSEC(7000), K_NO_WAIT);
-        #endif
+  #endif
 
 	#if defined(CONFIG_MCUMGR)
 		/* Initialize the Bluetooth mcumgr transport. */
@@ -404,7 +411,8 @@ void main(void)
       case BL_ID(_BUTTON,RELEASE_):  // [BUTTON:RELEASE @id] (button release)
       case BL_ID(_SWITCH,STS_):      // [BUTTON:RELEASE @id] (button release)
         LOGO(3,"",o,val);
-        return bl_out(o,val,output); // output to subscriber
+//return 0;
+      return bl_out(o,val,output); // output to subscriber
 
       case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
       case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]

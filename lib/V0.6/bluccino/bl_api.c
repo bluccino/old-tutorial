@@ -59,17 +59,18 @@
   #define LOG0(lvl,col,o,val)     LOGO_API(lvl,col,o,val)
 
 //==============================================================================
-// provisioned & attention state
+// provision & attention state
 //==============================================================================
 
-  static bool provisioned = 0;
+  static bool provision = 0;
   static bool attention = 0;
 
 //==============================================================================
 // notification and driver callbacks
 //==============================================================================
 
-  static BL_fct output = NULL;         // notification callback
+  static BL_fct output = NULL;         // output callback
+  static BL_fct test = NULL;           // test callback
 
 //==============================================================================
 // us/ms clock
@@ -115,6 +116,17 @@
   {
     BL_us us = bl_us();
     return us/1000;
+  }
+
+//==============================================================================
+// periode detection
+// - usage: ok = bl_period(o,ms)        // is tick/tock time meeting a period?
+//==============================================================================
+
+  bool bl_period(BL_ob *o, BL_ms ms)
+  {
+    BL_pace *p = bl_data(o);
+    return p ? ((p->time % ms) == 0) : 0;
   }
 
 //==============================================================================
@@ -182,15 +194,15 @@
 
     switch (bl_id(o))                           // dispatch event
     {
-      case BL_ID(_SET,PRV_):            // provisioned state changed
-        provisioned = val;
-        bl_log_color(attention,provisioned);
-        LOG(2,BL_M"node %sprovisioned",val?"":"un");
+      case BL_ID(_SET,PRV_):            // provision state changed
+        provision = val;
+        bl_log_color(attention,provision);
+        LOG(2,BL_M"node %sprovision",val?"":"un");
         return bl_out(o,val,output);
 
       case BL_ID(_SET,ATT_):          // attention state changed
         attention = val;
-        bl_log_color(attention,provisioned);
+        bl_log_color(attention,provision);
         LOG(2,BL_G"attention %s",val?"on":"off");
         return bl_out(o,val,output);
 
@@ -234,17 +246,25 @@
 
 //==============================================================================
 // message downward posting to lower level / driver layer (default/__weak)
+// - bl_down() is defined as weak and can be overloaded
+// - by default all messages posted to BL_DOWN are forwarded to BL_CORE
 //==============================================================================
 
   __weak int bl_down(BL_ob *o, int val)
   {
-    if ( !(bl_is(o,_LED,SET_) && o->id == 0))    // no status LED loggings
-    bl_logo(3,"down",o,val);
-    return bl_core(o,val);
+    bool nolog = bl_is(o,_LED,SET_) && o->id == 0;
+    nolog = nolog || (o->cl == _SYS);
+
+    if ( !nolog )
+      bl_logo(3,"down",o,val);         // not suppressed messages are logged
+
+    return bl_core(o,val);             // forward down to BL_CORE module
   }
 
 //==============================================================================
 // message upward posting to API layer (default/__weak)
+// - bl_up() is defined as weak and can be overloaded
+// - by default all messages posted to BL_UP are forwarded to BL_IN
 //==============================================================================
 
   __weak int bl_up(BL_ob *o, int val)
@@ -320,27 +340,16 @@
   }
 
 //==============================================================================
-// check wheter module can be used
+// setup initializing, ticking and tocking for a test module
+// - usage: bl_test(module)            // controlled by bl_run()
 //==============================================================================
-/*
-  int bl_use(BL_fct module, BL_txt msg)
+
+  int bl_test(BL_fct module)
   {
-    bool use = false;                       // cannot used by default
-    BL_ob oo = {_SYS,USE_,0,NULL};
-
-    if (module)
-      use = module(&oo,0);
-
-    if (!use && bl_dbg(0))
-    {
-      printk(BL_R "error: %s not ready for use (looping ...)\n"BL_0, msg);
-      for (;;)
-        bl_sleep(10);
-    }
-
-    return use;
+    test = module;
+    return 0;                          // OK
   }
-*/
+
 //==============================================================================
 // Blucino init                             // init Blucino system
 // usage:  bl_init(NULL,when,verbose)       // init Bluccino
@@ -379,16 +388,24 @@
 
   void bl_run(BL_fct app, int tick_ms, int tock_ms, BL_fct when)
   {
+    BL_pace tick_pace = {tick_ms,0};
+    BL_pace tock_pace = {tock_ms,0};
+
+    BL_ob oo_tick = {_SYS,TICK_,0,&tick_pace};
+    BL_ob oo_tock = {_SYS,TOCK_,1,&tock_pace};
+
     int multiple = tock_ms / tick_ms;
 
     if (tock_ms % tick_ms != 0)
-      bl_error(-1,"bl_engine: tock period no multiple of tick period");
+      bl_err(-1,"bl_engine: tock period no multiple of tick period");
 
       // init Bluccino library module and app init
 
-    bl_init(bluccino,when);
+    bl_init(bluccino,when);            // always use upward gear for core output
     if (app)
       bl_init(app,when);
+    if (test)
+      bl_init(test,when);
 
       // post periodic ticks and tocks ...
 
@@ -398,21 +415,27 @@
 
         // post [SYS:TICK @id,cnt] events
 
-      bl_tick(bluccino,0,ticks);
+      bluccino(&oo_tick,ticks);        // tick BLUCCINO module
       if (app)
-        bl_tick(app,0,ticks);
+        app(&oo_tick,ticks);           // tick APP module
+      if (test)
+        test(&oo_tick,ticks);          // tick TEST module
 
         // post [SYS:TOCK @id,cnt] events
 
-      if (ticks % multiple == 0)
+      if (ticks % multiple == 0)       // time for tocking?
       {
-        bl_tock(bluccino,1,tocks);
+        bluccino(&oo_tock,tocks);      // tock BLUCCINO module
         if (app)
-          bl_tock(app,1,tocks);
+          app(&oo_tock,tocks);         // tock APP module
+        if (test)
+          test(&oo_tock,tocks);        // tock TEST module
         tocks++;
+        tock_pace.time += tock_ms;     // increase tock time
       }
 
-      bl_sleep(tick_ms);
+      bl_sleep(tick_ms);               // sleep for one tick period
+      tick_pace.time += tick_ms;
     }
   }
 
@@ -446,12 +469,16 @@
     {
       case BL_ID(_SYS,INIT_):
         output = o->data;
-        bl_init(bl_core,bl_up);        // init core, subscribe with bl_up()
-        return 0;
+
+          // we need to initialize everything what is downstairs (on driver
+          // level). All stuff downstairs has to send messages through the
+          // upward gear
+
+        return bl_init(bl_down,bl_up); // forward to BL_DOWN gear, output=>BL_UP
 
       case BL_ID(_SYS,TICK_):
       case BL_ID(_SYS,TOCK_):
-        return bl_core(o,val);         // forward to BL_CORE module
+        return bl_down(o,val);         // forward to BL_CORE module
 
       case BL_ID(_SYS,WHEN_):
         output = o->data;

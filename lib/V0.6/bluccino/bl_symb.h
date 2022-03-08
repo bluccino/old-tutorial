@@ -23,8 +23,8 @@
 
     typedef enum BL_cl                 // class tag
             {
-              _VOID,                   // invalid
-              _SYS,                    // system
+              _VOID = 0x7FFF,          // invalid message class (a big number!)
+              _SYS = 1,                // system
               _OUT,                    // output a message
               _RESET,                  // reset
               _TIMER,                  // timer module
@@ -74,8 +74,8 @@
 
     typedef enum BL_op
             {
-              VOID_,                   // invalid opcode (0)
-              INIT_,                   // init function
+              VOID_ = 0x7FFF,          // invalid opcode (a big number)
+              INIT_ = 1,               // init function
               WHEN_,                   // provide module handling callback
               USE_,                    // can module be used
               TOC_,                    // tic/toc object

@@ -55,9 +55,9 @@
 // set log color
 //==============================================================================
 
-  void bl_log_color(bool attention, bool provisioned)
+  void bl_log_color(bool attention, bool provision)
   {
-    color = attention ? BL_G : (provisioned ? BL_Y : "");
+    color = attention ? BL_G : (provision ? BL_Y : "");
   }
 
   int bl_verbose(int verbose)              // set verbose level
@@ -79,6 +79,21 @@
       for(;;)
         bl_sleep(10);                  // sleep to support SEGGER RTT function
     }
+  }
+
+//==============================================================================
+// error message: error printing only for err != 0
+// - usage: err = bl_err(err,msg)
+//==============================================================================
+
+  int bl_err(int err, BL_txt msg)
+  {
+    if (err)
+    {
+      if (bl_dbg(1))                            // errors come @ verbose level 1
+        bl_prt(BL_R "error %d: %s\n",err,msg);  // in RED text!
+    }
+    return err;
   }
 
 //==============================================================================
@@ -153,57 +168,23 @@
 //==============================================================================
 // log messages
 //==============================================================================
-/*
-     // basic bl_log(lev,msg) function always automatically terminates with
-     // newline, except an empty string is passed. So the possibilities arw:
-     //
-     //   1) bl_log(lev,"here we go");  // automatically adds "\n" at the end
-     //   2) bl_log(lev,"");
-     //      printk("head"); ...; printk("tail\n");
 
-  void bl_log(int lev, BL_txt msg)              // log text msg without args
-  {
-    if ( !bl_dbg(lev) )
-      return;
-
-    if (msg[0] != 0)
-      printk("%s\n"BL_0, msg);
-  }
-
-  void bl_log1(int lev, BL_txt msg, int value)  // log text msg with 1 arg
-  {
-    if ( !bl_dbg(lev) )
-     return;
-
-    BL_txt col = (msg[0] != '@') ? "" : (value ? BL_G : BL_M);
-    msg = (msg[0] == '@') ? msg+1 : msg;
-
-    printk("%s%s: %d\n" BL_0, col, msg, value);
-  }
-
-  void bl_log2(int lev, BL_txt msg, int id, int value) // log text with 2 args
-  {
-    if ( !bl_dbg(lev) )
-     return;
-
-    BL_txt col = (msg[0] != '@') ? "" : (value ? BL_G : BL_M);
-    msg = (msg[0] == '@') ? msg+1 : msg;
-    printk("%s%s: @%d,%d\n"BL_0, col, msg, id,value);
-  }
-*/
   void bl_logo(int lev, BL_txt msg, BL_ob *o, int value) // log event message
   {
     if ( !bl_dbg(lev) )
      return;
 
+    BL_txt hash = BL_HASHED(o->op) ? "#" : "";
+    BL_op op = BL_CLEAR(o->op);
+
     BL_txt col = (msg[0] != '@') ? "" : (value ? BL_G : BL_M);
     msg = (msg[0] == '@') ? msg+1 : msg;
 
     #if CFG_PRETTY_LOGGING             // pretty text for class tag & opcode
-      printk("%s%s [%s:%s @%d,%d]\n"BL_0, col,msg,
-             cltext(o->cl),optext(o->op),o->id,value);
+      bl_prt("%s%s [%s:%s%s @%d,%d]\n"BL_0, col,msg,
+             cltext(o->cl),hash,optext(op),o->id,value);
     #else
-      printk("%s%s [%d:%d @%d,%d]\n"BL_0,col,msg,
-             o->cl,o->op, o->id,value);
+      bl_prt("%s%s [%d:%s%d @%d,%d]\n"BL_0,col,msg,
+             o->cl,hash,op,o->id,value);
     #endif
   }

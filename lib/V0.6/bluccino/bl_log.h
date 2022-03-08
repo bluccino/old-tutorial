@@ -40,7 +40,7 @@
             }                                    \
          } while(0)
 
-    #define bl_log BL_LOG              // log alias
+    #define bl_log(l,f,...)  BL_LOG(l,f,##__VA_ARGS__)  // always enabled
 
 //==============================================================================
 // API Logging
@@ -208,14 +208,10 @@
   void bl_assert(bool assertion);
 
 //==============================================================================
-// error message
-// - usage: bl_error(err,msg)
+// error message: error printing only for err != 0
+// - usage: err = bl_err(err,msg)
 //==============================================================================
 
-  static inline void bl_error(int err, BL_txt msg)
-  {
-    if (bl_dbg(1))                          // errors come @ verbose level 1
-      bl_prt(BL_R "error %d: %s",err,msg);  // in RED text!
-  }
+  int bl_err(int err, BL_txt msg);
 
 #endif // __BL_LOG_H__
