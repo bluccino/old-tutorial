@@ -38,7 +38,8 @@
 // typedefs
 //==============================================================================
 
-  typedef uint8_t BL_byte;
+  typedef uint8_t  BL_byte;             // unsigned 8-bit byte
+  typedef uint16_t BL_word;             // unsigned 16-bit word
 
   typedef int8_t   BL_s8;               // we like short type identifiers :-)
   typedef int16_t  BL_s16;              // we like short type identifiers :-)
@@ -87,5 +88,13 @@
   #define BL_LO(x)           ((BL_byte)  ((x) & 0xff))
   #define BL_HI(x)           ((BL_byte)  (((x) >> 8) & 0xff))
   #define BL_HILO(hi,lo)     ((uint16_t) ((((uint16_t)(hi)) << 8) | (lo)))
+
+  #define BL_LB(x)           ((BL_byte)  ((x) & 0xff))
+  #define BL_HB(x)           ((BL_byte)  (((x) >> 8) & 0xff))
+  #define BL_HBLB(hi,lo)     ((uint16_t) ((((uint16_t)(hi)) << 8) | (lo)))
+
+  #define BL_LW(x)           ((BL_word)  ((x) & 0xffff))
+  #define BL_HW(x)           ((BL_word)  (((x) >> 16) & 0xffff))
+  #define BL_HWLW(hi,lo)     ((uint32_t) ((((uint32_t)(hi)) << 16) | (lo)))
 
 #endif // __BL_TYPE_H__
