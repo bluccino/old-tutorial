@@ -40,16 +40,16 @@
 //==============================================================================
 
 #ifndef MIGRATION_STEP1
-  #define MIGRATION_STEP1         0    // introduce bl_core()
+  #define MIGRATION_STEP1         1    // introduce bl_core()
 #endif
 #ifndef MIGRATION_STEP2
-  #define MIGRATION_STEP2         0    // emit provisioned/attention messages
+  #define MIGRATION_STEP2         1    // emit provisioned/attention messages
 #endif
 #ifndef MIGRATION_STEP3
-  #define MIGRATION_STEP3         0    // set onoff state
+  #define MIGRATION_STEP3         1    // set onoff state
 #endif
 #ifndef MIGRATION_STEP6
-  #define MIGRATION_STEP6         0    // receive mesh messages
+  #define MIGRATION_STEP6         1    // receive mesh messages
 #endif
 
 //==============================================================================

@@ -82,6 +82,8 @@
 
               READY_,                  // ready state
               BUSY_,                   // busy state
+              PING_,                   // ping a module
+              PONG_,                   // pong response
               PRV_,                    // provisioning state changed
               ATT_,                    // attention state change
               DUE_,                    // timer is due

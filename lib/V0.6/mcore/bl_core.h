@@ -31,22 +31,22 @@
 //==============================================================================
 
   #ifndef MIGRATION_STEP1
-    #define MIGRATION_STEP1         0
+    #define MIGRATION_STEP1         1
   #endif
   #ifndef MIGRATION_STEP2
-    #define MIGRATION_STEP2         0
+    #define MIGRATION_STEP2         1
   #endif
   #ifndef MIGRATION_STEP3
-    #define MIGRATION_STEP3         0
+    #define MIGRATION_STEP3         1
   #endif
   #ifndef MIGRATION_STEP4
-    #define MIGRATION_STEP4         0
+    #define MIGRATION_STEP4         1
   #endif
   #ifndef MIGRATION_STEP5
-    #define MIGRATION_STEP5         0
+    #define MIGRATION_STEP5         1
   #endif
   #ifndef MIGRATION_STEP6
-    #define MIGRATION_STEP6         0
+    #define MIGRATION_STEP6         1
   #endif
 
 //==============================================================================
