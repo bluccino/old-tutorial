@@ -52,6 +52,8 @@
 
   #define _PRESS_    BL_HASH(PRESS_)   // hashed symbol #PRESS
   #define _RELEASE_  BL_HASH(RELEASE_) // hashed symbol #RELEASE
+  #define _CLICK_    BL_HASH(CLICK_)   // hashed symbol #CLICK
+  #define _HOLD_     BL_HASH(HOLD_)    // hashed symbol #HOLD
   #define _STS_      BL_HASH(STS_)     // hashed symbol #STS
   #define _PRV_      BL_HASH(PRV_)     // hashed symbol #PRV
   #define _ATT_      BL_HASH(ATT_)     // hashed symbol #ATT
@@ -454,13 +456,25 @@ static struct k_work notify_work;
 
 static void notify_worker(struct k_work *work)
 {
+  LOG(4,"notify_worker: edges:%d, hold:%d",sw.edges, sw.hold);
+	uint8_t id = sw.sw_num + 1;
+  bool press = sw.edges % 2;
+
+  BL_ob oo = {_BUTTON,press?_PRESS_:_RELEASE_,id,NULL};
+	bl_core(&oo,press);
+
+  if (sw.edges == 1)
+	{
+	  BL_ob oo = {_BUTTON,_CLICK_, id, NULL};
+		bl_core(&oo,press);
+	}
+
 	if (sw.hold == 0)
 	{
-    LOG(4,"notify_worker: edges:%d, hold:%d",sw.edges, sw.hold);
 	}
 	else
   {
-	  BL_ob oo = {_BUTTON, _PRESS_, sw.sw_num+1, NULL};   // button ID = sw_num+1
+	  BL_ob oo = {_BUTTON, _CLICK_, id, NULL};   // button ID = sw_num+1
 	  bl_core(&oo,sw.onoff_state);
 
 		sw_reset();
