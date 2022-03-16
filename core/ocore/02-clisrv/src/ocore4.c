@@ -25,9 +25,9 @@
 // OCORE Versions 4 (ocore4)
 //   - lower BUTTON_DEBOUNCE_DELAY_MS from 250 to 120ms                 @@@4.1
 //	 - lower sw.button_timer interval from 1.0 to 0.6s                  @@@4.2
-//   - define notify_work, provide code for notify_worker               @@@4.3
-//   - in button_cnt_timer submit a 'notify_work'                       @@@4.4
-//   - assign (init) notify_work with notify_worker                     @@@4.5
+//   - define notify_work, provide code for button_worker               @@@4.3
+//   - in button_timer submit a 'notify_work'                           @@@4.4
+//   - assign (init) notify_work with button_worker                     @@@4.5
 //   - dont directly set LED                                            @@@4.6
 //   - provide basis function to set LED                                @@@4.7
 //   - change name 'onoff_state' to 'p'                                 @@@4.8
@@ -49,6 +49,7 @@
 	#include <stdlib.h>
 
 	#include "bluccino.h"
+        #include "bl_gpio.h"
 
   #define _PRESS_    BL_HASH(PRESS_)   // hashed symbol #PRESS
   #define _RELEASE_  BL_HASH(RELEASE_) // hashed symbol #RELEASE
@@ -278,10 +279,12 @@ struct bt_mesh_model *mod_srv_sw[] = {
 
 	const struct device *sw_device;
 
-	struct sw {
+	struct sw
+	{
 		uint8_t sw_num;
 		uint8_t onoff_state;
 		bool hold;                            // hold phase
+		bool onoff[4];                        // on/off switch
 		uint8_t edges;                        // edge counter
 		uint8_t count;                        // press count
 		struct k_work pub_work;
@@ -289,6 +292,7 @@ struct bt_mesh_model *mod_srv_sw[] = {
 	};
 
 	static struct sw sw;
+	static BL_ms ms = 600;                  // discrimination time click/hold
 
 	static void sw_reset(void)
 	{
@@ -447,39 +451,65 @@ static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
 
 //==============================================================================
-// button notification
+// button worker
 //==============================================================================
 
-static struct k_work notify_work;
+	static struct k_work notify_work;
 
-static void notify_worker(struct k_work *work)
-{
-  LOG(4,"notify_worker: edges:%d, hold:%d, count:%d",
-	      sw.edges, sw.hold, sw.count);
-
-	uint8_t id = sw.sw_num + 1;
-  bool press = sw.edges % 2;
-
-  if (sw.hold == 0)
+	static void button_worker(struct k_work *work)
 	{
-	  BL_ob oo = {_BUTTON,press?_PRESS_:_RELEASE_,id,NULL};
-	  bl_core(&oo,press);
-  }
+	  LOG(4,"button_worker: edges:%d, hold:%d, count:%d",
+		      sw.edges, sw.hold, sw.count);
 
-  if (sw.edges == 1 && sw.hold == 0)
-	{
-	  BL_ob oo = {_BUTTON,_CLICK_, id, NULL};
-		bl_core(&oo,0);
+		uint8_t id = sw.sw_num + 1;
+	  bool press = sw.edges % 2;
+
+	  if (sw.hold == 0)
+		{
+		  BL_ob oo = {_BUTTON,press?_PRESS_:_RELEASE_,id,NULL};
+		  bl_core(&oo,press);
+	  }
+
+    if (sw.edges == 1 && 1 <= id && id <= 4)
+		{
+			sw.onoff[id-1] = !sw.onoff[id-1];   // toggle switch state
+      BL_ob oo = {_SWITCH,_STS_,id,NULL};
+			bl_core(&oo,sw.onoff[id-1]);
+		}
+
+	  if (sw.edges == 1 && sw.hold == 0)
+		{
+		  BL_ob oo = {_BUTTON,_CLICK_, id, NULL};
+			bl_core(&oo,0);
+		}
+
+		if (sw.hold != 0)
+	  {
+		  BL_ob oo = {_BUTTON, _CLICK_, id, NULL};   // button ID = sw_num+1
+		  bl_core(&oo,sw.count);
+
+			sw_reset();
+	  }
 	}
 
-	if (sw.hold != 0)
-  {
-	  BL_ob oo = {_BUTTON, _CLICK_, id, NULL};   // button ID = sw_num+1
-	  bl_core(&oo,sw.count);
+//==============================================================================
+// button timer
+//==============================================================================
 
-		sw_reset();
-  }
-}
+	static void button_timer(struct k_timer *work)
+	{
+		/*
+		struct sw *button_sw = CONTAINER_OF(work, struct sw, button_timer);
+
+		button_sw->onoff_state = sw.count == 1U ? 1 : 0;
+
+	  LOG(4,BL_Y "sw.count 0x%02x onoff_state 0x%02x",
+		           sw.count, button_sw->onoff_state);
+    */
+	  sw.hold = true;
+		k_work_submit(&notify_work);                                        //@@@4.4
+	}
+
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -509,36 +539,30 @@ static uint8_t pin_to_sw(uint32_t pin_pos)
 // button pressed callback
 //==============================================================================
 
-	static void button_pressed(const struct device *dev, struct gpio_callback *cb,
-				   uint32_t pin_pos)
+	static void button_pressed(const GP_device *dev, GP_ctx *cb, uint32_t pin_pos)
 	{
-		/*
-		 * One button press within a 1 second interval sends an on message
-		 * More than one button press sends an off message
-		 */
+		  // One button press within a 1 second interval sends an on message
+		  // More than one button press sends an off message
 
 		time = k_uptime_get_32();
 
-		/* debounce the switch */
-		if (time < last_time + BUTTON_DEBOUNCE_DELAY_MS) {
+		  // debounce the switch
+
+		if (time < last_time + BUTTON_DEBOUNCE_DELAY_MS)
+		{
 			last_time = time;
 			return;
 		}
 
-		if (sw.count == 0U) {
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//	k_timer_start(&sw.button_timer, K_SECONDS(1), K_NO_WAIT);
-			k_timer_start(&sw.button_timer, K_SECONDS(0.6), K_NO_WAIT);        //@@@4.2
-	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-		}
+//		if (sw.count == 0U)
+    if (sw.edges % 2 == 0)
+			k_timer_start(&sw.button_timer, K_MSEC(ms), K_NO_WAIT);           //@@@4.2
 
 	  sw.edges++;
 		if (sw.edges % 2)                     // if odd number of edges
 		  sw.count++;
 
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	  LOG(4,BL_Y "sw.count 0x%02x, edges:%d", sw.count, sw.edges);
-	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 		  // The variable pin_pos is the pin position in the GPIO register,
 		  // not the pin number. It's assumed that only one bit is set.
@@ -549,26 +573,6 @@ static uint8_t pin_to_sw(uint32_t pin_pos)
 		k_work_submit(&notify_work);
 	}
 
-/*
- * Button Count Timer Worker
- */
-
-static void button_cnt_timer(struct k_timer *work)
-{
-	struct sw *button_sw = CONTAINER_OF(work, struct sw, button_timer);
-
-	button_sw->onoff_state = sw.count == 1U ? 1 : 0;
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  LOG(4,BL_Y "sw.count 0x%02x onoff_state 0x%02x",
-	       sw.count, button_sw->onoff_state);
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	//sw.count = 0U;
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//k_work_submit(&sw.pub_work);
-  sw.hold = true;
-	k_work_submit(&notify_work);                                         //@@@4.4
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-}
 
 /*
  * Button Pressed Worker Task
@@ -724,17 +728,21 @@ void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flag
     /* Initialize the button debouncer */
     last_time = k_uptime_get_32();
 
+      // init on/off switch state
+
+		sw.onoff[0] = sw.onoff[1] = sw.onoff[2] = sw.onoff[3] = false;
+
     /* Initialize button worker task*/
     k_work_init(&sw.pub_work, pub_worker);
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     /* Initialize button worker task*/
-    k_work_init(&notify_work, notify_worker);                           //@@@4.5
+    k_work_init(&notify_work, button_worker);                           //@@@4.5
 		sw_reset();
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     /* Initialize button count timer */
-    k_timer_init(&sw.button_timer, button_cnt_timer, NULL);
+    k_timer_init(&sw.button_timer, button_timer, NULL);
 
     sw_device = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(sw0), gpios));
     gpio_pin_configure(sw_device, DT_GPIO_PIN(DT_ALIAS(sw0), gpios),
