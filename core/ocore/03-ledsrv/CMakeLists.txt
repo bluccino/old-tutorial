@@ -9,12 +9,18 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 # project definition and path setup
 #===============================================================================
 
-  project(02-clisrv)
+  project(03-ledsrv)
 
   set (LIB ../../../lib/V0.6)
   set (BLU ${LIB}/bluccino)
+  set (HWC ${LIB}/hwcore)
   set (SRC src)
 
-  include_directories(${SRC} ${BLU})
+  include_directories(${SRC} ${BLU} ${HWC})
 
-target_sources(app PRIVATE ${SRC}/main.c ${SRC}/ocore4.c  ${BLU}/bluccino.c)
+  target_sources(app PRIVATE
+               ${SRC}/main.c
+               ${SRC}/ocore5.c
+               ${HWC}/bl_hw.c
+               ${BLU}/bluccino.c
+              )

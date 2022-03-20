@@ -1,5 +1,5 @@
 //==============================================================================
-// ocore4.c - onoff-app based mesh/HW core, version 4                 //@@@1.1
+// ocore5.c - onoff-app based mesh/HW core, version 4                 //@@@1.1
 //==============================================================================
 //
 // OCORE Versions 1 (ocore1)
@@ -25,9 +25,9 @@
 // OCORE Versions 4 (ocore4)
 //   - lower BUTTON_DEBOUNCE_DELAY_MS from 250 to 120ms                 @@@4.1
 //	 - lower sw.button_timer interval from 1.0 to 0.6s                  @@@4.2
-//   - define notify_work, provide code for button_worker               @@@4.3
-//   - in button_timer submit a 'notify_work'                           @@@4.4
-//   - assign (init) notify_work with button_worker                     @@@4.5
+//   - define button_work, provide code for button_worker               @@@4.3
+//   - in button_timer submit a 'button_work'                           @@@4.4
+//   - assign (init) button_work with button_worker                     @@@4.5
 //   - dont directly set LED                                            @@@4.6
 //   - provide basis function to set LED                                @@@4.7
 //   - change name 'onoff_state' to 'p'                                 @@@4.8
@@ -49,12 +49,13 @@
 	#include <stdlib.h>
 
 	#include "bluccino.h"
-        #include "bl_gpio.h"
-
+	#include "bl_hw.h"
+/*
   #define _PRESS_    BL_HASH(PRESS_)   // hashed symbol #PRESS
   #define _RELEASE_  BL_HASH(RELEASE_) // hashed symbol #RELEASE
   #define _CLICK_    BL_HASH(CLICK_)   // hashed symbol #CLICK
   #define _HOLD_     BL_HASH(HOLD_)    // hashed symbol #HOLD
+*/
   #define _STS_      BL_HASH(STS_)     // hashed symbol #STS
   #define _PRV_      BL_HASH(PRV_)     // hashed symbol #PRV
   #define _ATT_      BL_HASH(ATT_)     // hashed symbol #ATT
@@ -274,37 +275,6 @@ struct bt_mesh_model *mod_srv_sw[] = {
 	};
 
 //==============================================================================
-// button/switch handling
-//==============================================================================
-
-	const struct device *sw_device;
-
-	struct sw
-	{
-		uint8_t sw_num;
-		uint8_t onoff_state;
-		bool hold;                            // hold phase
-		bool onoff[4];                        // on/off switch
-		uint8_t edges;                        // edge counter
-		uint8_t count;                        // press count
-		struct k_work pub_work;
-		struct k_timer button_timer;
-	};
-
-	static struct sw sw;
-	static BL_ms ms = 600;                  // discrimination time click/hold
-
-	static void sw_reset(void)
-	{
-		sw.hold = false;
-		sw.edges = 0;
-		sw.count = 0;
-	}
-
-  static struct gpio_callback button_cb;
-  static uint32_t time, last_time;
-
-//==============================================================================
 // Bluetooth Mesh global variables
 //==============================================================================
 
@@ -449,191 +419,6 @@ static void prov_reset(void)
 
 static uint8_t dev_uuid[16] = { 0xdd, 0xdd };
 
-
-//==============================================================================
-// button worker
-//==============================================================================
-
-	static struct k_work notify_work;
-
-	static void button_worker(struct k_work *work)
-	{
-	  LOG(4,"button_worker: edges:%d, hold:%d, count:%d",
-		      sw.edges, sw.hold, sw.count);
-
-		uint8_t id = sw.sw_num + 1;
-	  bool press = sw.edges % 2;
-
-	  if (sw.hold == 0)
-		{
-		  BL_ob oo = {_BUTTON,press?_PRESS_:_RELEASE_,id,NULL};
-		  bl_core(&oo,press);
-	  }
-
-    if (sw.edges == 1 && 1 <= id && id <= 4)
-		{
-			sw.onoff[id-1] = !sw.onoff[id-1];   // toggle switch state
-      BL_ob oo = {_SWITCH,_STS_,id,NULL};
-			bl_core(&oo,sw.onoff[id-1]);
-		}
-
-	  if (sw.edges == 1 && sw.hold == 0)
-		{
-		  BL_ob oo = {_BUTTON,_CLICK_, id, NULL};
-			bl_core(&oo,0);
-		}
-
-		if (sw.hold != 0)
-	  {
-		  BL_ob oo = {_BUTTON, _CLICK_, id, NULL};   // button ID = sw_num+1
-		  bl_core(&oo,sw.count);
-
-			sw_reset();
-	  }
-	}
-
-//==============================================================================
-// button timer
-//==============================================================================
-
-	static void button_timer(struct k_timer *work)
-	{
-		/*
-		struct sw *button_sw = CONTAINER_OF(work, struct sw, button_timer);
-
-		button_sw->onoff_state = sw.count == 1U ? 1 : 0;
-
-	  LOG(4,BL_Y "sw.count 0x%02x onoff_state 0x%02x",
-		           sw.count, button_sw->onoff_state);
-    */
-	  sw.hold = true;
-		k_work_submit(&notify_work);                                        //@@@4.4
-	}
-
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//#define BUTTON_DEBOUNCE_DELAY_MS 250
-#define BUTTON_DEBOUNCE_DELAY_MS 120                                  //@@@.4
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-/*
- * Map GPIO pins to button number
- * Change to select different GPIO input pins
- */
-
-static uint8_t pin_to_sw(uint32_t pin_pos)
-{
-	switch (pin_pos) {
-	case BIT(DT_GPIO_PIN(DT_ALIAS(sw0), gpios)): return 0;
-	case BIT(DT_GPIO_PIN(DT_ALIAS(sw1), gpios)): return 1;
-	case BIT(DT_GPIO_PIN(DT_ALIAS(sw2), gpios)): return 2;
-	case BIT(DT_GPIO_PIN(DT_ALIAS(sw3), gpios)): return 3;
-	}
-
-	printk("No match for GPIO pin 0x%08x\n", pin_pos);
-	return 0;
-}
-
-//==============================================================================
-// button pressed callback
-//==============================================================================
-
-	static void button_pressed(const GP_device *dev, GP_ctx *cb, uint32_t pin_pos)
-	{
-		  // One button press within a 1 second interval sends an on message
-		  // More than one button press sends an off message
-
-		time = k_uptime_get_32();
-
-		  // debounce the switch
-
-		if (time < last_time + BUTTON_DEBOUNCE_DELAY_MS)
-		{
-			last_time = time;
-			return;
-		}
-
-//		if (sw.count == 0U)
-    if (sw.edges % 2 == 0)
-			k_timer_start(&sw.button_timer, K_MSEC(ms), K_NO_WAIT);           //@@@4.2
-
-	  sw.edges++;
-		if (sw.edges % 2)                     // if odd number of edges
-		  sw.count++;
-
-	  LOG(4,BL_Y "sw.count 0x%02x, edges:%d", sw.count, sw.edges);
-
-		  // The variable pin_pos is the pin position in the GPIO register,
-		  // not the pin number. It's assumed that only one bit is set.
-
-		sw.sw_num = pin_to_sw(pin_pos);
-		last_time = time;
-
-		k_work_submit(&notify_work);
-	}
-
-
-/*
- * Button Pressed Worker Task
- */
-
-static void pub_worker(struct k_work *work)
-{
-	struct bt_mesh_model *mod_cli, *mod_srv;
-	struct bt_mesh_model_pub *pub_cli, *pub_srv;
-	struct sw *sw = CONTAINER_OF(work, struct sw, pub_work);
-	int err;
-	uint8_t sw_idx = sw->sw_num;
-
-	mod_cli = mod_cli_sw[sw_idx];
-	pub_cli = mod_cli->pub;
-
-	mod_srv = mod_srv_sw[sw_idx];
-	pub_srv = mod_srv->pub;
-
-	/* If unprovisioned, just call the set function.
-	 * The intent is to have switch-like behavior
-	 * prior to provisioning. Once provisioned,
-	 * the button and its corresponding led are no longer
-	 * associated and act independently. So, if a button is to
-	 * control its associated led after provisioning, the button
-	 * must be configured to either publish to the led's unicast
-	 * address or a group to which the led is subscribed.
-	 */
-
-	if (primary_addr == BT_MESH_ADDR_UNASSIGNED) {
-		NET_BUF_SIMPLE_DEFINE(msg, 1);
-		struct bt_mesh_msg_ctx ctx = {
-			.addr = sw_idx + primary_addr,
-		};
-
-		/* This is a dummy message sufficient
-		 * for the led server
-		 */
-
-		net_buf_simple_add_u8(&msg, sw->onoff_state);
-		(void)gen_onoff_set_unack(mod_srv, &ctx, &msg);
-		return;
-	}
-
-	if (pub_cli->addr == BT_MESH_ADDR_UNASSIGNED) {
-		return;
-	}
-
-	if (bl_dbg(4))
-  	printk(BL_Y"publish to 0x%04x onoff 0x%04x sw_idx 0x%04x\n"BL_0,
-	       pub_cli->addr, sw->onoff_state, sw_idx);
-	bt_mesh_model_msg_init(pub_cli->msg,
-			       BT_MESH_MODEL_OP_GEN_ONOFF_SET);
-	net_buf_simple_add_u8(pub_cli->msg, sw->onoff_state);
-	net_buf_simple_add_u8(pub_cli->msg, trans_id++);
-	err = bt_mesh_model_publish(mod_cli);
-	if (err) {
-		printk("bt_mesh_model_publish err %d\n", err);
-	}
-}
-
 //==============================================================================
 // provisioning link open/close callbacks                             //@@@3.3
 //==============================================================================
@@ -711,145 +496,122 @@ static void bt_ready(int err)
 	printk("Mesh initialized\n");
 }
 
-void init_led(uint8_t dev, const char *port, uint32_t pin_num, gpio_flags_t flags)
-{
-	onoff_state[dev].led_device = device_get_binding(port);
-	gpio_pin_configure(onoff_state[dev].led_device, pin_num,
-			   flags | GPIO_OUTPUT_INACTIVE);
-}
+//==============================================================================
+// publishing worker task
+//==============================================================================
 
-  static int init(BL_ob *o, int val)
+  static int pub_id;                   // publish ID
+  static uint8_t pub_val;              // publish value
+  static uint16_t pub_op;              // mesh model opcode
+
+  static void pub_worker(struct k_work *work)
   {
-    LOGO(3,BL_B"init ",o,val);
-    int err;
+    struct bt_mesh_model *mod_cli, *mod_srv;
+		struct bt_mesh_model_pub *pub_cli, *pub_srv;
+		uint8_t idx = pub_id-1;
 
-    printk("Initializing...\n");
+    mod_cli = mod_cli_sw[idx];
+    pub_cli = mod_cli->pub;
 
-    /* Initialize the button debouncer */
-    last_time = k_uptime_get_32();
+    mod_srv = mod_srv_sw[idx];
+    pub_srv = mod_srv->pub;
 
-      // init on/off switch state
+		/* If unprovisioned, just call the set function.
+		 * The intent is to have switch-like behavior
+		 * prior to provisioning. Once provisioned,
+		 * the button and its corresponding led are no longer
+		 * associated and act independently. So, if a button is to
+		 * control its associated led after provisioning, the button
+		 * must be configured to either publish to the led's unicast
+		 * address or a group to which the led is subscribed.
+		 */
 
-		sw.onoff[0] = sw.onoff[1] = sw.onoff[2] = sw.onoff[3] = false;
+    if (primary_addr == BT_MESH_ADDR_UNASSIGNED)
+    {
+            NET_BUF_SIMPLE_DEFINE(msg, 1);
+            struct bt_mesh_msg_ctx ctx = { .addr = idx + primary_addr};
 
-    /* Initialize button worker task*/
-    k_work_init(&sw.pub_work, pub_worker);
+              // This is a dummy message sufficient for the led server
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    /* Initialize button worker task*/
-    k_work_init(&notify_work, button_worker);                           //@@@4.5
-		sw_reset();
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-    /* Initialize button count timer */
-    k_timer_init(&sw.button_timer, button_timer, NULL);
-
-    sw_device = device_get_binding(DT_GPIO_LABEL(DT_ALIAS(sw0), gpios));
-    gpio_pin_configure(sw_device, DT_GPIO_PIN(DT_ALIAS(sw0), gpios),
-                       GPIO_INPUT |
-                       DT_GPIO_FLAGS(DT_ALIAS(sw0), gpios));
-    gpio_pin_configure(sw_device, DT_GPIO_PIN(DT_ALIAS(sw1), gpios),
-                       GPIO_INPUT |
-                       DT_GPIO_FLAGS(DT_ALIAS(sw1), gpios));
-    gpio_pin_configure(sw_device, DT_GPIO_PIN(DT_ALIAS(sw2), gpios),
-                       GPIO_INPUT |
-                       DT_GPIO_FLAGS(DT_ALIAS(sw2), gpios));
-    gpio_pin_configure(sw_device, DT_GPIO_PIN(DT_ALIAS(sw3), gpios),
-                       GPIO_INPUT |
-                       DT_GPIO_FLAGS(DT_ALIAS(sw3), gpios));
-
-    gpio_pin_interrupt_configure(sw_device,
-                                 DT_GPIO_PIN(DT_ALIAS(sw0), gpios),
-                                 GPIO_INT_EDGE_BOTH);
-    gpio_pin_interrupt_configure(sw_device,
-                                 DT_GPIO_PIN(DT_ALIAS(sw1), gpios),
-                                 GPIO_INT_EDGE_BOTH);
-    gpio_pin_interrupt_configure(sw_device,
-                                 DT_GPIO_PIN(DT_ALIAS(sw2), gpios),
-                                 GPIO_INT_EDGE_BOTH);
-    gpio_pin_interrupt_configure(sw_device,
-                                 DT_GPIO_PIN(DT_ALIAS(sw3), gpios),
-                                 GPIO_INT_EDGE_BOTH);
-    gpio_init_callback(&button_cb, button_pressed,
-                       BIT(DT_GPIO_PIN(DT_ALIAS(sw0), gpios)) |
-                       BIT(DT_GPIO_PIN(DT_ALIAS(sw1), gpios)) |
-                       BIT(DT_GPIO_PIN(DT_ALIAS(sw2), gpios)) |
-                       BIT(DT_GPIO_PIN(DT_ALIAS(sw3), gpios)));
-    gpio_add_callback(sw_device, &button_cb);
-
-    /* Initialize LED's */
-    init_led(0, DT_GPIO_LABEL(DT_ALIAS(led0), gpios),
-             DT_GPIO_PIN(DT_ALIAS(led0), gpios),
-             DT_GPIO_FLAGS(DT_ALIAS(led0), gpios));
-    init_led(1, DT_GPIO_LABEL(DT_ALIAS(led1), gpios),
-             DT_GPIO_PIN(DT_ALIAS(led1), gpios),
-             DT_GPIO_FLAGS(DT_ALIAS(led1), gpios));
-    init_led(2, DT_GPIO_LABEL(DT_ALIAS(led2), gpios),
-             DT_GPIO_PIN(DT_ALIAS(led2), gpios),
-             DT_GPIO_FLAGS(DT_ALIAS(led2), gpios));
-    init_led(3, DT_GPIO_LABEL(DT_ALIAS(led3), gpios),
-             DT_GPIO_PIN(DT_ALIAS(led3), gpios),
-             DT_GPIO_FLAGS(DT_ALIAS(led3), gpios));
-
-    /* Initialize the Bluetooth Subsystem */
-    err = bt_enable(bt_ready);
-    if (err) {
-            printk("Bluetooth init failed (err %d)\n", err);
+            net_buf_simple_add_u8(&msg, pub_val);
+            (void)gen_onoff_set_unack(mod_srv, &ctx, &msg);
+            return;
     }
 
-    return 0;
+    if (pub_cli->addr == BT_MESH_ADDR_UNASSIGNED)
+            return;
+
+    LOG(4,BL_Y"publish to 0x%04x onoff 0x%04x idx 0x%04x",
+               pub_cli->addr, pub_val, idx);
+    bt_mesh_model_msg_init(pub_cli->msg,pub_op);
+    net_buf_simple_add_u8(pub_cli->msg, pub_val);
+    net_buf_simple_add_u8(pub_cli->msg, trans_id++);
+    int err = bt_mesh_model_publish(mod_cli);
+    bl_err(err,"bt_mesh_model_publish");
   }
 
-//==============================================================================
-// dummy Arduino style loop                                              @@@1.4
-//==============================================================================
-
-void bl_core_loop(void)
-{
-	// nothing to do!
-}
+  K_WORK_DEFINE(pub_work, pub_worker);      // assign work with workhorse
 
 //==============================================================================
-// State change                                                          @@@2.2
+// publish GOOSET message
 //==============================================================================
 
-  void bl_core_set(BL_ob *o,int val)        // here's how we hook in ...
+  static int pub(BL_ob *o,int val)  // here's how we hook in ...
   {
     // id = 1..4, since it adresses elements 1..4
     // button indices are 0..3, thus swnum = o->id - 1
 
-    if (o->id < 1 || o->id > 4)             // ignore IDs not in 1..4
-      return;
+    if (o->id < 1 || o->id > 4)        // ignore IDs not in 1..4
+      return -2;                       // ID OUT OF RANGE
 
-    sw.sw_num = (uint8_t)(o->id-1);         // store ID (switch number)
-    sw.onoff_state = (uint8_t)val;          // store value (for onoff state)
+    pub_id = o->id;                    // store client ID (switch number)
+    pub_val = (uint8_t)val;            // store publish value
 
-		  // finally we submit a button press work, which refreshes the
-			// onoff state with the new value and publishes the state
+    switch (o->op)
+    {
+      case SET_:
+        pub_op = BT_MESH_MODEL_OP_GEN_ONOFF_SET;
+        break;
+      case LET_:
+        pub_op = BT_MESH_MODEL_OP_GEN_ONOFF_SET_UNACK;
+        break;
+      default:
+        return -1;                     // bad message opcode
+    }
 
-    LOGO(3,"@core.set",o,val);              // @@@3.7
-    k_work_submit(&sw.pub_work);         // submit button work (that's all)
+      // finally we submit a button press work, which refreshes the
+      // onoff state with the new value and publishes the state
+
+    LOGO(3,"publish:",o,val);
+    k_work_submit(&pub_work);          // submit button work (that's all)
+    return 0;                          // OK
   }
 
 //==============================================================================
-// LED set                                                               @@@4.7
+// init ocore module
 //==============================================================================
 
-  void bl_core_led(BL_ob *o, int val)       // set LED on/off
+  static int init(BL_ob *o, int val)
   {
-    LOGO(3,"@bl_core.led",o,val);                                       //@@@3.7
-    if (o->id >= 1 && o->id <= 4)
-    {
-      struct onoff_state *p = onoff_state + (o->id-1);
-      //p->current = value;
-      gpio_pin_set(p->led_device, p->led_gpio_pin, val);
-    }
+    LOG(2,BL_B"init Bluccino core");
+
+  	k_work_init(&pub_work, pub_worker);
+
+    bl_init(bl_hw,bl_core);            // init HW core, output goes here
+
+      // init Bluetooth subsystem
+
+    int err = bt_enable(bt_ready);
+    bl_err(err,"Bluetooth init failed");
+
+    return err;
   }
 
 //==============================================================================
 // public module interface
 //==============================================================================
 //
+//  (H) := (BL_HW)
 //                   +--------------------+
 //                   |      BL_CORE       |
 //                   +--------------------+
@@ -859,22 +621,22 @@ void bl_core_loop(void)
 //  (v)->     TOCK ->|      @id,cnt       |  tock module
 //                   +--------------------+
 //                   |       BUTTON:      |
-//  (#)->   #PRESS ->|       @id,1        |  button @id press (rising edge)
-//  (#)-> #RELEASE ->|       @id,0        |  button @id release (falling edge)
-//  (#)->   #CLICK ->|       @id,cnt      |  button @id click (number clicks)
-//  (#)->    #HOLD ->|       @id,time     |  button @id hold (hold time)
+//  (H)->    PRESS ->|       @id,1        |  button @id press (rising edge)
+//  (H)->  RELEASE ->|       @id,0        |  button @id release (falling edge)
+//  (H)->    CLICK ->|       @id,cnt      |  button @id click (number clicks)
+//  (H)->     HOLD ->|       @id,time     |  button @id hold (hold time)
 //  (^)<-    PRESS <-|       @id,1        |  button @id press (rising edge)
 //  (^)<-  RELEASE <-|       @id,0        |  button @id release (falling edge)
-//  (^)->   #CLICK ->|       @id,cnt      |  button @id click (number clicks)
-//  (^)->    #HOLD ->|       @id,time     |  button @id hold (hold time)
+//  (^)<-    CLICK <-|       @id,cnt      |  button @id click (number clicks)
+//  (^)<-     HOLD <-|       @id,time     |  button @id hold (hold time)
+//                   +--------------------+
+//                   |      SWITCH:       |  SWITCH interface
+//  (H)->      STS ->|     @id,onoff      |  provide switch status for output
+//  (^)<-      STS <-|     @id,onoff      |  output switch status
 //                   +--------------------+
 //                   |        LED:        |  LED interface
 //  (v)->      SET ->|     @id,onoff      |  set LED on/off
 //  (v)->   TOGGLE ->|        @id         |  toggle LED
-//                   +--------------------+
-//                   |      SWITCH:       |  SWITCH interface
-//  (#)->      STS ->|     @id,onoff      |  provide switch status for output
-//  (^)<-      STS <-|     @id,onoff      |  output switch status
 //                   +--------------------+
 //                   |        SET:        |  SET interface
 //  (#)->     #PRV ->|       enable       |  node provisioned
@@ -903,23 +665,11 @@ void bl_core_loop(void)
     {
       case BL_ID(_SYS,INIT_):        // [SYS:INIT <out>]
         out = o->data;               // store output callback
-        return init(o,val);          // forward to init() worker
+        return init(o,val);          // forward to init()
 
-      case BL_ID(_SYS,TICK_):        // [SYS:TICK @id,cnt]
-      case BL_ID(_SYS,TOCK_):        // [SYS:TOCK @id,cnt]
-        return 0;                    // OK - nothing to tick/tock
-
-      case BL_ID(_BUTTON,_PRESS_):   // [BUTTON:#PRESS @id 1] (button pressed)
-      case BL_ID(_BUTTON,_RELEASE_): // [BUTTON:#RELEASE @id 0] (button release)
-      case BL_ID(_BUTTON,_CLICK_):   // [BUTTON:#SWITCH @id,sts] (switch status)
-      case BL_ID(_BUTTON,_HOLD_):    // [BUTTON:#HOLD @id,sts] (switch status)
-      case BL_ID(_SWITCH,_STS_):     // [BUTTON:#SWITCH @id,sts] (switch status)
-        return bl_out(o,val,out);    // output to subscriber
-
-      case BL_ID(_LED,SET_):         // [LED:SET @id,onoff]
-      case BL_ID(_LED,TOGGLE_):      // [LED:SET @id,onoff]
-//      return led(o,val);           // delegate to led() worker
-				return -1;
+      case BL_ID(_SYS,TICK_):        // [SYS:TICK @0,cnt]
+      case BL_ID(_SYS,TOCK_):        // [SYS:TICK @0,cnt]
+        return bl_hw(o,val);         // tick/tock HW core
 
       case BL_ID(_SET,_PRV_):        // [SET:PRV val]  (provision)
       case BL_ID(_SET,_ATT_):        // [SET:ATT val]  (attention)
@@ -928,8 +678,7 @@ void bl_core_loop(void)
 
       case BL_ID(_GOOCLI,LET_):      // [GOOCLI:LET] publish unack'ed GOO msg
       case BL_ID(_GOOCLI,SET_):      // [GOOCLI:SET] publish ack'ed GOO msg
-//      return bl_pub(o,val);        // publish [GOOCLI:LET] or [GOOCLI:SET] msg
-        return 0;
+        return pub(o,val);           // publish [GOOCLI:LET] or [GOOCLI:SET] msg
 
       case BL_ID(_GOOSRV,_STS_):     // [GOOSRV:STS @id,sts] GOO status ->upward
         return bl_out(o,val,out);    // publish [GOOSRV:STS] upward

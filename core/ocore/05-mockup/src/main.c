@@ -22,6 +22,16 @@
 
   #include "bluccino.h"
 
+  int bl_down(BL_ob *o, int val)            // public APP module interface
+  {
+    if (bl_is(o,_GOOCLI,LET_))              // switch status update
+    {
+      BL_ob srv = {_GOOSRV,STS_};
+      bl_up(&srv,val);
+    }
+    return 0;                               // OK
+  }
+
   int app(BL_ob *o, int val)                // public APP module interface
   {
     BL_ob cli = {_GOOCLI,SET_,o->id,NULL};  // generic on/off client object
@@ -36,6 +46,13 @@
 
   void main(void)
   {
-    bl_hello(4,"02-clisrv");                // set verbose level, print hello message
+    bl_hello(4,"05-mockup");                // set verbose level, print hello message
     bl_init(bluccino,app);                  // init bluccino, output to app()
+
+    for (int i=0;;i++)
+    {
+      BL_ob swi = {_SWITCH,STS_,1,NULL};
+      bl_up(&swi,i%2);
+      bl_sleep(5000);
+    }
   }
