@@ -76,7 +76,7 @@
         BL_ob oo = {_SYS,INIT_,o->id,bl_hw};
 
         bl_hwbut(&oo,val);             // init BUTTON module
-        bl_hwled(&oo,val);               // init LED module
+        bl_hwled(&oo,val);             // init LED module
       	return 0;                      // OK
       }
 
@@ -92,9 +92,9 @@
       case BL_ID(_BUTTON,CLICK_):      // [BUTTON:CLICK @id,edge]
       case BL_ID(_BUTTON,HOLD_):       // [BUTTON:HOLD @id,time]
       case BL_ID(_SWITCH,STS_):        // [SWITCH:STS @id]
-	      return bl_out(o,val,output);   // output message
+        return bl_out(o,val,output);   // output message
 
       default:
-	      return -1;                     // bad input
+        return -1;                     // bad input
     }
   }

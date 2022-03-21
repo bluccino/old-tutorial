@@ -225,7 +225,7 @@
 //==============================================================================
 
   __weak int bl_hwbut(BL_ob *o, int val) { return -1; }
-  __weak int bl_hwled(BL_ob *o, int val)    { return -1; }
+  __weak int bl_hwled(BL_ob *o, int val) { return -1; }
 
   __weak int bl_core(BL_ob *o, int val)
   {

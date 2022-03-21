@@ -15,8 +15,8 @@
 
   #ifndef BL_CL_TEXT
 
-    #define BL_CL_TEXT {"VOID","SYS","OUT","RESET","TIMER","TEST","TIC","SET",\
-                        "GET","MESH","BLE","NGMN","CFGSRV","CFGCLI",\
+    #define BL_CL_TEXT {"VOID","SYS","OUT","RESET","TIMER","TEST","TIC",\
+                        "SET","GET","MESH","BLE","NGMN","CFGSRV","CFGCLI",\
                         "HEASRV","HEACLI","GOOCLI","GOOSRV","GLVCLI","GLVSRV",\
                         "BUTTON", "SWITCH", "LED",           \
                         "CTRL","SCAN","ADVT","SOS"}
@@ -33,7 +33,6 @@
 
               _SET,                    // set property
               _GET,                    // get property
-
               _MESH,                   // mesh
               _BLE,                    // BLE
               _NGMN,                   // 3G/4G/5G (next gen mobile networks)
@@ -67,7 +66,7 @@
   #ifndef BL_OP_TEXT
 
     #define BL_OP_TEXT {"VOID","INIT","WHEN","USE","TOC","READY","BUSY", \
-                        "PRV","ATT","DUE","SET","LET", \
+                        "PING","PONG","PRV","ATT","DUE","SET","LET", \
                         "GET","STS","TRIG","TICK","TOCK","CMD","VAL","LEVEL", \
                         "ONOFF","COUNT","TOGGLE","INC","DEC","PAY", "ADV", \
                         "BEACON","SEND","PRESS","RELEASE","CLICK","HOLD","MS"}
@@ -82,6 +81,8 @@
 
               READY_,                  // ready state
               BUSY_,                   // busy state
+              PING_,                   // ping a module
+              PONG_,                   // pong response
               PRV_,                    // provisioning state changed
               ATT_,                    // attention state change
               DUE_,                    // timer is due
