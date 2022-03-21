@@ -11,10 +11,9 @@
 
 #### But there's even more ...
 
+* Bluccino is a universal paradigm for event driven systems that suggests a readable SW architecture
 * Bluccino is a programming philosophy for platform independent Bluetooth networking applications
 * Bluccino is platform, hardware and language independent (C, C++, Python, ...)
-* Bluccino is a universal paradigm for event driven system
-* Bluccino saves efforts, cost and development time
 * Bluccino saves efforts, cost and development time
 * Bluccino is open source with open tutorials
 * Bluccino is a slim code layer
