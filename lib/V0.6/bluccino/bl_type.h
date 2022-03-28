@@ -9,7 +9,6 @@
   #include <stdbool.h>
   #include <stdlib.h>
 
-  #define BL_ID(cl,op)      (((uint32_t)(cl)<<16)|(op))      // message ID
   #define BL_LENGTH(a)      (sizeof(a)/sizeof(a[0]))         // array length
   #define BL_LEN(a)         (sizeof(a)/sizeof(a[0]))         // array length
 
@@ -27,6 +26,11 @@
   #define BL_HASH(op)       ((BL_op)((uint32_t)(op)|BL_HASHBIT))
   #define BL_CLEAR(op)      ((BL_op)((uint32_t)(op)&BL_HASHCLR))
   #define BL_HASHED(op)     (((op) & BL_HASHBIT) != 0)
+
+    // macros for mesh message identification
+
+  #define BL_ID(cl,op)      (((uint32_t)(cl)<<16)|(op))         // message ID
+  #define _BL_ID(cl,op)     (((uint32_t)(cl)<<16)|BL_HASH(op))  // hashed msg ID
 
     // useful macros for min(), max() and abs()
 
